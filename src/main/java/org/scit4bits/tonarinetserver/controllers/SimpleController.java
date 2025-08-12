@@ -18,6 +18,9 @@ public class SimpleController {
     @PostMapping("/echo")
     public ResponseEntity<SimpleResponse> echo(@RequestBody SimpleRequest request) {
         String replyMessage = "Received: " + request.getMessage();
+        if(request.getMessage() == null){
+            return ResponseEntity.badRequest().body(new SimpleResponse("Message cannot be null"));
+        }
         SimpleResponse response = new SimpleResponse(replyMessage);
         return ResponseEntity.ok(response);
     }
