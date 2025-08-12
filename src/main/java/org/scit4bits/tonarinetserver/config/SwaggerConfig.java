@@ -11,6 +11,7 @@ import io.swagger.v3.oas.models.info.Info;
 
 @OpenAPIDefinition(
     servers = {
+        @Server(url = "http://localhost:8999", description="local server"),
         @Server(url = "https://tnsv.thxx.xyz", description="live server")
     }
 )
@@ -25,8 +26,8 @@ public class SwaggerConfig {
  
     private Info apiInfo() {
         return new Info()
-                .title("Springdoc 테스트")
-                .description("Springdoc을 사용한 Swagger UI 테스트")
+                .title("Tonarinet REST API Server")
+                .description("Swagger Web UI For Tonarinet API Server")
                 .version("1.0.0");
     }
 }
