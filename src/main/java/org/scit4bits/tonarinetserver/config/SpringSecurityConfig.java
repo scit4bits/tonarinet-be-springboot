@@ -1,4 +1,4 @@
-package org.scit4bits.tonarinetserver.security;
+package org.scit4bits.tonarinetserver.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
