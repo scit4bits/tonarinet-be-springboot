@@ -1,4 +1,4 @@
-package org.scit4bits.tonarinetserver.controllers;
+package org.scit4bits.tonarinetserver.controller;
 
 import org.scit4bits.tonarinetserver.dto.SimpleRequest;
 import org.scit4bits.tonarinetserver.dto.SimpleResponse;
