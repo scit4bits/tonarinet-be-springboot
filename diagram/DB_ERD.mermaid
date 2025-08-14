@@ -1,0 +1,188 @@
+erDiagram
+		
+
+    User {
+        int id PK
+        varchar email UK
+        text password
+        text name
+        date birth
+        varchar nickname UK
+        varchar phone
+        text description
+        datetime created_at
+    }
+
+    Country {
+        varchar country_code PK
+        text name
+        text description
+    }
+
+    Organization {
+        int id PK
+        varchar kor_name UK
+        text description
+        varchar country_code FK
+    }
+
+    Board {
+        int id PK
+        text title
+        text description
+        varchar country_code FK
+        int org_id FK
+    }
+
+    Article {
+        int id PK
+        varchar category
+        text title
+        text contents
+        int created_by FK
+        datetime created_at
+        datetime updated_at
+        int board_id FK
+    }
+
+    Reply {
+        int id PK
+        datetime created_at
+        int created_by FK
+        text contents
+        int article_id FK
+    }
+
+    %% Tag 테이블은 (article_id, tag_name)로 저장되지만
+    %% ERD에서는 N:N 종단만 보이도록 'Tag' 엔터티를 가상으로 표시
+    Tag {
+        varchar tag_name PK
+    }
+
+    ChatRoom {
+        int id PK
+        text title
+        tinyint force_remain
+        text description
+        datetime created_at
+        int leader_user_id FK
+    }
+
+    ChatMessage {
+        int id PK
+        int sender FK
+        text message
+        datetime created_at
+        tinyint is_read
+        int chatroom_id FK
+    }
+
+    Notification {
+        int id PK
+        int user_id FK
+        text contents
+        text link
+        datetime created_at
+        tinyint is_read
+    }
+
+    Party {
+        int id PK
+        text name
+        int leader_user_id FK
+    }
+
+    Team {
+        int id PK
+        text name
+        int leader_user_id FK
+        int org_id FK
+    }
+
+    Task {
+        int id PK
+        text name
+        text contents
+        int created_by FK
+        datetime created_at
+        datetime updated_at
+        datetime due_date
+        int user_id FK
+        int team_id FK
+        int score
+        int max_score
+    }
+
+    Region {
+        int id PK
+        varchar country_code FK
+        varchar category1
+        varchar category2
+        varchar category3
+        varchar category4
+    }
+
+    TownReview {
+        int id PK
+        text contents
+        int created_by FK
+        datetime created_at
+        int transportation
+        int safety
+        int infra
+        int population
+        int education
+        int region_id FK
+        varchar country_code FK
+        int like_count
+    }
+
+    LiveReport {
+        int id PK
+        text contents
+        int like_count
+        datetime created_at
+        int created_by FK
+        text longitude
+        text latitude
+    }
+
+    %% 1:N
+    Country ||--o{ Organization : "has"
+    Country ||--o{ Board : "has"
+    Country ||--o{ Region : "has"
+    Country ||--o{ TownReview : "has"
+
+    Organization ||--o{ Board : "owns"
+    Organization ||--o{ Team : "owns"
+
+    User ||--o{ Article : "creates"
+    Board ||--o{ Article : "contains"
+
+    Article ||--o{ Reply : "has"
+    User ||--o{ Reply : "writes"
+
+    User ||--o{ ChatRoom : "leads"
+    ChatRoom ||--o{ ChatMessage : "has"
+    User ||--o{ ChatMessage : "sends"
+
+    User ||--o{ Notification : "receives"
+
+    User ||--o{ Party : "leads"
+    User ||--o{ Team : "leads"
+    Team ||--o{ Task : "assigned_to"
+    User ||--o{ Task : "created_by"
+    User ||--o{ Task : "assigned_to"
+
+    Region ||--o{ TownReview : "has"
+    User ||--o{ TownReview : "writes"
+
+    User ||--o{ LiveReport : "writes"
+
+    %% N:N (중간 테이블 숨김)
+    User }o--o{ ChatRoom : "member_of (UserChatRoom)"
+    User }o--o{ Country : "roles_in (UserCountry)"
+    User }o--o{ Party : "member_of (UserParty)"
+    User }o--o{ Organization : "roles_in (UserRole)"
+    User }o--o{ Team : "member_of (UserTeam)"
+    Article }o--o{ Tag : "tagged_with (Tag)"
