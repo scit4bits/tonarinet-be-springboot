@@ -24,4 +24,5 @@ public class SimpleController {
         SimpleResponse response = new SimpleResponse(replyMessage);
         return ResponseEntity.ok(response);
     }
+
 }
