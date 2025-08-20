@@ -6,6 +6,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @Entity
 @Table(name = "Organization")
 @Data
@@ -31,4 +33,10 @@ public class Organization {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "country_code", insertable = false, updatable = false)
     private Country country;
+    
+    @OneToMany(mappedBy = "organization", cascade = CascadeType.ALL)
+    private List<Team> teams;
+    
+    @ManyToMany(mappedBy = "organizations")
+    private List<User> users;
 }

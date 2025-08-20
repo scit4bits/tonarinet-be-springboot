@@ -37,4 +37,7 @@ public class Country {
     
     @OneToMany(mappedBy = "country", cascade = CascadeType.ALL)
     private List<TownReview> townReviews;
+    
+    @ManyToMany(mappedBy = "countries")
+    private List<User> users;
 }

@@ -47,14 +47,11 @@ public class User {
     @Column(name = "description", columnDefinition = "TEXT")
     private String description;
 
-    @Column(name = "line_user_id", columnDefinition = "TEXT")
-    private String lineUserId;
+    @Column(name = "provider", length=10)
+    private String provider;
     
-    @Column(name = "google_user_id", columnDefinition = "TEXT")
-    private String googleUserId;
-
-    @Column(name = "kakao_user_id", columnDefinition = "TEXT")
-    private String kakaoUserId;
+    @Column(name = "oauth_id", columnDefinition = "TEXT")
+    private String oauthid;
     
     @CreatedDate
     @Column(name = "created_at")
@@ -98,4 +95,20 @@ public class User {
     
     @ManyToMany(mappedBy = "users")
     private List<Team> joinedTeams;
+    
+    @ManyToMany
+    @JoinTable(
+        name = "UserCountry",
+        joinColumns = @JoinColumn(name = "user_id"),
+        inverseJoinColumns = @JoinColumn(name = "country_code")
+    )
+    private List<Country> countries;
+    
+    @ManyToMany
+    @JoinTable(
+        name = "UserRole",
+        joinColumns = @JoinColumn(name = "user_id"),
+        inverseJoinColumns = @JoinColumn(name = "org_id")
+    )
+    private List<Organization> organizations;
 }
