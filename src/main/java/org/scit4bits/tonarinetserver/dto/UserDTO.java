@@ -23,6 +23,8 @@ public class UserDTO {
     private String nickname;
     private String phone;
     private String description;
+    private String provider;
+    private String oauthid;
     private LocalDateTime createdAt;
     
     // Converter methods
@@ -39,6 +41,8 @@ public class UserDTO {
                 .birth(user.getBirth())
                 .nickname(user.getNickname())
                 .phone(user.getPhone())
+                .provider(user.getProvider())
+                .oauthid(user.getOauthid())
                 .description(user.getDescription())
                 .createdAt(user.getCreatedAt())
                 .build();
@@ -53,6 +57,8 @@ public class UserDTO {
                 .birth(this.birth)
                 .nickname(this.nickname)
                 .phone(this.phone)
+                .provider(this.provider)
+                .oauthid(this.oauthid)
                 .description(this.description)
                 .createdAt(this.createdAt)
                 .build();

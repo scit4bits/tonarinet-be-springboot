@@ -5,6 +5,8 @@ import java.util.LinkedHashMap;
 import org.apache.tomcat.util.json.JSONParser;
 import org.scit4bits.tonarinetserver.dto.AuthCheckResponse;
 import org.scit4bits.tonarinetserver.dto.GenerateStateResponse;
+import org.scit4bits.tonarinetserver.dto.SimpleResponse;
+import org.scit4bits.tonarinetserver.dto.UserDTO;
 import org.scit4bits.tonarinetserver.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
@@ -13,6 +15,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -204,7 +208,16 @@ public class AuthService {
         }
     }
 
-    
+    public boolean userSignUp(UserDTO userJson) {
+        try{
+            log.debug("userJson: {}", userJson);
+            userRepository.save(userJson.toEntity());
+            return true;
+        }catch(Exception e){
+            log.error("Error signing up user: {}", e.getMessage());
+            return false;
+        }
+    }
 
     
 }

@@ -19,13 +19,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 @RequiredArgsConstructor
 @RequestMapping("/api/user")
 public class UserController {
-    private final UserRepository userRepository;
 
-    @PostMapping("/create")
-    public ResponseEntity<SimpleResponse> createUser(@RequestBody UserDTO userJson) {
-        log.debug("userJson: {}", userJson);
-        userRepository.save(userJson.toEntity());
-        return ResponseEntity.ok(new SimpleResponse("User created successfully"));
-    }
+
     
 }

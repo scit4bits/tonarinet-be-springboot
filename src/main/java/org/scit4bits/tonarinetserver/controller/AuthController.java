@@ -47,6 +47,17 @@ public class AuthController {
     //     userRepository.save(userJson.toEntity());
     //     return ResponseEntity.ok(new SimpleResponse("User created successfully"));
     // }
+
+    @PostMapping("/signup")
+    public ResponseEntity<SimpleResponse> userSignUp(@RequestBody UserDTO userJson, @RequestBody String country, @RequestBody String org) {
+        log.debug("country: {}, org: {}", country, org);
+        if(authService.userSignUp(userJson)){
+            return ResponseEntity.ok(new SimpleResponse("User created successfully"));
+
+        }else{
+            return ResponseEntity.status(400).body(new SimpleResponse("User creation failed"));
+        }
+    }
     
     @GetMapping("/generateState")
     public ResponseEntity<GenerateStateResponse> getGenerateState() {
