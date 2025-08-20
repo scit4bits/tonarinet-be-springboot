@@ -1,0 +1,49 @@
+{
+  "properties": [
+    {
+      "name": "line.api.redirect_uri",
+      "type": "java.lang.String",
+      "description": "A description for 'line.api.redirect-uri'"
+    },
+    {
+      "name": "line.api.client_secret",
+      "type": "java.lang.String",
+      "description": "A description for 'line.api.client-secret'"
+    },
+    {
+      "name": "line.api.client_id",
+      "type": "java.lang.String",
+      "description": "A description for 'line.api.client-id'"
+    },
+    {
+      "name": "google.api.client_id",
+      "type": "java.lang.String",
+      "description": "A description for 'google.api.client_id'"
+    },
+    {
+      "name": "google.api.client_secret",
+      "type": "java.lang.String",
+      "description": "A description for 'google.api.client_secret'"
+    },
+    {
+      "name": "google.api.redirect_uri",
+      "type": "java.lang.String",
+      "description": "A description for 'google.api.redirect_uri'"
+    },
+    {
+      "name": "kakao.client_id",
+      "type": "java.lang.String",
+      "description": "A description for 'kakao.client_id'"
+    },
+    {
+      "name": "kakao.redirect_uri",
+      "type": "java.lang.String",
+      "description": "A description for 'kakao.redirect_uri'"
+    },
+    {
+      "name": "kakao.client_secret",
+      "type": "java.lang.String",
+      "description": "A description for 'kakao.client_secret'"
+    }
+  ]
+}

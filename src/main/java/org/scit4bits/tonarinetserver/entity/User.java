@@ -46,6 +46,15 @@ public class User {
     
     @Column(name = "description", columnDefinition = "TEXT")
     private String description;
+
+    @Column(name = "line_user_id", columnDefinition = "TEXT")
+    private String lineUserId;
+    
+    @Column(name = "google_user_id", columnDefinition = "TEXT")
+    private String googleUserId;
+
+    @Column(name = "kakao_user_id", columnDefinition = "TEXT")
+    private String kakaoUserId;
     
     @CreatedDate
     @Column(name = "created_at")
