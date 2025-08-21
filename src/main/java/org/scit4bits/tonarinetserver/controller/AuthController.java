@@ -1,24 +1,22 @@
 package org.scit4bits.tonarinetserver.controller;
 
-import org.apache.catalina.connector.Response;
 import org.scit4bits.tonarinetserver.dto.AuthCheckResponse;
 import org.scit4bits.tonarinetserver.dto.GenerateStateResponse;
 import org.scit4bits.tonarinetserver.dto.SignInEmailRequest;
 import org.scit4bits.tonarinetserver.dto.SignInOAuthRequest;
 import org.scit4bits.tonarinetserver.dto.SignUpRequest;
 import org.scit4bits.tonarinetserver.dto.SimpleResponse;
-import org.scit4bits.tonarinetserver.dto.UserDTO;
 import org.scit4bits.tonarinetserver.service.AuthService;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 
 

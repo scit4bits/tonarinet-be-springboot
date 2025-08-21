@@ -32,7 +32,8 @@ public class SpringSecurityConfig {
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(authz -> authz
                 .requestMatchers("/api/auth/**").permitAll() // Allow auth endpoints
-                .requestMatchers("/api/user/getMe").authenticated() // Secure this endpoint
+                .requestMatchers("/api/user/**").authenticated() // Secure this endpoint
+                .requestMatchers("/api/board/**").authenticated() // Secure board endpoints
                 .anyRequest().permitAll() // Allow other requests for now
             )
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
