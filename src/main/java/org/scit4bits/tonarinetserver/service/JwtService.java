@@ -5,6 +5,8 @@ import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.auth0.jwt.interfaces.JWTVerifier;
+
+import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.scit4bits.tonarinetserver.entity.User;
 import org.springframework.beans.factory.annotation.Value;
@@ -16,9 +18,14 @@ public class JwtService {
     
     @Value("${jwt.secret_key}")
     private String jwtSecretKey;
-    private final Algorithm algorithm = Algorithm.HMAC256(jwtSecretKey);
-    private final JWTVerifier verifier = JWT.require(algorithm).build();
+    private Algorithm algorithm;
+    private JWTVerifier verifier;
     
+    @PostConstruct
+    private void init(){
+         this.algorithm = Algorithm.HMAC256(jwtSecretKey);
+        this.verifier = JWT.require(algorithm).build();
+    }
 
     public String generateToken(User user) {
         String jwtToken = JWT.create()
