@@ -1,31 +1,20 @@
 package org.scit4bits.tonarinetserver.controller;
 
-import java.util.LinkedHashMap;
-
-import org.apache.tomcat.util.json.JSONParser;
+import org.apache.catalina.connector.Response;
 import org.scit4bits.tonarinetserver.dto.AuthCheckResponse;
 import org.scit4bits.tonarinetserver.dto.GenerateStateResponse;
+import org.scit4bits.tonarinetserver.dto.SignInEmailRequest;
+import org.scit4bits.tonarinetserver.dto.SignInOAuthRequest;
+import org.scit4bits.tonarinetserver.dto.SignUpRequest;
 import org.scit4bits.tonarinetserver.dto.SimpleResponse;
 import org.scit4bits.tonarinetserver.dto.UserDTO;
-import org.scit4bits.tonarinetserver.repository.UserRepository;
 import org.scit4bits.tonarinetserver.service.AuthService;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.client.RestTemplate;
-import org.springframework.web.reactive.function.BodyInserters;
-import org.springframework.web.reactive.function.client.WebClient;
-
-import com.auth0.jwt.JWT;
-import com.auth0.jwt.interfaces.DecodedJWT;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -41,21 +30,32 @@ public class AuthController {
 
     private final AuthService authService;
 
-    // @PostMapping("/create")
-    // public ResponseEntity<SimpleResponse> createUser(@RequestBody UserDTO userJson) {
-    //     log.debug("userJson: {}", userJson);
-    //     userRepository.save(userJson.toEntity());
-    //     return ResponseEntity.ok(new SimpleResponse("User created successfully"));
-    // }
-
     @PostMapping("/signup")
-    public ResponseEntity<SimpleResponse> userSignUp(@RequestBody UserDTO userJson, @RequestBody String country, @RequestBody String org) {
-        log.debug("country: {}, org: {}", country, org);
-        if(authService.userSignUp(userJson)){
+    public ResponseEntity<SimpleResponse> userSignUp(@RequestBody SignUpRequest body) {
+        if(authService.userSignUp(body)){
             return ResponseEntity.ok(new SimpleResponse("User created successfully"));
-
         }else{
             return ResponseEntity.status(400).body(new SimpleResponse("User creation failed"));
+        }
+    }
+
+    @PostMapping("/signin/email")
+    public ResponseEntity<SimpleResponse> userSignInEmail(@RequestBody SignInEmailRequest body) {
+        try{
+            String accessToken = authService.signInWithPassword(body.getEmail(), body.getPassword());
+            return ResponseEntity.ok(new SimpleResponse("Login Successful", accessToken));
+        }catch (Exception e){
+            return ResponseEntity.status(400).body(new SimpleResponse("User sign in failed"));
+        }
+    }
+
+    @PostMapping("/signin/oauth")
+    public ResponseEntity<SimpleResponse> userSignInOAuth(@RequestBody SignInOAuthRequest body) {
+        try{
+            String accessToken = authService.signInWithOAuth(body.getProvider(), body.getOauthid());
+            return ResponseEntity.ok(new SimpleResponse("Login Successful", accessToken));
+        }catch (Exception e){
+            return ResponseEntity.status(400).body(new SimpleResponse("User sign in failed"));
         }
     }
     

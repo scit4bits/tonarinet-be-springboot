@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 import java.util.List;
 
 @Entity
-@Table(name = "Team")
+@Table(name = "team")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -40,7 +40,7 @@ public class Team {
     
     @ManyToMany
     @JoinTable(
-        name = "UserTeam",
+        name = "userteam",
         joinColumns = @JoinColumn(name = "team_id"),
         inverseJoinColumns = @JoinColumn(name = "user_id")
     )

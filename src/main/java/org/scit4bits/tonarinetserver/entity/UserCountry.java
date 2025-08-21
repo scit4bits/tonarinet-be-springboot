@@ -7,7 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "UserCountry")
+@Table(name = "usercountry")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -40,7 +40,7 @@ public class UserCountry {
         @Column(name = "country_code", length = 5)
         private String countryCode;
         
-        @Column(name = "role", length = 20)
+        @Column(name = "role", length = 20, columnDefinition = "VARCHAR(20) DEFAULT 'user'")
         private String role;
     }
 }

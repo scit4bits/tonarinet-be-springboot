@@ -21,8 +21,8 @@ public class Organization {
     @Column(name = "id")
     private Integer id;
     
-    @Column(name = "kor_name", length = 60, nullable = false, unique = true)
-    private String korName;
+    @Column(name = "name", length = 60, nullable = false, unique = true)
+    private String name;
     
     @Column(name = "description", columnDefinition = "TEXT")
     private String description;

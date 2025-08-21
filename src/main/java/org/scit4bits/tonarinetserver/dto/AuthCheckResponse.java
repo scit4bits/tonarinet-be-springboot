@@ -8,7 +8,7 @@ import lombok.RequiredArgsConstructor;
 @AllArgsConstructor
 @RequiredArgsConstructor
 public class AuthCheckResponse {
-    private final String userId;
+    private final String oauthid;
     private final String name;
     private final String profileImageUrl;
     private String email = null;

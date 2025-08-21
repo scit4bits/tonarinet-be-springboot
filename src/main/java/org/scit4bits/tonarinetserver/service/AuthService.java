@@ -1,16 +1,28 @@
 package org.scit4bits.tonarinetserver.service;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 
 import org.apache.tomcat.util.json.JSONParser;
 import org.scit4bits.tonarinetserver.dto.AuthCheckResponse;
 import org.scit4bits.tonarinetserver.dto.GenerateStateResponse;
+import org.scit4bits.tonarinetserver.dto.SignInOAuthRequest;
+import org.scit4bits.tonarinetserver.dto.SignUpRequest;
 import org.scit4bits.tonarinetserver.dto.SimpleResponse;
 import org.scit4bits.tonarinetserver.dto.UserDTO;
+import org.scit4bits.tonarinetserver.entity.Country;
+import org.scit4bits.tonarinetserver.entity.Organization;
+import org.scit4bits.tonarinetserver.entity.User;
+import org.scit4bits.tonarinetserver.entity.UserRole;
+import org.scit4bits.tonarinetserver.repository.CountryRepository;
+import org.scit4bits.tonarinetserver.repository.OrganizationRepository;
 import org.scit4bits.tonarinetserver.repository.UserRepository;
+import org.scit4bits.tonarinetserver.repository.UserRoleRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
@@ -33,6 +45,9 @@ import lombok.extern.slf4j.Slf4j;
 public class AuthService {
     
     private final UserRepository userRepository;
+    private final CountryRepository countryRepository;
+    private final OrganizationRepository organizationRepository;
+    private final UserRoleRepository userRoleRepository;
     
     @Value("${line.api.client_id}")
     private String lineApiClientId;
@@ -60,6 +75,8 @@ public class AuthService {
 
     @Value("${kakao.redirect_uri}")
     private String kakaoRedirectUri;
+
+    private final BCryptPasswordEncoder passwordEncoder;
 
 
 
@@ -208,16 +225,85 @@ public class AuthService {
         }
     }
 
-    public boolean userSignUp(UserDTO userJson) {
+    public boolean userSignUp(SignUpRequest userJson) {
         try{
             log.debug("userJson: {}", userJson);
-            userRepository.save(userJson.toEntity());
+            User user = User.builder()
+                    .email(userJson.getEmail())
+                    .password(passwordEncoder.encode(userJson.getPassword()))
+                    .name(userJson.getName())
+                    .birth(userJson.getBirth())
+                    .nickname(userJson.getNickname())
+                    .phone(userJson.getPhone())
+                    .provider(userJson.getProvider())
+                    .oauthid(userJson.getOauthid())
+                    .build();
+
+            // Set up Country relationship (simple many-to-many)
+            Country countryEntity = countryRepository.findById(userJson.getCountry()).get();
+            List<Country> countryList = new ArrayList<>();
+            countryList.add(countryEntity);
+            user.setCountries(countryList);
+
+            // Save user first to get the generated ID
+            User savedUser = userRepository.save(user);
+
+            // Set up Organization-Role relationship using UserRole entity
+            Organization organizationEntity = organizationRepository.findByName(userJson.getOrg()).get();
+            
+            UserRole userRole = UserRole.builder()
+                    .id(UserRole.UserRoleId.builder()
+                            .userId(savedUser.getId())
+                            .orgId(organizationEntity.getId())
+                            .role(userJson.getRole())
+                            .build())
+                    .user(savedUser)
+                    .organization(organizationEntity)
+                    .build();
+            
+            userRoleRepository.save(userRole);
+            
             return true;
         }catch(Exception e){
             log.error("Error signing up user: {}", e.getMessage());
             return false;
         }
     }
+
+    public String generateToken(User user){
+        String jwtToken = JWT.create()
+            .withSubject(user.getId().toString())
+            .withClaim("userId", user.getId().toString())
+            .withClaim("email", user.getEmail())
+            .withIssuedAt(new java.util.Date())
+            .withExpiresAt(new java.util.Date(System.currentTimeMillis() + 86400000)) // 24 hours
+            .sign(com.auth0.jwt.algorithms.Algorithm.HMAC256("JWTSecretKeyLOL"));
+        return jwtToken;
+    }
+
+    public String signInWithPassword(String email, String password){
+        User user = userRepository.findByEmail(email).get();
+        if(user != null && passwordEncoder.matches(password, user.getPassword())){
+            log.debug("User authenticated successfully: {}", user.getEmail());
+            return generateToken(user);
+        } else {
+            log.warn("Authentication failed for user: {}", email);
+            return null;
+        }
+    }
+
+    public String signInWithOAuth(String provider, String oauthid){ // OAuthID from IDToken (sub)
+        User user = userRepository.findByOauthidAndProvider(oauthid, provider).get();
+        if(user != null) {
+            log.debug("User authenticated successfully with OAuth: {}", user.getEmail());
+            return generateToken(user);
+        } else {
+            log.warn("OAuth authentication failed for provider: {} and oauthid: {}", provider, oauthid);
+            return null;
+        }
+    }
+
+    
 
     
 }

@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
-@Table(name = "ChatRoom")
+@Table(name = "chatroom")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -48,7 +48,7 @@ public class ChatRoom {
     
     @ManyToMany
     @JoinTable(
-        name = "UserChatRoom",
+        name = "userchatroom",
         joinColumns = @JoinColumn(name = "chatroom_id"),
         inverseJoinColumns = @JoinColumn(name = "user_id")
     )

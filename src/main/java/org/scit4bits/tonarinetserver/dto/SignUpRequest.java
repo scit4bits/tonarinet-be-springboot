@@ -13,13 +13,16 @@ import java.time.LocalDateTime;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class UserDTO {
-    private Integer id;
+public class SignUpRequest {
     private String email;
+    private String password;
     private String name;
     private LocalDate birth;
     private String nickname;
     private String phone;
-    private String description;
-    private LocalDateTime createdAt;
+    private String provider;
+    private String oauthid;
+    private String country;
+    private String org;
+    private String role;
 }

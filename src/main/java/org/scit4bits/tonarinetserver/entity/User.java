@@ -7,19 +7,23 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 @Entity
-@Table(name = "User")
+@Table(name = "user")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 @EntityListeners(AuditingEntityListener.class)
-public class User {
+public class User implements UserDetails {
     
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -52,6 +56,9 @@ public class User {
     
     @Column(name = "oauth_id", columnDefinition = "TEXT")
     private String oauthid;
+
+    @Column(name = "is_admin", nullable = false, columnDefinition = "BOOLEAN DEFAULT FALSE")
+    private Boolean isAdmin;
     
     @CreatedDate
     @Column(name = "created_at")
@@ -98,17 +105,60 @@ public class User {
     
     @ManyToMany
     @JoinTable(
-        name = "UserCountry",
+        name = "usercountry",
         joinColumns = @JoinColumn(name = "user_id"),
         inverseJoinColumns = @JoinColumn(name = "country_code")
     )
     private List<Country> countries;
     
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    private List<UserRole> userRoles;
+
+
     @ManyToMany
     @JoinTable(
-        name = "UserRole",
+        name = "userrole",
         joinColumns = @JoinColumn(name = "user_id"),
         inverseJoinColumns = @JoinColumn(name = "org_id")
     )
     private List<Organization> organizations;
+
+    // UserDetails implementation methods
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        // Return empty collection for now - you can implement roles later
+        return Collections.emptyList();
+    }
+
+    @Override
+    public String getUsername() {
+        // Use id as username
+        return this.id != null ? this.id.toString() : null;
+    }
+
+    @Override
+    public String getPassword() {
+        // Return the actual password field
+        return this.password;
+    }
+
+    @Override
+    public boolean isAccountNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isAccountNonLocked() {
+        return true;
+    }
+
+    @Override
+    public boolean isCredentialsNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return true;
+    }
 }

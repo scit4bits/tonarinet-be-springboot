@@ -1,17 +1,13 @@
 package org.scit4bits.tonarinetserver.dto;
 
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.RequiredArgsConstructor;
+
+@Data
+@AllArgsConstructor
+@RequiredArgsConstructor
 public class SimpleResponse {
-    private String reply;
-
-    public SimpleResponse(String reply) {
-        this.reply = reply;
-    }
-
-    public String getReply() {
-        return reply;
-    }
-
-    public void setReply(String reply) {
-        this.reply = reply;
-    }
+    private final String message;
+    private String data = null;
 }
