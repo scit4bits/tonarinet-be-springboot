@@ -6,15 +6,32 @@ import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.auth0.jwt.interfaces.JWTVerifier;
 import lombok.extern.slf4j.Slf4j;
+import org.scit4bits.tonarinetserver.entity.User;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 @Service
 @Slf4j
 public class JwtService {
     
-    private static final String SECRET_KEY = "JWTSecretKeyLOL";
-    private final Algorithm algorithm = Algorithm.HMAC256(SECRET_KEY);
+    @Value("${jwt.secret_key}")
+    private String jwtSecretKey;
+    private final Algorithm algorithm = Algorithm.HMAC256(jwtSecretKey);
     private final JWTVerifier verifier = JWT.require(algorithm).build();
+    
+
+    public String generateToken(User user) {
+        String jwtToken = JWT.create()
+            .withSubject(user.getId().toString())
+            .withClaim("userId", user.getId().toString())
+            .withClaim("email", user.getEmail())
+            .withIssuedAt(new java.util.Date())
+            .withExpiresAt(new java.util.Date(System.currentTimeMillis() + 86400000))
+            .sign(algorithm);
+        
+        log.debug("Generated JWT token for user: {}", user.getEmail());
+        return jwtToken;
+    }
     
     public String extractUserId(String token) {
         try {

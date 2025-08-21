@@ -7,10 +7,7 @@ import java.util.List;
 import org.apache.tomcat.util.json.JSONParser;
 import org.scit4bits.tonarinetserver.dto.AuthCheckResponse;
 import org.scit4bits.tonarinetserver.dto.GenerateStateResponse;
-import org.scit4bits.tonarinetserver.dto.SignInOAuthRequest;
 import org.scit4bits.tonarinetserver.dto.SignUpRequest;
-import org.scit4bits.tonarinetserver.dto.SimpleResponse;
-import org.scit4bits.tonarinetserver.dto.UserDTO;
 import org.scit4bits.tonarinetserver.entity.Country;
 import org.scit4bits.tonarinetserver.entity.Organization;
 import org.scit4bits.tonarinetserver.entity.User;
@@ -21,15 +18,10 @@ import org.scit4bits.tonarinetserver.repository.UserRepository;
 import org.scit4bits.tonarinetserver.repository.UserRoleRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
 
@@ -48,6 +40,8 @@ public class AuthService {
     private final CountryRepository countryRepository;
     private final OrganizationRepository organizationRepository;
     private final UserRoleRepository userRoleRepository;
+    private final BCryptPasswordEncoder passwordEncoder;
+    private final JwtService jwtService;
     
     @Value("${line.api.client_id}")
     private String lineApiClientId;
@@ -75,8 +69,6 @@ public class AuthService {
 
     @Value("${kakao.redirect_uri}")
     private String kakaoRedirectUri;
-
-    private final BCryptPasswordEncoder passwordEncoder;
 
 
 
@@ -270,22 +262,11 @@ public class AuthService {
         }
     }
 
-    public String generateToken(User user){
-        String jwtToken = JWT.create()
-            .withSubject(user.getId().toString())
-            .withClaim("userId", user.getId().toString())
-            .withClaim("email", user.getEmail())
-            .withIssuedAt(new java.util.Date())
-            .withExpiresAt(new java.util.Date(System.currentTimeMillis() + 86400000)) // 24 hours
-            .sign(com.auth0.jwt.algorithms.Algorithm.HMAC256("JWTSecretKeyLOL"));
-        return jwtToken;
-    }
-
     public String signInWithPassword(String email, String password){
         User user = userRepository.findByEmail(email).get();
         if(user != null && passwordEncoder.matches(password, user.getPassword())){
             log.debug("User authenticated successfully: {}", user.getEmail());
-            return generateToken(user);
+            return jwtService.generateToken(user);
         } else {
             log.warn("Authentication failed for user: {}", email);
             return null;
@@ -296,7 +277,7 @@ public class AuthService {
         User user = userRepository.findByOauthidAndProvider(oauthid, provider).get();
         if(user != null) {
             log.debug("User authenticated successfully with OAuth: {}", user.getEmail());
-            return generateToken(user);
+            return jwtService.generateToken(user);
         } else {
             log.warn("OAuth authentication failed for provider: {} and oauthid: {}", provider, oauthid);
             return null;
