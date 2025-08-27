@@ -229,6 +229,7 @@ public class AuthService {
                     .phone(userJson.getPhone())
                     .provider(userJson.getProvider())
                     .oauthid(userJson.getOauthid())
+                    .isAdmin(false)
                     .build();
 
             // Set up Country relationship (simple many-to-many)
@@ -249,6 +250,7 @@ public class AuthService {
                             .orgId(organizationEntity.getId())
                             .role(userJson.getRole())
                             .build())
+                    .isGranted(false)
                     .user(savedUser)
                     .organization(organizationEntity)
                     .build();

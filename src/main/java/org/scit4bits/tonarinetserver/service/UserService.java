@@ -1,5 +1,9 @@
 package org.scit4bits.tonarinetserver.service;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import org.scit4bits.tonarinetserver.dto.UserDTO;
 import org.scit4bits.tonarinetserver.entity.User;
 import org.scit4bits.tonarinetserver.repository.UserRepository;
 import org.springframework.stereotype.Service;
@@ -36,6 +40,24 @@ public class UserService {
             log.error("Error validating access token: {}", e.getMessage());
             return null;
         }
+    }
+
+    public List<UserDTO> getAllUsers() {
+        List<User> users = userRepository.findAll();
+        List<UserDTO> userDTOs = new ArrayList<>();
+        for(User entity : users){
+            userDTOs.add(UserDTO.builder()
+                    .id(entity.getId())
+                    .email(entity.getEmail())
+                    .name(entity.getName())
+                    .nickname(entity.getNickname())
+                    .phone(entity.getPhone())
+                    .description(entity.getDescription())
+                    .birth(entity.getBirth())
+                    .createdAt(entity.getCreatedAt())
+                    .build());
+        }
+        return userDTOs;
     }
 
     

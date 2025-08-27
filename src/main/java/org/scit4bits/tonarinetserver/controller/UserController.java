@@ -1,7 +1,10 @@
 package org.scit4bits.tonarinetserver.controller;
 
+import java.util.List;
+
 import org.scit4bits.tonarinetserver.dto.UserDTO;
 import org.scit4bits.tonarinetserver.entity.User;
+import org.scit4bits.tonarinetserver.service.UserService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -19,6 +22,17 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 @RequestMapping("/api/user")
 public class UserController {
+
+    private final UserService userService;
+
+    @GetMapping("/list")
+    public ResponseEntity<List<UserDTO>> getUsers(@AuthenticationPrincipal User user) {
+        if(user == null || user.getIsAdmin() == false) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+        List<UserDTO> users = userService.getAllUsers();
+        return ResponseEntity.ok(users);
+    }
 
     @GetMapping("/getMe")
     public ResponseEntity<UserDTO> getMe(@AuthenticationPrincipal User user) {

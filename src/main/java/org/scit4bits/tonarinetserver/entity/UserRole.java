@@ -34,6 +34,9 @@ public class UserRole {
     @MapsId("orgId")
     @JoinColumn(name = "org_id")
     private Organization organization;
+
+    @Column(name = "is_granted", nullable = false, columnDefinition = "boolean default false")
+    private Boolean isGranted;
     
     @Embeddable
     @Data

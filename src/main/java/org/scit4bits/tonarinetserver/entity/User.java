@@ -106,6 +106,9 @@ public class User implements UserDetails {
     @OneToMany(mappedBy = "createdBy", cascade = CascadeType.ALL)
     private List<TownReview> townReviews;
     
+    @OneToMany(mappedBy = "createdBy", cascade = CascadeType.ALL)
+    private List<Submission> submissions;
+    
     @ManyToMany(mappedBy = "users")
     private List<ChatRoom> joinedChatRooms;
     
