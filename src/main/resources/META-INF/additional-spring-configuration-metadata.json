@@ -3,52 +3,57 @@
     {
       "name": "line.api.redirect_uri",
       "type": "java.lang.String",
-      "description": "A description for 'line.api.redirect-uri'"
+      "description": "LINE API redirect URI for OAuth authentication"
     },
     {
       "name": "line.api.client_secret",
       "type": "java.lang.String",
-      "description": "A description for 'line.api.client-secret'"
+      "description": "LINE API client secret for OAuth authentication"
     },
     {
       "name": "line.api.client_id",
       "type": "java.lang.String",
-      "description": "A description for 'line.api.client-id'"
+      "description": "LINE API client ID for OAuth authentication"
     },
     {
       "name": "google.api.client_id",
       "type": "java.lang.String",
-      "description": "A description for 'google.api.client_id'"
+      "description": "Google API client ID for OAuth authentication"
     },
     {
       "name": "google.api.client_secret",
       "type": "java.lang.String",
-      "description": "A description for 'google.api.client_secret'"
+      "description": "Google API client secret for OAuth authentication"
     },
     {
       "name": "google.api.redirect_uri",
       "type": "java.lang.String",
-      "description": "A description for 'google.api.redirect_uri'"
+      "description": "Google API redirect URI for OAuth authentication"
     },
     {
       "name": "kakao.client_id",
       "type": "java.lang.String",
-      "description": "A description for 'kakao.client_id'"
+      "description": "Kakao API client ID for OAuth authentication"
     },
     {
       "name": "kakao.redirect_uri",
       "type": "java.lang.String",
-      "description": "A description for 'kakao.redirect_uri'"
+      "description": "Kakao API redirect URI for OAuth authentication"
     },
     {
       "name": "kakao.client_secret",
       "type": "java.lang.String",
-      "description": "A description for 'kakao.client_secret'"
+      "description": "Kakao API client secret for OAuth authentication"
     },
     {
       "name": "jwt.secret_key",
       "type": "java.lang.String",
-      "description": "A description for 'jwt.secret_key'"
+      "description": "JWT secret key for token signing and verification"
+    },
+    {
+      "name": "spring.mail.sender",
+      "type": "java.lang.String",
+      "description": "Approved Sender in Oracle Cloud Infrastructure Email Delivery Service"
     }
   ]
 }

@@ -42,6 +42,7 @@ public class AuthService {
     private final UserRoleRepository userRoleRepository;
     private final BCryptPasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+    private final EmailService emailService;
     
     @Value("${line.api.client_id}")
     private String lineApiClientId;
@@ -217,6 +218,10 @@ public class AuthService {
         }
     }
 
+    public boolean isEmailAvailable(String email) {
+        return !userRepository.existsByEmail(email);
+    }
+
     public boolean userSignUp(SignUpRequest userJson) {
         try{
             log.debug("userJson: {}", userJson);
@@ -230,32 +235,19 @@ public class AuthService {
                     .provider(userJson.getProvider())
                     .oauthid(userJson.getOauthid())
                     .isAdmin(false)
+                    .gender(userJson.getGender())
                     .build();
 
+            // Country set-up is REQUIRED
+
             // Set up Country relationship (simple many-to-many)
-            Country countryEntity = countryRepository.findById(userJson.getCountry()).get();
+            Country countryEntity = countryRepository.findById(userJson.getNationality()).get();
             List<Country> countryList = new ArrayList<>();
             countryList.add(countryEntity);
             user.setCountries(countryList);
+            user.setNationality(countryEntity);
 
-            // Save user first to get the generated ID
-            User savedUser = userRepository.save(user);
-
-            // Set up Organization-Role relationship using UserRole entity
-            Organization organizationEntity = organizationRepository.findByName(userJson.getOrg()).get();
-            
-            UserRole userRole = UserRole.builder()
-                    .id(UserRole.UserRoleId.builder()
-                            .userId(savedUser.getId())
-                            .orgId(organizationEntity.getId())
-                            .role(userJson.getRole())
-                            .build())
-                    .isGranted(false)
-                    .user(savedUser)
-                    .organization(organizationEntity)
-                    .build();
-            
-            userRoleRepository.save(userRole);
+            userRepository.save(user);
             
             return true;
         }catch(Exception e){

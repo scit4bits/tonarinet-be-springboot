@@ -17,10 +17,9 @@ public class SignUpRequest {
     private String name;
     private LocalDate birth;
     private String nickname;
+    private String gender;
     private String phone;
     private String provider;
     private String oauthid;
-    private String country;
-    private String org;
-    private String role;
+    private String nationality;
 }

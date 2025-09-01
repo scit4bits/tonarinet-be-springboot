@@ -35,9 +35,15 @@ public class UserRole {
     @JoinColumn(name = "org_id")
     private Organization organization;
 
+    @Column(name="role",length=20)
+    private String role;
+
     @Column(name = "is_granted", nullable = false, columnDefinition = "boolean default false")
     private Boolean isGranted;
-    
+
+    @Column(name="entry_message")
+    private String entryMessage;
+
     @Embeddable
     @Data
     @NoArgsConstructor
@@ -50,8 +56,5 @@ public class UserRole {
         
         @Column(name = "org_id")
         private Integer orgId;
-        
-        @Column(name = "role", length = 20)
-        private String role;
     }
 }

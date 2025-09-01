@@ -34,7 +34,10 @@ public class UserParty {
     @MapsId("partyId")
     @JoinColumn(name = "party_id")
     private Party party;
-    
+
+    @Column(name="entry_message")
+    private String entryMessage;
+
     @Embeddable
     @Data
     @NoArgsConstructor

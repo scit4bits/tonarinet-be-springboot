@@ -40,6 +40,9 @@ public class Organization {
     
     @Column(name = "country_code", length = 5, nullable = false)
     private String countryCode;
+
+    @Column(name = "type", columnDefinition = "ENUM('SCHOOL', 'COMPANY')", nullable = false)
+    private String type;
     
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "country_code", insertable = false, updatable = false)

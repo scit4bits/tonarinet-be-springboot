@@ -15,12 +15,14 @@ import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
@@ -59,6 +61,9 @@ public class User implements UserDetails {
     
     @Column(name = "phone", length = 20)
     private String phone;
+
+    @Column(name="gender", length=10)
+    private String gender;
     
     @Column(name = "description", columnDefinition = "TEXT")
     private String description;
@@ -71,6 +76,11 @@ public class User implements UserDetails {
 
     @Column(name = "is_admin", nullable = false, columnDefinition = "BOOLEAN DEFAULT FALSE")
     private Boolean isAdmin;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "nationality", referencedColumnName = "country_code")
+    private Country nationality;
+
     
     @CreatedDate
     @Column(name = "created_at")

@@ -37,6 +37,13 @@ public class AuthController {
         }
     }
 
+    @GetMapping("/emaildupcheck")
+    public ResponseEntity<Boolean> getEmailDupCheck(@RequestParam("email") String email) {
+        boolean isAvailable = authService.isEmailAvailable(email);
+        return ResponseEntity.ok(isAvailable);
+    }
+    
+
     @PostMapping("/signin/email")
     public ResponseEntity<SimpleResponse> userSignInEmail(@RequestBody SignInEmailRequest body) {
         try{

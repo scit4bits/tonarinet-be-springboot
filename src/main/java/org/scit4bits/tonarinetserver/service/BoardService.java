@@ -52,6 +52,7 @@ public class BoardService {
         return boards;
     }
 
+    @Transactional(readOnly = true)
     public List<ArticleDTO> getArticlesOfBoard(User user, Integer boardId) {
         User dbUser = userRepository.findById(user.getId()).get();
         Board board = boardRepository.findById(boardId).get();

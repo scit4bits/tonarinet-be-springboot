@@ -70,6 +70,9 @@ public class Task {
     @Column(name = "max_score")
     private Integer maxScore;
     
+    @Column(name = "taskgroup_id", nullable = false)
+    private Integer taskGroupId;
+    
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by", insertable = false, updatable = false)
     private User createdBy;
@@ -81,6 +84,10 @@ public class Task {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "team_id", insertable = false, updatable = false)
     private Team team;
+    
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "taskgroup_id", insertable = false, updatable = false)
+    private TaskGroup taskGroup;
     
     @OneToMany(mappedBy = "task", cascade = CascadeType.ALL)
     private List<Submission> submissions;
