@@ -28,6 +28,15 @@ public interface TownReviewRepository extends JpaRepository<TownReview, Integer>
     // 국가 코드로 검색
     Page<TownReview> findByCountryCode(String countryCode, Pageable pageable);
     
+    // 위도로 검색
+    Page<TownReview> findByLongitudeContainingIgnoreCase(String longitude, Pageable pageable);
+    
+    // 경도로 검색
+    Page<TownReview> findByLatitudeContainingIgnoreCase(String latitude, Pageable pageable);
+    
+    // 반경으로 검색
+    Page<TownReview> findByRadius(Integer radius, Pageable pageable);
+    
     // 특정 지역의 리뷰들 (좋아요 순)
     List<TownReview> findByRegionIdOrderByLikeCountDesc(Integer regionId);
     
@@ -45,4 +54,15 @@ public interface TownReviewRepository extends JpaRepository<TownReview, Integer>
            "LOWER(tr.contents) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
            "LOWER(tr.countryCode) LIKE LOWER(CONCAT('%', :search, '%'))")
     Page<TownReview> findByAllFieldsContaining(@Param("search") String search, Pageable pageable);
+    
+    // 특정 위경도와 반경으로 검색
+    List<TownReview> findByLongitudeAndLatitudeAndRadius(String longitude, String latitude, Integer radius);
+    
+    // 특정 반경 내의 모든 리뷰 검색
+    @Query("SELECT tr FROM TownReview tr WHERE tr.radius <= :maxRadius")
+    List<TownReview> findByRadiusLessThanEqual(@Param("maxRadius") Integer maxRadius);
+    
+    // 특정 반경 이상의 모든 리뷰 검색
+    @Query("SELECT tr FROM TownReview tr WHERE tr.radius >= :minRadius")
+    List<TownReview> findByRadiusGreaterThanEqual(@Param("minRadius") Integer minRadius);
 }

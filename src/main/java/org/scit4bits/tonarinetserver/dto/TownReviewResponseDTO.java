@@ -29,6 +29,9 @@ public class TownReviewResponseDTO {
     private String countryCode;
     private String countryName;
     private Integer likeCount;
+    private String longitude;
+    private String latitude;
+    private Integer radius;
     private Double averageRating;
 
     public static TownReviewResponseDTO fromEntity(TownReview townReview) {
@@ -56,6 +59,9 @@ public class TownReviewResponseDTO {
                 .countryCode(townReview.getCountryCode())
                 .countryName(townReview.getCountry() != null ? townReview.getCountry().getName() : null)
                 .likeCount(townReview.getLikeCount())
+                .longitude(townReview.getLongitude())
+                .latitude(townReview.getLatitude())
+                .radius(townReview.getRadius())
                 .averageRating(Math.round(avgRating * 10.0) / 10.0) // Round to 1 decimal place
                 .build();
     }

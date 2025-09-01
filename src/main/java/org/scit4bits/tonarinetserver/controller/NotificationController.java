@@ -8,8 +8,8 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
 
+import org.scit4bits.tonarinetserver.dto.NotificationDTO;
 import org.scit4bits.tonarinetserver.dto.SimpleResponse;
-import org.scit4bits.tonarinetserver.entity.Notification;
 import org.scit4bits.tonarinetserver.entity.User;
 import org.scit4bits.tonarinetserver.service.NotificationService;
 import org.springframework.http.HttpStatus;
@@ -28,12 +28,12 @@ public class NotificationController {
     private final NotificationService notificationService;
 
     @GetMapping("/my")
-    public ResponseEntity<List<Notification>> getMyNotifications(@AuthenticationPrincipal User user) {
+    public ResponseEntity<List<NotificationDTO>> getMyNotifications(@AuthenticationPrincipal User user) {
         if(user == null) {
             // 401 Unauthorized
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-        List<Notification> notifications = notificationService.getUserNotifications(user.getId());
+        List<NotificationDTO> notifications = notificationService.getUserNotifications(user.getId());
         return ResponseEntity.ok(notifications);
     }
 

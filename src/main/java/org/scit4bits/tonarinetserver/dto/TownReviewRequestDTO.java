@@ -48,4 +48,13 @@ public class TownReviewRequestDTO {
     
     @NotBlank(message = "Country code is required")
     private String countryCode;
+    
+    @NotBlank(message = "Longitude is required")
+    private String longitude;
+    
+    @NotBlank(message = "Latitude is required")
+    private String latitude;
+    
+    @NotNull(message = "Radius is required")
+    private Integer radius;
 }

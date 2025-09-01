@@ -14,6 +14,7 @@ import org.scit4bits.tonarinetserver.dto.SimpleResponse;
 import org.scit4bits.tonarinetserver.entity.Organization;
 import org.scit4bits.tonarinetserver.entity.User;
 import org.scit4bits.tonarinetserver.service.OrganizationService;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -35,6 +36,16 @@ public class OrganizationController {
         Organization createdOrganization = organizationService.createOrganization(organizationDTO);
         return ResponseEntity.ok(OrganizationDTO.fromEntity(createdOrganization));
     }
+
+    @GetMapping("/my")
+    public ResponseEntity<List<OrganizationDTO>> getMyOrganizations(@AuthenticationPrincipal User user) {
+        if(user == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        List<OrganizationDTO> organizations = organizationService.getMyOrganizations(user);
+        return ResponseEntity.ok(organizations);
+    }
+    
     
 
     @GetMapping("/search")

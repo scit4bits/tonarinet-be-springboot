@@ -200,4 +200,43 @@ public class TownReviewController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
+
+    @GetMapping("/location")
+    @Operation(summary = "Get town reviews by specific location")
+    public ResponseEntity<List<TownReviewResponseDTO>> getTownReviewsByLocation(
+            @RequestParam String longitude,
+            @RequestParam String latitude,
+            @RequestParam Integer radius) {
+        try {
+            List<TownReviewResponseDTO> reviews = townReviewService.getTownReviewsByLocation(longitude, latitude, radius);
+            return ResponseEntity.ok(reviews);
+        } catch (Exception e) {
+            log.error("Error fetching town reviews by location: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    @GetMapping("/radius/max/{maxRadius}")
+    @Operation(summary = "Get town reviews with radius less than or equal to specified value")
+    public ResponseEntity<List<TownReviewResponseDTO>> getTownReviewsByMaxRadius(@PathVariable Integer maxRadius) {
+        try {
+            List<TownReviewResponseDTO> reviews = townReviewService.getTownReviewsByMaxRadius(maxRadius);
+            return ResponseEntity.ok(reviews);
+        } catch (Exception e) {
+            log.error("Error fetching town reviews by max radius: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    @GetMapping("/radius/min/{minRadius}")
+    @Operation(summary = "Get town reviews with radius greater than or equal to specified value")
+    public ResponseEntity<List<TownReviewResponseDTO>> getTownReviewsByMinRadius(@PathVariable Integer minRadius) {
+        try {
+            List<TownReviewResponseDTO> reviews = townReviewService.getTownReviewsByMinRadius(minRadius);
+            return ResponseEntity.ok(reviews);
+        } catch (Exception e) {
+            log.error("Error fetching town reviews by min radius: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
 }

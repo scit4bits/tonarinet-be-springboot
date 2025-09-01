@@ -138,7 +138,17 @@ public class User implements UserDetails {
     
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private List<UserRole> userRoles;
+    
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    private List<UserLikeArticle> likedArticles;
 
+    @ManyToMany
+    @JoinTable(
+        name = "userlikearticle",
+        joinColumns = @JoinColumn(name = "user_id"),
+        inverseJoinColumns = @JoinColumn(name = "article_id")
+    )
+    private List<Article> likedArticlesList;
 
     @ManyToMany
     @JoinTable(

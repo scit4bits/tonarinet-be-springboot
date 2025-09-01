@@ -1,12 +1,17 @@
 package org.scit4bits.tonarinetserver.service;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.scit4bits.tonarinetserver.dto.OrganizationDTO;
 import org.scit4bits.tonarinetserver.dto.PagedResponse;
+import org.scit4bits.tonarinetserver.entity.Board;
+import org.scit4bits.tonarinetserver.entity.Country;
 import org.scit4bits.tonarinetserver.entity.Organization;
 import org.scit4bits.tonarinetserver.entity.User;
 import org.scit4bits.tonarinetserver.entity.UserRole;
+import org.scit4bits.tonarinetserver.repository.BoardRepository;
+import org.scit4bits.tonarinetserver.repository.CountryRepository;
 import org.scit4bits.tonarinetserver.repository.OrganizationRepository;
 import org.scit4bits.tonarinetserver.repository.UserRepository;
 import org.scit4bits.tonarinetserver.repository.UserRoleRepository;
@@ -27,18 +32,31 @@ import lombok.extern.slf4j.Slf4j;
 @Transactional
 public class OrganizationService {
     private final OrganizationRepository organizationRepository;
+    private final CountryRepository countryRepository;
     private final UserRepository userRepository;
     private final UserRoleRepository userRoleRepository;
     private final UserRoleService userRoleService;
+    private final BoardRepository boardRepository;
 
     public Organization createOrganization(OrganizationDTO request) {
+        Country country = countryRepository.findById(request.getCountryCode()).get();
         Organization organization = Organization.builder()
                 .name(request.getName())
-                .countryCode(request.getCountryCode())
+                .country(country)
                 .type(request.getType())
                 .description(request.getDescription())
                 .build();
-        return organizationRepository.save(organization);
+
+        Organization savedOrganization = organizationRepository.save(organization);
+
+        Board newBoard = Board.builder()
+            .title(request.getName().concat(" Board"))
+            .organization(savedOrganization)
+            .build();
+
+        boardRepository.save(newBoard);
+
+        return savedOrganization;
     }
 
     public List<OrganizationDTO> getAllOrganizations() {
@@ -226,5 +244,13 @@ public class OrganizationService {
     public void deleteOrganization(Integer id) {
         log.info("Deleting organization with id: {}", id);
         organizationRepository.deleteById(id);
+    }
+
+    public List<OrganizationDTO> getMyOrganizations(User user) {
+        User dbUser = userRepository.findById(user.getId()).get();
+        List<Organization> organizations = dbUser.getOrganizations();
+        return organizations.stream()
+                .map(OrganizationDTO::fromEntity)
+                .collect(Collectors.toList());
     }
 }
