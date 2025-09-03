@@ -78,7 +78,7 @@ public class ReplyController {
 
     @GetMapping("/{id}")
     @Operation(summary = "Get reply by ID")
-    public ResponseEntity<ReplyResponseDTO> getReplyById(@PathVariable Integer id) {
+    public ResponseEntity<ReplyResponseDTO> getReplyById(@PathVariable("id") Integer id) {
         try {
             ReplyResponseDTO reply = replyService.getReplyById(id);
             return ResponseEntity.ok(reply);
@@ -93,7 +93,7 @@ public class ReplyController {
 
     @GetMapping("/article/{articleId}")
     @Operation(summary = "Get replies by article ID")
-    public ResponseEntity<List<ReplyResponseDTO>> getRepliesByArticleId(@PathVariable Integer articleId) {
+    public ResponseEntity<List<ReplyResponseDTO>> getRepliesByArticleId(@PathVariable("articleId") Integer articleId) {
         try {
             List<ReplyResponseDTO> replies = replyService.getRepliesByArticleId(articleId);
             return ResponseEntity.ok(replies);

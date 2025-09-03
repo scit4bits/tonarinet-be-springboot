@@ -40,7 +40,7 @@ public class TaskController {
 
     @PostMapping
     @Operation(summary = "Create a new task", security = @SecurityRequirement(name = "bearerAuth"))
-    public ResponseEntity<TaskResponseDTO> createTask(
+    public ResponseEntity<SimpleResponse> createTask(
             @Valid @RequestBody TaskRequestDTO request,
             @AuthenticationPrincipal User user) {
         if (user == null) {
@@ -48,8 +48,8 @@ public class TaskController {
         }
         
         try {
-            TaskResponseDTO task = taskService.createTask(request, user);
-            return ResponseEntity.status(HttpStatus.CREATED).body(task);
+            taskService.createTask(request, user);
+            return ResponseEntity.status(HttpStatus.CREATED).body(new SimpleResponse("Task created successfully"));
         } catch (Exception e) {
             log.error("Error creating task: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
@@ -154,33 +154,6 @@ public class TaskController {
             return ResponseEntity.ok(tasks);
         } catch (Exception e) {
             log.error("Error fetching team tasks: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
-    }
-
-    @PutMapping("/{id}")
-    @Operation(summary = "Update a task", security = @SecurityRequirement(name = "bearerAuth"))
-    public ResponseEntity<TaskResponseDTO> updateTask(
-            @PathVariable Integer id,
-            @Valid @RequestBody TaskRequestDTO request,
-            @AuthenticationPrincipal User user) {
-        if (user == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
-        
-        try {
-            TaskResponseDTO task = taskService.updateTask(id, request, user);
-            return ResponseEntity.ok(task);
-        } catch (RuntimeException e) {
-            if (e.getMessage().contains("not found")) {
-                return ResponseEntity.notFound().build();
-            } else if (e.getMessage().contains("Only the task creator") || 
-                      e.getMessage().contains("admin")) {
-                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-            }
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
-        } catch (Exception e) {
-            log.error("Error updating task: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }

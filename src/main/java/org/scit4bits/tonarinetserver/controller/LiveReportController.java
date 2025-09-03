@@ -109,33 +109,6 @@ public class LiveReportController {
         }
     }
 
-    @PutMapping("/{id}")
-    @Operation(summary = "Update a live report", security = @SecurityRequirement(name = "bearerAuth"))
-    public ResponseEntity<LiveReportResponseDTO> updateLiveReport(
-            @PathVariable Integer id,
-            @Valid @RequestBody LiveReportRequestDTO request,
-            @AuthenticationPrincipal User user) {
-        if (user == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
-        
-        try {
-            LiveReportResponseDTO report = liveReportService.updateLiveReport(id, request, user);
-            return ResponseEntity.ok(report);
-        } catch (RuntimeException e) {
-            if (e.getMessage().contains("not found")) {
-                return ResponseEntity.notFound().build();
-            } else if (e.getMessage().contains("Only the report creator") || 
-                      e.getMessage().contains("admin")) {
-                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-            }
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
-        } catch (Exception e) {
-            log.error("Error updating live report: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
-    }
-
     @DeleteMapping("/{id}")
     @Operation(summary = "Delete a live report", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<SimpleResponse> deleteLiveReport(
@@ -181,25 +154,6 @@ public class LiveReportController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         } catch (Exception e) {
             log.error("Error liking live report: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
-    }
-
-    @GetMapping("/search")
-    @Operation(summary = "Search live reports")
-    public ResponseEntity<PagedResponse<LiveReportResponseDTO>> searchLiveReports(
-            @RequestParam(name = "searchBy", defaultValue = "all") String searchBy,
-            @RequestParam(name = "search", defaultValue = "") String search,
-            @RequestParam(name = "page", defaultValue = "0") Integer page,
-            @RequestParam(name = "pageSize", defaultValue = "10") Integer pageSize,
-            @RequestParam(name = "sortBy", defaultValue = "id") String sortBy,
-            @RequestParam(name = "sortDirection", defaultValue = "asc") String sortDirection) {
-        try {
-            PagedResponse<LiveReportResponseDTO> reports = liveReportService.searchLiveReports(
-                searchBy, search, page, pageSize, sortBy, sortDirection);
-            return ResponseEntity.ok(reports);
-        } catch (Exception e) {
-            log.error("Error searching live reports: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }

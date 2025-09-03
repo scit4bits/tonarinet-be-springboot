@@ -34,6 +34,9 @@ public class UserCountry {
     @MapsId("countryCode")
     @JoinColumn(name = "country_code")
     private Country country;
+
+    @Column(name = "role", length = 20, columnDefinition = "VARCHAR(20) DEFAULT 'user'")
+    private String role;
     
     @Embeddable
     @Data
@@ -48,7 +51,5 @@ public class UserCountry {
         @Column(name = "country_code", length = 5)
         private String countryCode;
         
-        @Column(name = "role", length = 20, columnDefinition = "VARCHAR(20) DEFAULT 'user'")
-        private String role;
     }
 }

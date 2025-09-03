@@ -14,7 +14,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -64,6 +63,36 @@ public class UserController {
         }
     }
 
+    
+
+    @GetMapping("/toggleGrant")
+    public ResponseEntity<SimpleResponse> toggleGrant(@AuthenticationPrincipal User user, @RequestParam("userId") Integer userId, @RequestParam("orgId") Integer orgId) {
+        if(user == null){
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        try{
+            userService.toggleUserRole(user, userId, orgId);
+            return ResponseEntity.ok(new SimpleResponse("Toggling grant succeeded"));
+        }catch (Exception e){
+            log.debug("Error toggling grant: ", e); 
+            return ResponseEntity.status(400).body(new SimpleResponse("Toggling grant failed"));
+        }
+    }
+
+    @GetMapping("changeRole")
+    public ResponseEntity<SimpleResponse> changeRole(@AuthenticationPrincipal User user, @RequestParam("userId") Integer userId, @RequestParam("orgId") Integer orgId, @RequestParam("newRole") String newRole) {
+        if(user == null){
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        try{
+            userService.changeUserRole(user, userId, orgId, newRole);
+            return ResponseEntity.ok(new SimpleResponse("Changing role succeeded"));
+        }catch (Exception e){
+            log.debug("Error changing role: ", e);
+            return ResponseEntity.status(400).body(new SimpleResponse("Changing role failed"));
+        }
+    }
+
     @GetMapping("/search")
     public ResponseEntity<PagedResponse<UserDTO>> getUserSearch(
         @RequestParam(name="searchBy", defaultValue = "all") String searchBy,
@@ -81,5 +110,23 @@ public class UserController {
         PagedResponse<UserDTO> users = userService.searchUser(searchBy, search, page, pageSize, sortBy, sortDirection);
         return ResponseEntity.ok(users);
     }
-    
+
+    @GetMapping("/searchWithOrg")
+    public ResponseEntity<PagedResponse<UserDTO>> getUserSearchWithOrg(
+        @RequestParam(name="orgId", defaultValue = "") Integer orgId,
+        @RequestParam(name="searchBy", defaultValue = "all") String searchBy,
+        @RequestParam(name="search", defaultValue = "") String search,
+        @RequestParam(name="page", defaultValue = "0") Integer page,
+        @RequestParam(name="pageSize", defaultValue = "10") Integer pageSize,
+        @RequestParam(name="sortBy", defaultValue = "id") String sortBy,
+        @RequestParam(name="sortDirection", defaultValue = "asc") String sortDirection,
+        @AuthenticationPrincipal User user
+    ){
+        if(user == null || user.getIsAdmin() == false) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+
+        PagedResponse<UserDTO> users = userService.searchOrganizationMembers(orgId, searchBy, search, page, pageSize, sortBy, sortDirection);
+        return ResponseEntity.ok(users);
+    }
 }

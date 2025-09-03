@@ -45,8 +45,6 @@ public class OrganizationController {
         List<OrganizationDTO> organizations = organizationService.getMyOrganizations(user);
         return ResponseEntity.ok(organizations);
     }
-    
-    
 
     @GetMapping("/search")
     public ResponseEntity<PagedResponse<OrganizationDTO>> getOrganizationSearch(

@@ -24,6 +24,7 @@ public class SpringSecurityConfig {
                     config.setAllowedOrigins(java.util.List.of("*"));
                     config.setAllowedMethods(java.util.List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
                     config.setAllowedHeaders(java.util.List.of("*","Authorization"));
+                    config.setExposedHeaders(java.util.List.of("Content-Disposition"));
                     config.setAllowCredentials(false);
                     return config;
                 })

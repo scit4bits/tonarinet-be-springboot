@@ -25,6 +25,8 @@ public class UserDTO {
     private String description;
     private Boolean isAdmin;
     private LocalDateTime createdAt;
+    private Boolean isGranted; // 직접 주입
+    private String role; // 직접 주입
 
 
     public static UserDTO fromEntity(User user) {

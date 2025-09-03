@@ -141,6 +141,9 @@ public class User implements UserDetails {
     
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private List<UserLikeArticle> likedArticles;
+    
+    @OneToMany(mappedBy = "uploadedByUser", cascade = CascadeType.ALL)
+    private List<FileAttachment> uploadedFiles;
 
     @ManyToMany
     @JoinTable(

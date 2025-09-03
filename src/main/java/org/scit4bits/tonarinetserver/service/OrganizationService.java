@@ -192,7 +192,7 @@ public class OrganizationService {
     public void approveOrganizationMembership(User adminUser, Integer targetUserId, Integer organizationId) {
         Organization organization = organizationRepository.findById(organizationId).get();
         User user = userRepository.findById(targetUserId).get();
-        if(!userRoleService.checkAdminPrivileges(user, organization)){
+        if(!userRoleService.checkUsersRoleInOrg(user, organization,"admin")){
             throw new AccessDeniedException("Admin privileges required");
         }
 
@@ -216,7 +216,7 @@ public class OrganizationService {
      */
     public void removeUserFromOrganization(User adminUser, Integer targetUserId, Integer organizationId) {
         Organization organization = organizationRepository.findById(organizationId).get();
-        if (!userRoleService.checkAdminPrivileges(adminUser, organization)) {
+        if (!userRoleService.checkUsersRoleInOrg(adminUser, organization, "admin")) {
             throw new AccessDeniedException("Admin privileges required");
         }
 

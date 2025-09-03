@@ -89,7 +89,7 @@ public class UserLikeArticleService {
      * 게시글의 좋아요 수 조회
      */
     @Transactional(readOnly = true)
-    public Long getLikeCount(Integer articleId) {
+    public Integer getLikeCount(Integer articleId) {
         return userLikeArticleRepository.countByArticleId(articleId);
     }
     

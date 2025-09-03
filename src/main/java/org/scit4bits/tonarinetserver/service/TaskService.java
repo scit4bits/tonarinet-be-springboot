@@ -1,13 +1,21 @@
 package org.scit4bits.tonarinetserver.service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.scit4bits.tonarinetserver.dto.PagedResponse;
 import org.scit4bits.tonarinetserver.dto.TaskRequestDTO;
 import org.scit4bits.tonarinetserver.dto.TaskResponseDTO;
+import org.scit4bits.tonarinetserver.dto.TeamResponseDTO;
+import org.scit4bits.tonarinetserver.dto.UserDTO;
 import org.scit4bits.tonarinetserver.entity.Task;
+import org.scit4bits.tonarinetserver.entity.TaskGroup;
+import org.scit4bits.tonarinetserver.entity.Team;
 import org.scit4bits.tonarinetserver.entity.User;
+import org.scit4bits.tonarinetserver.repository.TaskGroupRepository;
 import org.scit4bits.tonarinetserver.repository.TaskRepository;
+import org.scit4bits.tonarinetserver.repository.TeamRepository;
+import org.scit4bits.tonarinetserver.repository.UserRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -24,26 +32,55 @@ import lombok.extern.slf4j.Slf4j;
 @Transactional
 public class TaskService {
     
+    private final UserRepository userRepository;
     private final TaskRepository taskRepository;
+    private final TeamRepository teamRepository;
+    private final TaskGroupRepository taskGroupRepository;    
 
-    public TaskResponseDTO createTask(TaskRequestDTO request, User creator) {
+    public void createTask(TaskRequestDTO request, User creator) {
         log.info("Creating task with name: {} by user: {}", request.getName(), creator.getId());
-        
-        Task task = Task.builder()
-                .name(request.getName())
+
+        TaskGroup taskGroup = TaskGroup.builder()
+                .title(request.getName())
                 .contents(request.getContents())
-                .createdById(creator.getId())
                 .dueDate(request.getDueDate())
-                .userId(request.getUserId())
-                .teamId(request.getTeamId())
                 .maxScore(request.getMaxScore())
-                .taskGroupId(request.getTaskGroupId())
-                .score(0) // Initial score
                 .build();
-        
-        Task savedTask = taskRepository.save(task);
-        log.info("Task created successfully with id: {}", savedTask.getId());
-        return TaskResponseDTO.fromEntity(savedTask);
+
+        TaskGroup savedTaskGroup = taskGroupRepository.save(taskGroup);
+
+        for(UserDTO user : request.getAssignedUsers()){
+            User dbUser = userRepository.findById(user.getId())
+                    .orElseThrow(() -> new RuntimeException("User not found with id: " + user.getId()));
+            Task task = Task.builder()
+            .name(savedTaskGroup.getTitle())
+            .contents(savedTaskGroup.getContents())
+            .createdBy(creator)
+            .maxScore(savedTaskGroup.getMaxScore())
+            .taskGroup(savedTaskGroup)
+            .user(dbUser)
+            .dueDate(savedTaskGroup.getDueDate())
+            .build();
+
+            taskRepository.save(task);
+        }
+
+        for(TeamResponseDTO team : request.getAssignedTeams()){
+            Team dbTeam = teamRepository.findById(team.getId())
+                    .orElseThrow(() -> new RuntimeException("Team not found with id: " + team.getId()));
+            
+            Task task = Task.builder()
+                    .name(savedTaskGroup.getTitle())
+                    .contents(savedTaskGroup.getContents())
+                    .createdBy(creator)
+                    .maxScore(savedTaskGroup.getMaxScore())
+                    .taskGroup(savedTaskGroup)
+                    .team(dbTeam)
+                    .dueDate(savedTaskGroup.getDueDate())
+                    .build();
+
+            taskRepository.save(task);
+        }
     }
 
     @Transactional(readOnly = true)
@@ -78,31 +115,6 @@ public class TaskService {
                 .toList();
     }
 
-    public TaskResponseDTO updateTask(Integer id, TaskRequestDTO request, User user) {
-        log.info("Updating task with id: {} by user: {}", id, user.getId());
-        
-        Task task = taskRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Task not found with id: " + id));
-        
-        // Check if user is the creator or admin
-        if (!task.getCreatedById().equals(user.getId()) && !user.getIsAdmin()) {
-            throw new RuntimeException("Only the task creator or admin can update the task");
-        }
-        
-        task.setName(request.getName() != null && !request.getName().trim().isEmpty() 
-                    ? request.getName() : task.getName());
-        task.setContents(request.getContents() != null && !request.getContents().trim().isEmpty() 
-                        ? request.getContents() : task.getContents());
-        task.setDueDate(request.getDueDate() != null ? request.getDueDate() : task.getDueDate());
-        task.setUserId(request.getUserId() != null ? request.getUserId() : task.getUserId());
-        task.setTeamId(request.getTeamId() != null ? request.getTeamId() : task.getTeamId());
-        task.setMaxScore(request.getMaxScore() != null ? request.getMaxScore() : task.getMaxScore());
-        task.setTaskGroupId(request.getTaskGroupId() != null ? request.getTaskGroupId() : task.getTaskGroupId());
-        
-        Task savedTask = taskRepository.save(task);
-        log.info("Task updated successfully");
-        return TaskResponseDTO.fromEntity(savedTask);
-    }
 
     public void deleteTask(Integer id, User user) {
         log.info("Deleting task with id: {} by user: {}", id, user.getId());

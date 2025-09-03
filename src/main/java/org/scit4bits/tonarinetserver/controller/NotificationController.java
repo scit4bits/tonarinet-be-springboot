@@ -54,7 +54,4 @@ public class NotificationController {
         notificationService.readOneNotification(user.getId(), notiId);
         return ResponseEntity.ok(new SimpleResponse("Notification marked as read"));
     }
-    
-    
-    
 }

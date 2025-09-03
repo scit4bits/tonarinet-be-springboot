@@ -17,7 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 public class UserRoleService {
     private final UserRoleRepository userRoleRepository;
 
-    public boolean checkAdminPrivileges(User user, Organization organization){
+    public boolean checkUsersRoleInOrg(User user, Organization organization, String role){
 
         UserRole userRole = userRoleRepository.findById(
             UserRole.UserRoleId.builder()
@@ -26,10 +26,14 @@ public class UserRoleService {
                 .build()
         ).get();
 
-        if(userRole.getRole().equals("admin")) {
-            return true;
+        if(!userRole.getIsGranted()){
+            return false;
         }
 
-        return false;
+        if(role != null && !userRole.getRole().equals(role)) {
+            return false;
+        }
+
+        return true;
     }
 }

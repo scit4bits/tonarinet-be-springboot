@@ -1,5 +1,7 @@
 package org.scit4bits.tonarinetserver.dto;
 
+import java.util.List;
+
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -18,4 +20,6 @@ public class TeamRequestDTO {
     
     @NotNull(message = "Organization ID is required")
     private Integer orgId;
+
+    private List<UserDTO> members;
 }

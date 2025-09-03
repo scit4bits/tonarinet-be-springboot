@@ -1,8 +1,10 @@
 package org.scit4bits.tonarinetserver.dto;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import org.scit4bits.tonarinetserver.entity.Article;
+import org.scit4bits.tonarinetserver.entity.FileAttachment;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -22,7 +24,11 @@ public class ArticleDTO {
     private String createdByName;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private Integer views;
     private Integer boardId;
+    private Integer likedByUsers;
+    private List<FileAttachmentResponseDTO> files;
+    private List<String> tags;
 
     public static ArticleDTO fromEntity(Article article) {
         return ArticleDTO.builder()
@@ -35,6 +41,10 @@ public class ArticleDTO {
                 .createdAt(article.getCreatedAt())
                 .updatedAt(article.getUpdatedAt())
                 .boardId(article.getBoardId())
+                .views(article.getViews())
+                .files(article.getAttachments() != null ? article.getAttachments().stream().map(FileAttachmentResponseDTO::fromEntity).toList() : null)
+                .likedByUsers(article.getLikedByUsers() != null ? article.getLikedByUsers().size() : 0)
+                .tags(article.getTags() != null ? article.getTags().stream().map(t -> t.getId().getTagName()).toList() : null)
                 .build();
     }
 }

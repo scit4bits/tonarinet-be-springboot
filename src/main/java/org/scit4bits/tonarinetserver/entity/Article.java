@@ -58,7 +58,11 @@ public class Article {
     @LastModifiedDate
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
-    
+
+    @Builder.Default
+    @Column(name = "views", nullable = false)
+    private Integer views = 0;
+
     @Column(name = "board_id", nullable = false)
     private Integer boardId;
     
@@ -76,6 +80,12 @@ public class Article {
     @OneToMany(mappedBy = "article", cascade = CascadeType.ALL)
     private List<UserLikeArticle> likedByUsers;
     
+    @OneToMany(mappedBy = "article", cascade = CascadeType.ALL)
+    private List<FileAttachment> attachments;
+
+    @OneToMany(mappedBy = "article", cascade = CascadeType.ALL)
+    private List<Tag> tags;
+
     @ManyToMany(mappedBy = "likedArticlesList")
     private List<User> usersWhoLiked;
 }

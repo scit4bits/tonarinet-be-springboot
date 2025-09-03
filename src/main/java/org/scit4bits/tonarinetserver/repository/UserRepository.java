@@ -46,4 +46,38 @@ public interface UserRepository extends JpaRepository<User, Integer> {
            "LOWER(u.phone) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
            "LOWER(u.nationality.countryCode) LIKE LOWER(CONCAT('%', :search, '%'))")
     Page<User> findByAllFieldsContaining(@Param("search") String search, Pageable pageable);
+    
+    // 조직의 멤버들을 조회하는 쿼리들 (isGranted 값과 관계없이 UserRole이 있는 모든 사용자)
+    @Query("SELECT u FROM User u JOIN u.userRoles ur WHERE ur.organization.id = :organizationId")
+    Page<User> findByOrganizationId(@Param("organizationId") Integer organizationId, Pageable pageable);
+    
+    @Query("SELECT u FROM User u JOIN u.userRoles ur WHERE ur.organization.id = :organizationId AND u.id = :userId")
+    Page<User> findByOrganizationIdAndId(@Param("organizationId") Integer organizationId, @Param("userId") Integer userId, Pageable pageable);
+    
+    @Query("SELECT u FROM User u JOIN u.userRoles ur WHERE ur.organization.id = :organizationId AND LOWER(u.email) LIKE LOWER(CONCAT('%', :email, '%'))")
+    Page<User> findByOrganizationIdAndEmailContainingIgnoreCase(@Param("organizationId") Integer organizationId, @Param("email") String email, Pageable pageable);
+    
+    @Query("SELECT u FROM User u JOIN u.userRoles ur WHERE ur.organization.id = :organizationId AND LOWER(u.name) LIKE LOWER(CONCAT('%', :name, '%'))")
+    Page<User> findByOrganizationIdAndNameContainingIgnoreCase(@Param("organizationId") Integer organizationId, @Param("name") String name, Pageable pageable);
+    
+    @Query("SELECT u FROM User u JOIN u.userRoles ur WHERE ur.organization.id = :organizationId AND LOWER(u.nickname) LIKE LOWER(CONCAT('%', :nickname, '%'))")
+    Page<User> findByOrganizationIdAndNicknameContainingIgnoreCase(@Param("organizationId") Integer organizationId, @Param("nickname") String nickname, Pageable pageable);
+    
+    @Query("SELECT u FROM User u JOIN u.userRoles ur WHERE ur.organization.id = :organizationId AND LOWER(u.phone) LIKE LOWER(CONCAT('%', :phone, '%'))")
+    Page<User> findByOrganizationIdAndPhoneContainingIgnoreCase(@Param("organizationId") Integer organizationId, @Param("phone") String phone, Pageable pageable);
+    
+    @Query("SELECT u FROM User u JOIN u.userRoles ur WHERE ur.organization.id = :organizationId AND LOWER(u.nationality.countryCode) LIKE LOWER(CONCAT('%', :countryCode, '%'))")
+    Page<User> findByOrganizationIdAndNationality_CountryCodeContainingIgnoreCase(@Param("organizationId") Integer organizationId, @Param("countryCode") String countryCode, Pageable pageable);
+    
+    @Query("SELECT u FROM User u JOIN u.userRoles ur WHERE ur.organization.id = :organizationId AND u.isAdmin = :isAdmin")
+    Page<User> findByOrganizationIdAndIsAdmin(@Param("organizationId") Integer organizationId, @Param("isAdmin") Boolean isAdmin, Pageable pageable);
+    
+    @Query("SELECT u FROM User u JOIN u.userRoles ur WHERE ur.organization.id = :organizationId AND (" +
+           "CAST(u.id AS string) LIKE CONCAT('%', :search, '%') OR " +
+           "LOWER(u.email) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
+           "LOWER(u.name) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
+           "LOWER(u.nickname) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
+           "LOWER(u.phone) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
+           "LOWER(u.nationality.countryCode) LIKE LOWER(CONCAT('%', :search, '%')))")
+    Page<User> findByOrganizationIdAndAllFieldsContaining(@Param("organizationId") Integer organizationId, @Param("search") String search, Pageable pageable);
 }

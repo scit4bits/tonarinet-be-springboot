@@ -1,13 +1,18 @@
 package org.scit4bits.tonarinetserver.service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.scit4bits.tonarinetserver.dto.PagedResponse;
 import org.scit4bits.tonarinetserver.dto.TeamRequestDTO;
 import org.scit4bits.tonarinetserver.dto.TeamResponseDTO;
+import org.scit4bits.tonarinetserver.dto.UserDTO;
 import org.scit4bits.tonarinetserver.entity.Team;
 import org.scit4bits.tonarinetserver.entity.User;
+import org.scit4bits.tonarinetserver.entity.UserTeam;
 import org.scit4bits.tonarinetserver.repository.TeamRepository;
+import org.scit4bits.tonarinetserver.repository.UserRepository;
+import org.scit4bits.tonarinetserver.repository.UserTeamRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -25,6 +30,8 @@ import lombok.extern.slf4j.Slf4j;
 public class TeamService {
     
     private final TeamRepository teamRepository;
+    private final UserTeamRepository userTeamRepository;
+    private final UserRepository userRepository;
 
     public TeamResponseDTO createTeam(TeamRequestDTO request, User creator) {
         log.info("Creating team with name: {} for organization: {} by user: {}", 
@@ -32,11 +39,21 @@ public class TeamService {
         
         Team team = Team.builder()
                 .name(request.getName())
-                .leaderUserId(creator.getId())
+                .leaderUserId(request.getMembers().get(0).getId()) // 첫번째 사람이 리더
                 .orgId(request.getOrgId())
                 .build();
         
         Team savedTeam = teamRepository.save(team);
+
+        List<User> memberList = new ArrayList<>();
+
+        for(UserDTO member : request.getMembers()) {
+            User dbUser = userRepository.findById(member.getId()).get();
+            memberList.add(dbUser);
+        }
+        savedTeam.setUsers(memberList);
+
+        teamRepository.save(savedTeam);
         log.info("Team created successfully with id: {}", savedTeam.getId());
         return TeamResponseDTO.fromEntity(savedTeam);
     }

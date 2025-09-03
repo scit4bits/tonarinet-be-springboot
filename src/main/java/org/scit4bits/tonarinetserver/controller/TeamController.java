@@ -69,7 +69,7 @@ public class TeamController {
 
     @GetMapping("/{id}")
     @Operation(summary = "Get team by ID")
-    public ResponseEntity<TeamResponseDTO> getTeamById(@PathVariable Integer id) {
+    public ResponseEntity<TeamResponseDTO> getTeamById(@PathVariable("id") Integer id) {
         try {
             TeamResponseDTO team = teamService.getTeamById(id);
             return ResponseEntity.ok(team);
@@ -84,7 +84,7 @@ public class TeamController {
 
     @GetMapping("/organization/{orgId}")
     @Operation(summary = "Get teams by organization ID")
-    public ResponseEntity<List<TeamResponseDTO>> getTeamsByOrgId(@PathVariable Integer orgId) {
+    public ResponseEntity<List<TeamResponseDTO>> getTeamsByOrgId(@PathVariable("orgId") Integer orgId) {
         try {
             List<TeamResponseDTO> teams = teamService.getTeamsByOrgId(orgId);
             return ResponseEntity.ok(teams);
@@ -97,7 +97,7 @@ public class TeamController {
     @PutMapping("/{id}")
     @Operation(summary = "Update a team", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<TeamResponseDTO> updateTeam(
-            @PathVariable Integer id,
+            @PathVariable("id") Integer id,
             @Valid @RequestBody TeamRequestDTO request,
             @AuthenticationPrincipal User user) {
         if (user == null) {
@@ -124,7 +124,7 @@ public class TeamController {
     @DeleteMapping("/{id}")
     @Operation(summary = "Delete a team", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<SimpleResponse> deleteTeam(
-            @PathVariable Integer id,
+            @PathVariable("id") Integer id,
             @AuthenticationPrincipal User user) {
         if (user == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
@@ -169,7 +169,7 @@ public class TeamController {
     @PostMapping("/{id}/join")
     @Operation(summary = "Join a team", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<SimpleResponse> joinTeam(
-            @PathVariable Integer id,
+            @PathVariable("id") Integer id,
             @AuthenticationPrincipal User user) {
         if (user == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
@@ -192,7 +192,7 @@ public class TeamController {
     @PostMapping("/{id}/leave")
     @Operation(summary = "Leave a team", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<SimpleResponse> leaveTeam(
-            @PathVariable Integer id,
+            @PathVariable("id") Integer id,
             @AuthenticationPrincipal User user) {
         if (user == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();

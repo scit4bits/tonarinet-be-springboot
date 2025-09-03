@@ -5,16 +5,24 @@ import java.util.List;
 
 import org.scit4bits.tonarinetserver.dto.ArticleDTO;
 import org.scit4bits.tonarinetserver.dto.BoardDTO;
+import org.scit4bits.tonarinetserver.dto.BoardWriteRequestDTO;
+import org.scit4bits.tonarinetserver.dto.FileAttachmentRequestDTO;
 import org.scit4bits.tonarinetserver.entity.Article;
 import org.scit4bits.tonarinetserver.entity.Board;
 import org.scit4bits.tonarinetserver.entity.Country;
 import org.scit4bits.tonarinetserver.entity.Organization;
+import org.scit4bits.tonarinetserver.entity.Tag;
 import org.scit4bits.tonarinetserver.entity.User;
-import org.scit4bits.tonarinetserver.entity.UserRole;
+import org.scit4bits.tonarinetserver.entity.FileAttachment.FileType;
+import org.scit4bits.tonarinetserver.repository.ArticleRepository;
 import org.scit4bits.tonarinetserver.repository.BoardRepository;
+import org.scit4bits.tonarinetserver.repository.OrganizationRepository;
+import org.scit4bits.tonarinetserver.repository.TagRepository;
 import org.scit4bits.tonarinetserver.repository.UserRepository;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,10 +30,17 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 @Slf4j
 @RequiredArgsConstructor
+@Transactional
 public class BoardService {
 
     private final BoardRepository boardRepository;
+    private final ArticleRepository articleRepository;
     private final UserRepository userRepository;
+    private final OrganizationRepository organizationRepository;
+    private final UserRoleService userRoleService;
+    private final FileAttachmentService fileAttachmentService;
+    private final TagRepository tagRepository;
+    private final UserCountryService userCountryService;
 
     @Transactional(readOnly = true)
     public List<BoardDTO> getAccessibleBoards(User user){
@@ -53,26 +68,116 @@ public class BoardService {
     }
 
     @Transactional(readOnly = true)
-    public List<ArticleDTO> getArticlesOfBoard(User user, Integer boardId) {
-        User dbUser = userRepository.findById(user.getId()).get();
-        Board board = boardRepository.findById(boardId).get();
-        boolean authenticated = false;
-        for(UserRole roles: dbUser.getUserRoles()){
-            if(roles.getId().getOrgId() == board.getOrgId() || user.getIsAdmin() == true){
-                // User has access to the board
-                authenticated = true;
-                break;
-            }
-        }
-        if(!authenticated){
+    public List<ArticleDTO> getArticlesByBoardId(User user, Integer boardId) {
+        Board board = boardRepository.findById(boardId).orElse(null);
+        if (board == null) {
             return null;
         }
-        List<ArticleDTO> articleDTOs = new ArrayList<>();
 
-        for(Article article : board.getArticles()){ // full experiences with JPA
-            articleDTOs.add(ArticleDTO.fromEntity(article));
+        // Check if user has access to the board
+        if(board.getCountryCode() != null){
+            if(!userCountryService.checkUserCountryAccess(user.getId(), board.getCountryCode())) {
+                log.debug("User {} does not have access to country board {}", user.getId(), board.getCountryCode());
+                return null;
+            }
+        }else if(board.getOrgId() != null){
+            Organization organization = organizationRepository.findById(board.getOrgId()).orElse(null);
+            if(organization == null || !userRoleService.checkUsersRoleInOrg(user, organization, null)) {
+                log.debug("User {} does not have access to organization board {}", user.getId(), organization != null ? organization.getName() : "unknown");
+                return null;
+            }
         }
-        return articleDTOs;
+
+        // Get articles for this board (excluding counsel articles)
+        List<Article> articles = articleRepository.findByBoardIdAndCategoryNotOrderByCreatedAtDesc(boardId, "counsel");
+        return articles.stream()
+                .map(ArticleDTO::fromEntity)
+                .toList();
+    }
+
+
+
+    public ArticleDTO createArticle(User user, Integer boardId, BoardWriteRequestDTO request, List<MultipartFile> files) {
+        Board board = boardRepository.findById(boardId).get();
+
+        if(board.getCountryCode() != null){
+            if(!userCountryService.checkUserCountryAccess(user.getId(), board.getCountryCode())) {
+                // Handle insufficient permissions
+                log.debug("User {} does not have access to country board {}", user.getId(), board.getCountryCode());
+                throw new AccessDeniedException("User does not have permission to create articles in this board.");
+            }
+        }else if(board.getOrgId() != null){
+            Organization organization = organizationRepository.findById(board.getOrgId()).get();
+            if(!userRoleService.checkUsersRoleInOrg(user, organization, null)) {
+                // Handle insufficient permissions
+                log.debug("User {} does not have access to organization board {}", user.getId(), organization.getName());
+                throw new AccessDeniedException("User does not have permission to create articles in this board.");
+            }
+        }
+        Article article = Article.builder()
+                .category(request.getCategory())
+                .title(request.getTitle())
+                .contents(request.getContent())
+                .createdById(user.getId())
+                .boardId(boardId)
+                .build();
+
+        Article savedArticle = articleRepository.save(article);
+
+        log.debug("Article created with ID: {}", savedArticle.getId());
+
+        // Handle file attachments if necessary
+        if (files != null && !files.isEmpty()) {
+            log.debug("Handling file attachments for article: {}", savedArticle.getTitle());
+
+            FileAttachmentRequestDTO requestDTO = new FileAttachmentRequestDTO();
+            requestDTO.setArticleId(savedArticle.getId());
+            requestDTO.setIsPrivate(false); // Default to public
+            requestDTO.setType(FileType.ATTACHMENT);
+
+            fileAttachmentService.uploadFiles(files, requestDTO, user);
+        }
+
+        if (request.getTags() != null && !request.getTags().isEmpty()) {
+            // Handle tags if your Article entity supports it
+            // This is a placeholder; implement tag handling as needed
+            log.debug("Tags provided: {}", request.getTags());
+            for (String tag : request.getTags()) {
+                Tag.TagId tagId = Tag.TagId.builder()
+                    .tagName(tag)
+                    .build();
+                Tag tagEntity = new Tag();
+                tagEntity.setId(tagId);
+                tagEntity.setArticle(savedArticle);
+                log.debug("Saving tag: {}", tagEntity);
+                tagRepository.save(tagEntity);
+            }
+        }
+
+        return ArticleDTO.fromEntity(
+            savedArticle
+        );
+    }
+
+    public BoardDTO getBoardInformation(User user, Integer boardId) {
+        Board board = boardRepository.findById(boardId).get();
+
+        if(board.getCountryCode() != null){
+            if(!userCountryService.checkUserCountryAccess(user.getId(), board.getCountryCode())) {
+                // Handle insufficient permissions
+                log.debug("User {} does not have access to country board {}", user.getId(), board.getCountryCode());
+                throw new AccessDeniedException("User does not have permission to create articles in this board.");
+            }
+        }else if(board.getOrgId() != null){
+            Organization organization = organizationRepository.findById(board.getOrgId()).get();
+            if(!userRoleService.checkUsersRoleInOrg(user, organization, null)) {
+                // Handle insufficient permissions
+                log.debug("User {} does not have access to organization board {}", user.getId(), organization.getName());
+                throw new AccessDeniedException("User does not have permission to create articles in this board.");
+            }
+        }
+
+        return BoardDTO.fromEntity(board);
     }
 
 }
