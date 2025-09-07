@@ -121,7 +121,36 @@ public class FileAttachmentController {
             }
                 
         } catch (RuntimeException e) {
-            log.error("Failed to download file {} for user {}: {}", id, user.getId(), e.getMessage());
+            log.error("Failed to download file {} for user {}: {}", id, user != null ? user.getId() : "anonymous", e.getMessage());
+            if (e.getMessage().contains("not found")) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+            } else if (e.getMessage().contains("not authorized")) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+            }
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    @GetMapping("/submission/{submissionId}")
+    @Operation(summary = "Get files by submission ID", description = "Get all file attachments for a specific submission")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Files retrieved successfully"),
+        @ApiResponse(responseCode = "401", description = "Unauthorized"),
+        @ApiResponse(responseCode = "404", description = "Submission not found")
+    })
+    public ResponseEntity<List<FileAttachmentResponseDTO>> getFilesBySubmissionId(
+            @AuthenticationPrincipal User user,
+            @PathVariable("submissionId") Integer submissionId) {
+        
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        try {
+            List<FileAttachmentResponseDTO> files = fileAttachmentService.getFileAttachmentsBySubmissionId(submissionId, user);
+            return ResponseEntity.ok(files);
+        } catch (RuntimeException e) {
+            log.error("Failed to get files for submission {} for user {}: {}", submissionId, user.getId(), e.getMessage());
             if (e.getMessage().contains("not found")) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
             } else if (e.getMessage().contains("not authorized")) {

@@ -38,46 +38,47 @@ public class TaskService {
     private final TaskGroupRepository taskGroupRepository;    
 
     public void createTask(TaskRequestDTO request, User creator) {
-        log.info("Creating task with name: {} by user: {}", request.getName(), creator.getId());
+        log.info("Creating task with name: {} by user: {} for organization: {}", request.getTitle(), creator.getId(), request.getOrgId());
 
         TaskGroup taskGroup = TaskGroup.builder()
-                .title(request.getName())
+                .title(request.getTitle())
                 .contents(request.getContents())
                 .dueDate(request.getDueDate())
                 .maxScore(request.getMaxScore())
+                .orgId(request.getOrgId())
                 .build();
 
         TaskGroup savedTaskGroup = taskGroupRepository.save(taskGroup);
 
-        for(UserDTO user : request.getAssignedUsers()){
-            User dbUser = userRepository.findById(user.getId())
-                    .orElseThrow(() -> new RuntimeException("User not found with id: " + user.getId()));
+        for(Integer userId : request.getAssignedUserIds()){
+            User dbUser = userRepository.findById(userId)
+                    .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
             Task task = Task.builder()
             .name(savedTaskGroup.getTitle())
             .contents(savedTaskGroup.getContents())
-            .createdBy(creator)
+            .createdById(creator.getId())
             .maxScore(savedTaskGroup.getMaxScore())
-            .taskGroup(savedTaskGroup)
-            .user(dbUser)
+            .taskGroupId(savedTaskGroup.getId())
+            .userId(dbUser.getId())
             .dueDate(savedTaskGroup.getDueDate())
             .build();
 
             taskRepository.save(task);
         }
 
-        for(TeamResponseDTO team : request.getAssignedTeams()){
-            Team dbTeam = teamRepository.findById(team.getId())
-                    .orElseThrow(() -> new RuntimeException("Team not found with id: " + team.getId()));
-            
+        for(Integer teamId : request.getAssignedTeamIds()){
+            Team dbTeam = teamRepository.findById(teamId)
+                    .orElseThrow(() -> new RuntimeException("Team not found with id: " + teamId));
+
             Task task = Task.builder()
-                    .name(savedTaskGroup.getTitle())
-                    .contents(savedTaskGroup.getContents())
-                    .createdBy(creator)
-                    .maxScore(savedTaskGroup.getMaxScore())
-                    .taskGroup(savedTaskGroup)
-                    .team(dbTeam)
-                    .dueDate(savedTaskGroup.getDueDate())
-                    .build();
+                .name(savedTaskGroup.getTitle())
+                .contents(savedTaskGroup.getContents())
+                .createdById(creator.getId())
+                .maxScore(savedTaskGroup.getMaxScore())
+                .taskGroupId(savedTaskGroup.getId())
+                .teamId(dbTeam.getId())
+                .dueDate(savedTaskGroup.getDueDate())
+                .build();
 
             taskRepository.save(task);
         }

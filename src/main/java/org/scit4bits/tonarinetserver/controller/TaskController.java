@@ -4,9 +4,11 @@ import java.util.List;
 
 import org.scit4bits.tonarinetserver.dto.PagedResponse;
 import org.scit4bits.tonarinetserver.dto.SimpleResponse;
+import org.scit4bits.tonarinetserver.dto.TaskGroupResponseDTO;
 import org.scit4bits.tonarinetserver.dto.TaskRequestDTO;
 import org.scit4bits.tonarinetserver.dto.TaskResponseDTO;
 import org.scit4bits.tonarinetserver.entity.User;
+import org.scit4bits.tonarinetserver.service.TaskGroupService;
 import org.scit4bits.tonarinetserver.service.TaskService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,7 +18,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -37,6 +38,7 @@ import lombok.extern.slf4j.Slf4j;
 public class TaskController {
 
     private final TaskService taskService;
+    private final TaskGroupService taskGroupService;
 
     @PostMapping
     @Operation(summary = "Create a new task", security = @SecurityRequirement(name = "bearerAuth"))
@@ -77,10 +79,12 @@ public class TaskController {
         }
     }
 
+
+
     @GetMapping("/{id}")
     @Operation(summary = "Get task by ID", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<TaskResponseDTO> getTaskById(
-            @PathVariable Integer id,
+            @PathVariable("id") Integer id,
             @AuthenticationPrincipal User user) {
         if (user == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
@@ -212,11 +216,35 @@ public class TaskController {
         }
     }
 
+    @GetMapping("/taskgroup/{id}")
+    @Operation(summary = "Get task group by ID", security = @SecurityRequirement(name = "bearerAuth"))
+    public ResponseEntity<TaskGroupResponseDTO> getTaskGroupById(
+            @PathVariable("id") Integer id,
+            @AuthenticationPrincipal User user) {
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        
+        try {
+            TaskGroupResponseDTO taskGroup = taskGroupService.getTaskGroupById(id);
+            return ResponseEntity.ok(taskGroup);
+        } catch (RuntimeException e) {
+            log.error("Error fetching task group: {}", e.getMessage());
+            return ResponseEntity.notFound().build();
+        } catch (Exception e) {
+            log.error("Error fetching task group: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
     @GetMapping("/search")
-    @Operation(summary = "Search tasks", security = @SecurityRequirement(name = "bearerAuth"))
-    public ResponseEntity<PagedResponse<TaskResponseDTO>> searchTasks(
+    @Operation(summary = "Search task groups within a specific organization", 
+               description = "Search for task groups within the specified organization. All search operations are scoped to the provided organization.",
+               security = @SecurityRequirement(name = "bearerAuth"))
+    public ResponseEntity<PagedResponse<TaskGroupResponseDTO>> searchTasks(
             @RequestParam(name = "searchBy", defaultValue = "all") String searchBy,
             @RequestParam(name = "search", defaultValue = "") String search,
+            @RequestParam(name = "orgId", required = true) Integer orgId,
             @RequestParam(name = "page", defaultValue = "0") Integer page,
             @RequestParam(name = "pageSize", defaultValue = "10") Integer pageSize,
             @RequestParam(name = "sortBy", defaultValue = "id") String sortBy,
@@ -226,12 +254,20 @@ public class TaskController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
         
+        if (orgId == null) {
+            log.error("Organization ID is required for task group searches");
+            return ResponseEntity.badRequest().build();
+        }
+        
         try {
-            PagedResponse<TaskResponseDTO> tasks = taskService.searchTasks(
-                searchBy, search, page, pageSize, sortBy, sortDirection);
-            return ResponseEntity.ok(tasks);
+            PagedResponse<TaskGroupResponseDTO> taskGroups = taskGroupService.searchTaskGroups(
+                searchBy, search, orgId, page, pageSize, sortBy, sortDirection);
+            return ResponseEntity.ok(taskGroups);
+        } catch (IllegalArgumentException e) {
+            log.error("Invalid parameters for task group search: {}", e.getMessage());
+            return ResponseEntity.badRequest().build();
         } catch (Exception e) {
-            log.error("Error searching tasks: {}", e.getMessage());
+            log.error("Error searching task groups: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }

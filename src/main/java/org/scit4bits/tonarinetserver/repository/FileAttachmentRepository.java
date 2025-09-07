@@ -17,6 +17,9 @@ public interface FileAttachmentRepository extends JpaRepository<FileAttachment, 
     // Find by article ID
     List<FileAttachment> findByArticleId(Integer articleId);
     
+    // Find by submission ID
+    List<FileAttachment> findBySubmissionId(Integer submissionId);
+    
     // Find by uploaded user ID
     List<FileAttachment> findByUploadedBy(Integer uploadedBy);
     
@@ -26,11 +29,17 @@ public interface FileAttachmentRepository extends JpaRepository<FileAttachment, 
     // Find by article ID and file type
     List<FileAttachment> findByArticleIdAndType(Integer articleId, FileType type);
     
+    // Find by submission ID and file type
+    List<FileAttachment> findBySubmissionIdAndType(Integer submissionId, FileType type);
+    
     // Find by uploaded user and privacy
     List<FileAttachment> findByUploadedByAndIsPrivate(Integer uploadedBy, Boolean isPrivate);
     
     // Find by article ID and privacy
     List<FileAttachment> findByArticleIdAndIsPrivate(Integer articleId, Boolean isPrivate);
+    
+    // Find by submission ID and privacy
+    List<FileAttachment> findBySubmissionIdAndIsPrivate(Integer submissionId, Boolean isPrivate);
     
     // Find by original filename containing
     Page<FileAttachment> findByOriginalFilenameContainingIgnoreCase(String filename, Pageable pageable);
@@ -40,6 +49,9 @@ public interface FileAttachmentRepository extends JpaRepository<FileAttachment, 
     
     // Find by article ID with pagination
     Page<FileAttachment> findByArticleId(Integer articleId, Pageable pageable);
+    
+    // Find by submission ID with pagination
+    Page<FileAttachment> findBySubmissionId(Integer submissionId, Pageable pageable);
     
     // Find by type with pagination
     Page<FileAttachment> findByType(FileType type, Pageable pageable);
@@ -55,16 +67,24 @@ public interface FileAttachmentRepository extends JpaRepository<FileAttachment, 
     @Query("SELECT f FROM FileAttachment f WHERE f.article.title LIKE %:articleTitle%")
     Page<FileAttachment> findByArticleTitleContaining(@Param("articleTitle") String articleTitle, Pageable pageable);
     
+    // Custom query for searching by submission contents
+    @Query("SELECT f FROM FileAttachment f WHERE f.submission.contents LIKE %:submissionContents%")
+    Page<FileAttachment> findBySubmissionContentsContaining(@Param("submissionContents") String submissionContents, Pageable pageable);
+    
     // Global search query
     @Query("SELECT f FROM FileAttachment f WHERE " +
            "LOWER(f.originalFilename) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
            "LOWER(f.filepath) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
            "LOWER(f.uploadedByUser.name) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
-           "LOWER(f.article.title) LIKE LOWER(CONCAT('%', :search, '%'))")
+           "LOWER(f.article.title) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
+           "LOWER(f.submission.contents) LIKE LOWER(CONCAT('%', :search, '%'))")
     Page<FileAttachment> findByAllFieldsContaining(@Param("search") String search, Pageable pageable);
     
     // Count attachments by article
     long countByArticleId(Integer articleId);
+    
+    // Count attachments by submission
+    long countBySubmissionId(Integer submissionId);
     
     // Count attachments by user
     long countByUploadedBy(Integer uploadedBy);

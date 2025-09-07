@@ -13,6 +13,8 @@ import jakarta.persistence.EntityListeners;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
@@ -50,6 +52,13 @@ public class TaskGroup {
     @Column(name = "max_score")
     private Integer maxScore;
     
+    @Column(name = "org_id", nullable = false)
+    private Integer orgId;
+    
     @OneToMany(mappedBy = "taskGroup", cascade = CascadeType.ALL)
     private List<Task> tasks;
+
+    @ManyToOne
+    @JoinColumn(name = "org_id", insertable = false, updatable = false)
+    private Organization organization;
 }

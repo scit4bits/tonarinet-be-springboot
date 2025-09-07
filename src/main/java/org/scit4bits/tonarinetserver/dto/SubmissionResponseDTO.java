@@ -1,6 +1,8 @@
 package org.scit4bits.tonarinetserver.dto;
 
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import org.scit4bits.tonarinetserver.entity.Submission;
 
@@ -41,6 +43,9 @@ public class SubmissionResponseDTO {
     @Schema(description = "Task information")
     private TaskResponseDTO task;
 
+    @Schema(description = "File attachments")
+    private List<FileAttachmentResponseDTO> fileAttachments;
+
     public static SubmissionResponseDTO fromEntity(Submission submission) {
         SubmissionResponseDTOBuilder builder = SubmissionResponseDTO.builder()
             .id(submission.getId())
@@ -57,6 +62,13 @@ public class SubmissionResponseDTO {
         // Add task if available
         if (submission.getTask() != null) {
             builder.task(TaskResponseDTO.fromEntity(submission.getTask()));
+        }
+
+        // Add file attachments if available
+        if (submission.getFileAttachments() != null && !submission.getFileAttachments().isEmpty()) {
+            builder.fileAttachments(submission.getFileAttachments().stream()
+                .map(FileAttachmentResponseDTO::fromEntity)
+                .collect(Collectors.toList()));
         }
 
         return builder.build();

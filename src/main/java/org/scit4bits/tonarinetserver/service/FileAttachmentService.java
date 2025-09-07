@@ -16,9 +16,11 @@ import org.scit4bits.tonarinetserver.dto.PagedResponse;
 import org.scit4bits.tonarinetserver.entity.Article;
 import org.scit4bits.tonarinetserver.entity.FileAttachment;
 import org.scit4bits.tonarinetserver.entity.FileAttachment.FileType;
+import org.scit4bits.tonarinetserver.entity.Submission;
 import org.scit4bits.tonarinetserver.entity.User;
 import org.scit4bits.tonarinetserver.repository.ArticleRepository;
 import org.scit4bits.tonarinetserver.repository.FileAttachmentRepository;
+import org.scit4bits.tonarinetserver.repository.SubmissionRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -38,6 +40,7 @@ public class FileAttachmentService {
 
     private final FileAttachmentRepository fileAttachmentRepository;
     private final ArticleRepository articleRepository;
+    private final SubmissionRepository submissionRepository;
 
     @Value("${upload.path:c:/upload}")
     private String uploadPath;
@@ -46,9 +49,14 @@ public class FileAttachmentService {
         try {
             List<FileAttachmentResponseDTO> dtos = new ArrayList<>();
             Article article = null;
+            Submission submission = null;
             
             if(requestDTO.getArticleId() != null){
                 article = articleRepository.findById(requestDTO.getArticleId()).get();
+            }
+            
+            if(requestDTO.getSubmissionId() != null){
+                submission = submissionRepository.findById(requestDTO.getSubmissionId()).get();
             }
             for(MultipartFile file: files){
     // Validate file
@@ -59,6 +67,11 @@ public class FileAttachmentService {
                 // Check if user can attach to this article (article creator or admin)
                 if (article != null && !article.getCreatedById().equals(currentUser.getId()) && !currentUser.getIsAdmin()) {
                     throw new AccessDeniedException("You are not authorized to attach files to this article");
+                }
+
+                // Check if user can attach to this submission (submission creator or admin)
+                if (submission != null && !submission.getCreatedById().equals(currentUser.getId()) && !currentUser.getIsAdmin()) {
+                    throw new AccessDeniedException("You are not authorized to attach files to this submission");
                 }
 
                 // Generate unique filename
@@ -87,6 +100,7 @@ public class FileAttachmentService {
                     .uploadedBy(currentUser.getId())
                     .type(fileType)
                     .articleId(requestDTO.getArticleId() != null ? requestDTO.getArticleId() : null)
+                    .submissionId(requestDTO.getSubmissionId() != null ? requestDTO.getSubmissionId() : null)
                     .filesize((int) file.getSize())
                     .build();
 
@@ -141,6 +155,19 @@ public class FileAttachmentService {
     }
 
     @Transactional(readOnly = true)
+    public List<FileAttachmentResponseDTO> getFileAttachmentsBySubmissionId(Integer submissionId, User currentUser) {
+        List<FileAttachment> files = fileAttachmentRepository.findBySubmissionId(submissionId);
+        
+        // Filter out private files that user cannot access
+        return files.stream()
+            .filter(file -> !file.getIsPrivate() || 
+                          file.getUploadedBy().equals(currentUser.getId()) || 
+                          currentUser.getIsAdmin())
+            .map(FileAttachmentResponseDTO::fromEntity)
+            .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
     public List<FileAttachmentResponseDTO> getFileAttachmentsByUserId(Integer userId, User currentUser) {
         // Only allow users to see their own files or admin to see all
         if (!userId.equals(currentUser.getId()) && !currentUser.getIsAdmin()) {
@@ -181,6 +208,17 @@ public class FileAttachmentService {
             }
         }
 
+        // Validate submission if being changed
+        if (requestDTO.getSubmissionId() != null && !requestDTO.getSubmissionId().equals(existingFile.getSubmissionId())) {
+            Submission submission = submissionRepository.findById(requestDTO.getSubmissionId())
+                .orElseThrow(() -> new RuntimeException("Submission not found with ID: " + requestDTO.getSubmissionId()));
+            
+            // Check if user can attach to the new submission
+            if (!submission.getCreatedById().equals(currentUser.getId()) && !currentUser.getIsAdmin()) {
+                throw new RuntimeException("You are not authorized to attach files to this submission");
+            }
+        }
+
         // Update fields
         if (requestDTO.getIsPrivate() != null) {
             existingFile.setIsPrivate(requestDTO.getIsPrivate());
@@ -190,6 +228,9 @@ public class FileAttachmentService {
         }
         if (requestDTO.getArticleId() != null) {
             existingFile.setArticleId(requestDTO.getArticleId());
+        }
+        if (requestDTO.getSubmissionId() != null) {
+            existingFile.setSubmissionId(requestDTO.getSubmissionId());
         }
 
         FileAttachment updatedFile = fileAttachmentRepository.save(existingFile);
@@ -242,6 +283,9 @@ public class FileAttachmentService {
             case "article":
                 filePage = fileAttachmentRepository.findByArticleTitleContaining(search, pageable);
                 break;
+            case "submission":
+                filePage = fileAttachmentRepository.findBySubmissionContentsContaining(search, pageable);
+                break;
             case "type":
                 try {
                     FileType fileType = FileType.valueOf(search.toUpperCase());
@@ -264,6 +308,14 @@ public class FileAttachmentService {
                     filePage = fileAttachmentRepository.findByArticleId(articleId, pageable);
                 } catch (NumberFormatException e) {
                     filePage = fileAttachmentRepository.findByArticleTitleContaining(search, pageable);
+                }
+                break;
+            case "submissionid":
+                try {
+                    Integer submissionId = Integer.parseInt(search);
+                    filePage = fileAttachmentRepository.findBySubmissionId(submissionId, pageable);
+                } catch (NumberFormatException e) {
+                    filePage = fileAttachmentRepository.findBySubmissionContentsContaining(search, pageable);
                 }
                 break;
             default:

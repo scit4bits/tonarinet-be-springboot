@@ -15,18 +15,21 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class TaskRequestDTO {
-    
-    @NotBlank(message = "Task name is required")
-    private String name;
+
+    @NotBlank(message = "Task title is required")
+    private String title;
     
     @NotBlank(message = "Task contents is required")
     private String contents;
     
+    @NotNull(message = "Organization ID is required")
+    private Integer orgId;
+    
     private LocalDateTime dueDate;
     
-    private List<UserDTO> assignedUsers; // If assigned to specific user
-    
-    private List<TeamResponseDTO> assignedTeams; // If assigned to team
-    
+    private List<Integer> assignedUserIds; // If assigned to specific user
+
+    private List<Integer> assignedTeamIds; // If assigned to team
+
     private Integer maxScore;
 }

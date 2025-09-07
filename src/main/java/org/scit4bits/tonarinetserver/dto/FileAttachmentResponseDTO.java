@@ -26,6 +26,8 @@ public class FileAttachmentResponseDTO {
     private Integer articleId;
     private String articleTitle;
     private Integer filesize;
+    private Integer submissionId;
+    private String submissionContents;
     
     public static FileAttachmentResponseDTO fromEntity(FileAttachment fileAttachment) {
         return FileAttachmentResponseDTO.builder()
@@ -42,6 +44,9 @@ public class FileAttachmentResponseDTO {
                 .articleTitle(fileAttachment.getArticle() != null ? 
                     fileAttachment.getArticle().getTitle() : null)
                 .filesize(fileAttachment.getFilesize())
+                .submissionId(fileAttachment.getSubmissionId())
+                .submissionContents(fileAttachment.getSubmission() != null ? 
+                    fileAttachment.getSubmission().getContents() : null)
                 .build();
     }
 }

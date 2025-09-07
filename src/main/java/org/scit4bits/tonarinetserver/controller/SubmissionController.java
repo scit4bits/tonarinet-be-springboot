@@ -2,11 +2,14 @@ package org.scit4bits.tonarinetserver.controller;
 
 import java.util.List;
 
+import org.scit4bits.tonarinetserver.dto.FileAttachmentRequestDTO;
+import org.scit4bits.tonarinetserver.dto.FileAttachmentResponseDTO;
 import org.scit4bits.tonarinetserver.dto.PagedResponse;
 import org.scit4bits.tonarinetserver.dto.SimpleResponse;
 import org.scit4bits.tonarinetserver.dto.SubmissionRequestDTO;
 import org.scit4bits.tonarinetserver.dto.SubmissionResponseDTO;
 import org.scit4bits.tonarinetserver.entity.User;
+import org.scit4bits.tonarinetserver.service.FileAttachmentService;
 import org.scit4bits.tonarinetserver.service.SubmissionService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,7 +22,9 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -36,6 +41,7 @@ import lombok.extern.slf4j.Slf4j;
 public class SubmissionController {
 
     private final SubmissionService submissionService;
+    private final FileAttachmentService fileAttachmentService;
 
     @PostMapping
     @Operation(summary = "Create a new submission", security = @SecurityRequirement(name = "bearerAuth"))
@@ -58,6 +64,48 @@ public class SubmissionController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         } catch (Exception e) {
             log.error("Error creating submission: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    @PostMapping("/with-attachments")
+    @Operation(summary = "Create a new submission with file attachments", security = @SecurityRequirement(name = "bearerAuth"))
+    public ResponseEntity<SubmissionResponseDTO> createSubmissionWithAttachments(
+            @RequestPart("request") @Valid SubmissionRequestDTO request,
+            @RequestPart(value = "files", required = false) List<MultipartFile> files,
+            @AuthenticationPrincipal User user) {
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        
+        try {
+            // First create the submission
+            SubmissionResponseDTO submission = submissionService.createSubmission(request, user);
+            
+            // If files are provided, upload them and associate with the submission
+            if (files != null && !files.isEmpty()) {
+                FileAttachmentRequestDTO fileRequest = FileAttachmentRequestDTO.builder()
+                    .submissionId(submission.getId())
+                    .isPrivate(false) // Default to not private for submission attachments
+                    .type(null) // Auto-determine file type based on content
+                    .build();
+                
+                fileAttachmentService.uploadFiles(files, fileRequest, user);
+                
+                // Re-fetch the submission to include the attachments
+                submission = submissionService.getSubmissionById(submission.getId());
+            }
+            
+            return ResponseEntity.status(HttpStatus.CREATED).body(submission);
+        } catch (RuntimeException e) {
+            if (e.getMessage().contains("not found")) {
+                return ResponseEntity.notFound().build();
+            } else if (e.getMessage().contains("not authorized")) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+            }
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        } catch (Exception e) {
+            log.error("Error creating submission with attachments: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
@@ -150,7 +198,7 @@ public class SubmissionController {
     @GetMapping("/task/{taskId}")
     @Operation(summary = "Get submissions by task ID", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<List<SubmissionResponseDTO>> getSubmissionsByTaskId(
-            @PathVariable Integer taskId, 
+            @PathVariable("taskId") Integer taskId, 
             @AuthenticationPrincipal User user) {
         if (user == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
@@ -255,6 +303,40 @@ public class SubmissionController {
             return ResponseEntity.ok(submissions);
         } catch (Exception e) {
             log.error("Error searching submissions: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    @GetMapping("/{id}/attachments")
+    @Operation(summary = "Get file attachments for a submission", security = @SecurityRequirement(name = "bearerAuth"))
+    public ResponseEntity<List<FileAttachmentResponseDTO>> getSubmissionAttachments(
+            @PathVariable Integer id,
+            @AuthenticationPrincipal User user) {
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        
+        try {
+            // First check if user can access this submission
+            SubmissionResponseDTO submission = submissionService.getSubmissionById(id);
+            
+            // Users can only see attachments for their own submissions unless they're admin
+            if (!submission.getCreatedById().equals(user.getId()) && !user.getIsAdmin()) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+            }
+            
+            List<FileAttachmentResponseDTO> attachments = fileAttachmentService.getFileAttachmentsBySubmissionId(id, user);
+            return ResponseEntity.ok(attachments);
+        } catch (RuntimeException e) {
+            log.error("Error fetching submission attachments: {}", e.getMessage());
+            if (e.getMessage().contains("not found")) {
+                return ResponseEntity.notFound().build();
+            } else if (e.getMessage().contains("not authorized")) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+            }
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        } catch (Exception e) {
+            log.error("Error fetching submission attachments: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }

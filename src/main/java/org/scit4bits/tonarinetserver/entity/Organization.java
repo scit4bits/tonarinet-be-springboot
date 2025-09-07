@@ -51,6 +51,9 @@ public class Organization {
     @OneToMany(mappedBy = "organization", cascade = CascadeType.ALL)
     private List<Team> teams;
     
+    @OneToMany(mappedBy = "organization", cascade = CascadeType.ALL)
+    private List<TaskGroup> taskGroups;
+    
     @ManyToMany(mappedBy = "organizations")
     private List<User> users;
 }

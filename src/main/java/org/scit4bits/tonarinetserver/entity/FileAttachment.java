@@ -62,6 +62,9 @@ public class FileAttachment {
     @Column(name = "filesize", nullable = false)
     private Integer filesize;
     
+    @Column(name = "submission_id")
+    private Integer submissionId;
+    
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "uploaded_by", insertable = false, updatable = false)
     private User uploadedByUser;
@@ -69,6 +72,10 @@ public class FileAttachment {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "article_id", insertable = false, updatable = false)
     private Article article;
+    
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "submission_id", insertable = false, updatable = false)
+    private Submission submission;
     
     public enum FileType {
         IMAGE, ATTACHMENT

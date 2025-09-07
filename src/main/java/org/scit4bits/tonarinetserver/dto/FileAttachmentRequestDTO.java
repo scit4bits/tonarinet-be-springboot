@@ -15,4 +15,5 @@ public class FileAttachmentRequestDTO {
     private Boolean isPrivate;
     private FileType type;
     private Integer articleId;
+    private Integer submissionId;
 }
