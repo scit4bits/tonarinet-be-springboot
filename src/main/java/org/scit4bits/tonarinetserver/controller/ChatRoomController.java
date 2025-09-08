@@ -39,11 +39,12 @@ public class ChatRoomController {
 
     @GetMapping("/{id}")
     @Operation(summary = "Get chat room by ID", security = @SecurityRequirement(name = "bearerAuth"))
-    public ResponseEntity<ChatRoomResponseDTO> getChatRoomById(@PathVariable Integer id, @AuthenticationPrincipal User user) {
+    public ResponseEntity<ChatRoomResponseDTO> getChatRoomById(@PathVariable("id") Integer id,
+            @AuthenticationPrincipal User user) {
         if (user == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-        
+
         try {
             ChatRoomResponseDTO chatRoom = chatRoomService.getChatRoomById(id);
             return ResponseEntity.ok(chatRoom);
@@ -62,7 +63,7 @@ public class ChatRoomController {
         if (user == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-        
+
         try {
             List<ChatRoomResponseDTO> chatRooms = chatRoomService.getChatRoomsByUserId(user.getId());
             return ResponseEntity.ok(chatRooms);
@@ -75,20 +76,20 @@ public class ChatRoomController {
     @DeleteMapping("/{id}")
     @Operation(summary = "Delete a chat room", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<SimpleResponse> deleteChatRoom(
-            @PathVariable Integer id,
+            @PathVariable("id") Integer id,
             @AuthenticationPrincipal User user) {
         if (user == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-        
+
         try {
             chatRoomService.deleteChatRoom(id, user);
             return ResponseEntity.ok(new SimpleResponse("Chat room deleted successfully"));
         } catch (RuntimeException e) {
             if (e.getMessage().contains("not found")) {
                 return ResponseEntity.notFound().build();
-            } else if (e.getMessage().contains("Only the chat room leader") || 
-                      e.getMessage().contains("admin")) {
+            } else if (e.getMessage().contains("Only the chat room leader") ||
+                    e.getMessage().contains("admin")) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
             }
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
@@ -101,12 +102,12 @@ public class ChatRoomController {
     @PostMapping("/{id}/join")
     @Operation(summary = "Join a chat room", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<SimpleResponse> joinChatRoom(
-            @PathVariable Integer id,
+            @PathVariable("id") Integer id,
             @AuthenticationPrincipal User user) {
         if (user == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-        
+
         try {
             chatRoomService.joinChatRoom(id, user);
             return ResponseEntity.ok(new SimpleResponse("Successfully joined chat room"));
@@ -126,20 +127,20 @@ public class ChatRoomController {
     @PostMapping("/{id}/leave")
     @Operation(summary = "Leave a chat room", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<SimpleResponse> leaveChatRoom(
-            @PathVariable Integer id,
+            @PathVariable("id") Integer id,
             @AuthenticationPrincipal User user) {
         if (user == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-        
+
         try {
             chatRoomService.leaveChatRoom(id, user);
             return ResponseEntity.ok(new SimpleResponse("Successfully left chat room"));
         } catch (RuntimeException e) {
             if (e.getMessage().contains("not found")) {
                 return ResponseEntity.notFound().build();
-            } else if (e.getMessage().contains("leader cannot leave") || 
-                      e.getMessage().contains("not in this chat room")) {
+            } else if (e.getMessage().contains("leader cannot leave") ||
+                    e.getMessage().contains("not in this chat room")) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
             }
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();

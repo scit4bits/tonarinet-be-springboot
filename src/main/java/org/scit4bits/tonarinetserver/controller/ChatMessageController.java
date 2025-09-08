@@ -52,7 +52,7 @@ public class ChatMessageController {
      * Clients should send messages to /app/chat/send/{roomId}
      */
     @MessageMapping("/chat/send/{roomId}")
-    public void sendMessage(@DestinationVariable Integer roomId,
+    public void sendMessage(@DestinationVariable("roomId") Integer roomId,
             @Payload ChatMessageRequestDTO messageRequest,
             UserPrincipal principal) {
         try {
@@ -88,9 +88,9 @@ public class ChatMessageController {
     @GetMapping("/room/{roomId}/messages")
     @Operation(summary = "Get chat messages for a room", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<List<ChatMessageResponseDTO>> getMessages(
-            @PathVariable Integer roomId,
-            @RequestParam(defaultValue = "0") Integer page,
-            @RequestParam(defaultValue = "50") Integer size,
+            @PathVariable("roomId") Integer roomId,
+            @RequestParam(name = "page", defaultValue = "0") Integer page,
+            @RequestParam(name = "size", defaultValue = "50") Integer size,
             @AuthenticationPrincipal User user) {
 
         if (user == null) {
@@ -118,7 +118,7 @@ public class ChatMessageController {
     @GetMapping("/room/{roomId}/messages/all")
     @Operation(summary = "Get all chat messages for a room", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<List<ChatMessageResponseDTO>> getAllMessages(
-            @PathVariable Integer roomId,
+            @PathVariable("roomId") Integer roomId,
             @AuthenticationPrincipal User user) {
 
         if (user == null) {
@@ -146,7 +146,7 @@ public class ChatMessageController {
     @PostMapping("/room/{roomId}/send")
     @Operation(summary = "Send a message to a chat room", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<ChatMessageResponseDTO> sendMessageRest(
-            @PathVariable Integer roomId,
+            @PathVariable("roomId") Integer roomId,
             @Valid @RequestBody ChatMessageRequestDTO messageRequest,
             @AuthenticationPrincipal User user) {
 
@@ -186,7 +186,7 @@ public class ChatMessageController {
     @PostMapping("/room/{roomId}/read")
     @Operation(summary = "Mark messages as read", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<SimpleResponse> markAsRead(
-            @PathVariable Integer roomId,
+            @PathVariable("roomId") Integer roomId,
             @AuthenticationPrincipal User user) {
 
         if (user == null) {
@@ -214,7 +214,7 @@ public class ChatMessageController {
     @DeleteMapping("/message/{messageId}")
     @Operation(summary = "Delete a chat message", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<SimpleResponse> deleteMessage(
-            @PathVariable Integer messageId,
+            @PathVariable("messageId") Integer messageId,
             @AuthenticationPrincipal User user) {
 
         if (user == null) {
