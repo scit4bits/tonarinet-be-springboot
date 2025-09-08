@@ -3,8 +3,10 @@ package org.scit4bits.tonarinetserver.service;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.scit4bits.tonarinetserver.dto.ArticleDTO;
 import org.scit4bits.tonarinetserver.dto.PagedResponse;
 import org.scit4bits.tonarinetserver.dto.UserDTO;
+import org.scit4bits.tonarinetserver.entity.Article;
 import org.scit4bits.tonarinetserver.entity.User;
 import org.scit4bits.tonarinetserver.entity.UserRole;
 import org.scit4bits.tonarinetserver.repository.UserRepository;
@@ -30,16 +32,16 @@ public class UserService {
     private final UserRepository userRepository;
     private final UserRoleRepository userRoleRepository;
 
-    public User getUserByAccessToken(String accessToken){
+    public User getUserByAccessToken(String accessToken) {
         try {
             DecodedJWT decodedJWT = JWT.require(com.auth0.jwt.algorithms.Algorithm.HMAC256("JWTSecretKeyLOL"))
-                .build()
-                .verify(accessToken);
-            
+                    .build()
+                    .verify(accessToken);
+
             Integer userId = Integer.parseInt(decodedJWT.getSubject());
             User user = userRepository.findById(userId).get();
-            
-            if(user != null) {
+
+            if (user != null) {
                 log.debug("User found by access token: {}", user.getEmail());
                 return user;
             } else {
@@ -65,19 +67,20 @@ public class UserService {
         userRepository.save(user);
     }
 
-    public PagedResponse<UserDTO> searchUser(String searchBy, String search, Integer page, Integer pageSize, String sortBy, String sortDirection) {
-        log.info("Searching users with searchBy: {}, search: {}, page: {}, pageSize: {}, sortBy: {}, sortDirection: {}", 
+    public PagedResponse<UserDTO> searchUser(String searchBy, String search, Integer page, Integer pageSize,
+            String sortBy, String sortDirection) {
+        log.info("Searching users with searchBy: {}, search: {}, page: {}, pageSize: {}, sortBy: {}, sortDirection: {}",
                 searchBy, search, page, pageSize, sortBy, sortDirection);
-        
+
         // 기본값 설정
         int pageNum = (page != null) ? page : 0;
         int pageSizeNum = (pageSize != null) ? pageSize : 10;
         String sortByField = (sortBy != null && !sortBy.isEmpty()) ? sortBy : "id";
         String direction = (sortDirection != null && !sortDirection.isEmpty()) ? sortDirection : "asc";
-        
+
         // 정렬 방향 설정
         Sort.Direction sortDir = "desc".equalsIgnoreCase(direction) ? Sort.Direction.DESC : Sort.Direction.ASC;
-        
+
         // sortBy 필드명 매핑 (엔티티 필드명과 일치하도록)
         String entityFieldName;
         switch (sortByField.toLowerCase()) {
@@ -109,13 +112,13 @@ public class UserService {
                 entityFieldName = "id"; // 기본값
                 break;
         }
-        
+
         // 정렬 및 페이징 설정
         Sort sort = Sort.by(sortDir, entityFieldName);
         Pageable pageable = PageRequest.of(pageNum, pageSizeNum, sort);
-        
+
         Page<User> userPage;
-        
+
         // searchBy에 따른 검색 로직
         if (search == null || search.trim().isEmpty()) {
             // 검색어가 없으면 모든 사용자 조회
@@ -147,7 +150,8 @@ public class UserService {
                     userPage = userRepository.findByPhoneContainingIgnoreCase(search.trim(), pageable);
                     break;
                 case "nationality":
-                    userPage = userRepository.findByNationality_CountryCodeContainingIgnoreCase(search.trim(), pageable);
+                    userPage = userRepository.findByNationality_CountryCodeContainingIgnoreCase(search.trim(),
+                            pageable);
                     break;
                 case "isadmin":
                     try {
@@ -164,7 +168,7 @@ public class UserService {
                     break;
             }
         }
-        
+
         // Entity를 DTO로 변환하여 반환
         int totalPages = userPage.getTotalPages();
         long totalCount = userPage.getTotalElements();
@@ -172,38 +176,41 @@ public class UserService {
         List<UserDTO> result = userPage.getContent().stream()
                 .map(UserDTO::fromEntity)
                 .toList();
-        
+
         log.info("Found {} users out of {} total", result.size(), userPage.getTotalElements());
         return new PagedResponse<UserDTO>(result, pageNum, pageSizeNum, totalCount, totalPages);
     }
 
-
-
     /**
      * 조직의 멤버들을 검색하는 메서드 (isGranted 필터 포함)
+     * 
      * @param organizationId 조직 ID
-     * @param searchBy 검색 기준 (all, id, email, name, nickname, phone, nationality, isadmin, isgranted)
-     * @param search 검색어
-     * @param page 페이지 번호 (0부터 시작)
-     * @param pageSize 페이지 크기
-     * @param sortBy 정렬 기준
-     * @param sortDirection 정렬 방향 (asc, desc)
-     * @param isGranted 승인 여부 필터 (null이면 모든 상태, true면 승인된 사용자만, false면 승인되지 않은 사용자만)
+     * @param searchBy       검색 기준 (all, id, email, name, nickname, phone,
+     *                       nationality, isadmin, isgranted)
+     * @param search         검색어
+     * @param page           페이지 번호 (0부터 시작)
+     * @param pageSize       페이지 크기
+     * @param sortBy         정렬 기준
+     * @param sortDirection  정렬 방향 (asc, desc)
+     * @param isGranted      승인 여부 필터 (null이면 모든 상태, true면 승인된 사용자만, false면 승인되지 않은
+     *                       사용자만)
      * @return PagedResponse<UserDTO>
      */
-    public PagedResponse<UserDTO> searchOrganizationMembers(Integer organizationId, String searchBy, String search, Integer page, Integer pageSize, String sortBy, String sortDirection) {
-        log.info("Searching organization members with organizationId: {}, searchBy: {}, search: {}, page: {}, pageSize: {}, sortBy: {}, sortDirection: {}, isGranted: {}", 
+    public PagedResponse<UserDTO> searchOrganizationMembers(Integer organizationId, String searchBy, String search,
+            Integer page, Integer pageSize, String sortBy, String sortDirection) {
+        log.info(
+                "Searching organization members with organizationId: {}, searchBy: {}, search: {}, page: {}, pageSize: {}, sortBy: {}, sortDirection: {}, isGranted: {}",
                 organizationId, searchBy, search, page, pageSize, sortBy, sortDirection);
-        
+
         // 기본값 설정
         int pageNum = (page != null) ? page : 0;
         int pageSizeNum = (pageSize != null) ? pageSize : 10;
         String sortByField = (sortBy != null && !sortBy.isEmpty()) ? sortBy : "id";
         String direction = (sortDirection != null && !sortDirection.isEmpty()) ? sortDirection : "asc";
-        
+
         // 정렬 방향 설정
         Sort.Direction sortDir = "desc".equalsIgnoreCase(direction) ? Sort.Direction.DESC : Sort.Direction.ASC;
-        
+
         // sortBy 필드명 매핑 (엔티티 필드명과 일치하도록)
         String entityFieldName;
         switch (sortByField.toLowerCase()) {
@@ -238,13 +245,13 @@ public class UserService {
                 entityFieldName = "id"; // 기본값
                 break;
         }
-        
+
         // 정렬 및 페이징 설정
         Sort sort = Sort.by(sortDir, entityFieldName);
         Pageable pageable = PageRequest.of(pageNum, pageSizeNum, sort);
-        
+
         Page<User> userPage;
-        
+
         // searchBy에 따른 검색 로직
         if (search == null || search.trim().isEmpty()) {
             // 검색어가 없으면 해당 조직의 모든 멤버 조회
@@ -252,7 +259,8 @@ public class UserService {
         } else {
             switch (searchBy.toLowerCase()) {
                 case "all":
-                    userPage = userRepository.findByOrganizationIdAndAllFieldsContaining(organizationId, search.trim(), pageable);
+                    userPage = userRepository.findByOrganizationIdAndAllFieldsContaining(organizationId, search.trim(),
+                            pageable);
                     break;
                 case "id":
                     try {
@@ -264,19 +272,24 @@ public class UserService {
                     }
                     break;
                 case "email":
-                    userPage = userRepository.findByOrganizationIdAndEmailContainingIgnoreCase(organizationId, search.trim(), pageable);
+                    userPage = userRepository.findByOrganizationIdAndEmailContainingIgnoreCase(organizationId,
+                            search.trim(), pageable);
                     break;
                 case "name":
-                    userPage = userRepository.findByOrganizationIdAndNameContainingIgnoreCase(organizationId, search.trim(), pageable);
+                    userPage = userRepository.findByOrganizationIdAndNameContainingIgnoreCase(organizationId,
+                            search.trim(), pageable);
                     break;
                 case "nickname":
-                    userPage = userRepository.findByOrganizationIdAndNicknameContainingIgnoreCase(organizationId, search.trim(), pageable);
+                    userPage = userRepository.findByOrganizationIdAndNicknameContainingIgnoreCase(organizationId,
+                            search.trim(), pageable);
                     break;
                 case "phone":
-                    userPage = userRepository.findByOrganizationIdAndPhoneContainingIgnoreCase(organizationId, search.trim(), pageable);
+                    userPage = userRepository.findByOrganizationIdAndPhoneContainingIgnoreCase(organizationId,
+                            search.trim(), pageable);
                     break;
                 case "nationality":
-                    userPage = userRepository.findByOrganizationIdAndNationality_CountryCodeContainingIgnoreCase(organizationId, search.trim(), pageable);
+                    userPage = userRepository.findByOrganizationIdAndNationality_CountryCodeContainingIgnoreCase(
+                            organizationId, search.trim(), pageable);
                     break;
                 case "isadmin":
                     try {
@@ -289,41 +302,43 @@ public class UserService {
                     break;
                 default:
                     // 기본적으로 전체 검색 수행
-                    userPage = userRepository.findByOrganizationIdAndAllFieldsContaining(organizationId, search.trim(), pageable);
+                    userPage = userRepository.findByOrganizationIdAndAllFieldsContaining(organizationId, search.trim(),
+                            pageable);
                     break;
             }
         }
-        
+
         // Entity를 DTO로 변환하여 반환
         int totalPages = userPage.getTotalPages();
         long totalCount = userPage.getTotalElements();
 
         List<UserDTO> result = new ArrayList<>();
 
-        for(User user : userPage.getContent()) {
+        for (User user : userPage.getContent()) {
             UserDTO userDTO = UserDTO.fromEntity(user);
 
-            UserRole userRole = userRoleRepository.findById(UserRole.UserRoleId.builder().userId(user.getId()).orgId(organizationId).build()).get();
-            
+            UserRole userRole = userRoleRepository
+                    .findById(UserRole.UserRoleId.builder().userId(user.getId()).orgId(organizationId).build()).get();
+
             userDTO.setIsGranted(userRole.getIsGranted());
             userDTO.setRole(userRole.getRole());
             result.add(userDTO);
         }
-        
+
         log.info("Found {} organization members out of {} total", result.size(), userPage.getTotalElements());
         return new PagedResponse<UserDTO>(result, pageNum, pageSizeNum, totalCount, totalPages);
     }
 
     public void toggleUserRole(User user, Integer userId, Integer orgId) {
         UserRole.UserRoleId adminUserRoleId = UserRole.UserRoleId.builder()
-            .userId(user.getId())
-            .orgId(orgId)
-            .build();
+                .userId(user.getId())
+                .orgId(orgId)
+                .build();
 
         UserRole adminUserRole = userRoleRepository.findById(adminUserRoleId)
-            .orElseThrow(() -> new RuntimeException("Admin UserRole not found"));
+                .orElseThrow(() -> new RuntimeException("Admin UserRole not found"));
 
-        if(!user.getIsAdmin() && !adminUserRole.getRole().equals("admin")){
+        if (!user.getIsAdmin() && !adminUserRole.getRole().equals("admin")) {
             throw new RuntimeException("User is not an admin");
         }
 
@@ -339,17 +354,17 @@ public class UserService {
         userRoleRepository.save(userRole);
     }
 
-    public void changeUserRole(User user, Integer userId, Integer orgId, String newRole){
-        
+    public void changeUserRole(User user, Integer userId, Integer orgId, String newRole) {
+
         UserRole.UserRoleId adminUserRoleId = UserRole.UserRoleId.builder()
-            .userId(user.getId())
-            .orgId(orgId)
-            .build();
+                .userId(user.getId())
+                .orgId(orgId)
+                .build();
 
         UserRole adminUserRole = userRoleRepository.findById(adminUserRoleId)
-            .orElseThrow(() -> new RuntimeException("Admin UserRole not found"));
+                .orElseThrow(() -> new RuntimeException("Admin UserRole not found"));
 
-        if(!user.getIsAdmin() && !adminUserRole.getRole().equals("admin")){
+        if (!user.getIsAdmin() && !adminUserRole.getRole().equals("admin")) {
             throw new RuntimeException("User is not an admin");
         }
 
@@ -363,5 +378,20 @@ public class UserService {
 
         userRole.setRole(newRole);
         userRoleRepository.save(userRole);
+    }
+
+    public List<ArticleDTO> getMyCounsels(User user) {
+        User dbUser = userRepository.findById(user.getId())
+                .orElseThrow(() -> new RuntimeException("User not found with id: " + user.getId()));
+
+        List<Article> counsels = dbUser.getArticles();
+
+        counsels = counsels.stream()
+                .filter(article -> article.getCategory().equals("counsel"))
+                .toList();
+
+        return counsels.stream()
+                .map(ArticleDTO::fromEntity)
+                .toList();
     }
 }

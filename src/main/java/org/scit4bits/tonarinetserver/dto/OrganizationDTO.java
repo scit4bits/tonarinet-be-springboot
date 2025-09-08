@@ -17,6 +17,7 @@ public class OrganizationDTO {
     private String description;
     private String countryCode;
     private String type;
+    private String role;
 
     /**
      * Organization 엔티티를 OrganizationDTO로 변환하는 static 메서드
@@ -28,7 +29,7 @@ public class OrganizationDTO {
         if (organization == null) {
             return null;
         }
-        
+
         return OrganizationDTO.builder()
                 .id(organization.getId())
                 .name(organization.getName())

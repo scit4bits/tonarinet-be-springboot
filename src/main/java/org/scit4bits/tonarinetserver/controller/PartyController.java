@@ -45,7 +45,7 @@ public class PartyController {
         if (user == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-        
+
         try {
             PartyResponseDTO party = partyService.createParty(request, user);
             return ResponseEntity.status(HttpStatus.CREATED).body(party);
@@ -63,6 +63,21 @@ public class PartyController {
             return ResponseEntity.ok(parties);
         } catch (Exception e) {
             log.error("Error fetching parties: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    @GetMapping("my")
+    public ResponseEntity<List<PartyResponseDTO>> getMyParties(@AuthenticationPrincipal User user) {
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        try {
+            List<PartyResponseDTO> parties = partyService.getPartiesByUserId(user);
+            return ResponseEntity.ok(parties);
+        } catch (Exception e) {
+            log.error("Error fetching user's parties: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
@@ -91,15 +106,15 @@ public class PartyController {
         if (user == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-        
+
         try {
             PartyResponseDTO party = partyService.updateParty(id, request, user);
             return ResponseEntity.ok(party);
         } catch (RuntimeException e) {
             if (e.getMessage().contains("not found")) {
                 return ResponseEntity.notFound().build();
-            } else if (e.getMessage().contains("Only the party leader") || 
-                      e.getMessage().contains("admin")) {
+            } else if (e.getMessage().contains("Only the party leader") ||
+                    e.getMessage().contains("admin")) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
             }
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
@@ -117,15 +132,15 @@ public class PartyController {
         if (user == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-        
+
         try {
             partyService.deleteParty(id, user);
             return ResponseEntity.ok(new SimpleResponse("Party deleted successfully"));
         } catch (RuntimeException e) {
             if (e.getMessage().contains("not found")) {
                 return ResponseEntity.notFound().build();
-            } else if (e.getMessage().contains("Only the party leader") || 
-                      e.getMessage().contains("admin")) {
+            } else if (e.getMessage().contains("Only the party leader") ||
+                    e.getMessage().contains("admin")) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
             }
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
@@ -146,7 +161,7 @@ public class PartyController {
             @RequestParam(name = "sortDirection", defaultValue = "asc") String sortDirection) {
         try {
             PagedResponse<PartyResponseDTO> parties = partyService.searchParties(
-                searchBy, search, page, pageSize, sortBy, sortDirection);
+                    searchBy, search, page, pageSize, sortBy, sortDirection);
             return ResponseEntity.ok(parties);
         } catch (Exception e) {
             log.error("Error searching parties: {}", e.getMessage());
@@ -162,7 +177,7 @@ public class PartyController {
         if (user == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-        
+
         try {
             partyService.joinParty(id, user);
             return ResponseEntity.ok(new SimpleResponse("Joined party successfully"));
@@ -185,7 +200,7 @@ public class PartyController {
         if (user == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-        
+
         try {
             partyService.leaveParty(id, user);
             return ResponseEntity.ok(new SimpleResponse("Left party successfully"));

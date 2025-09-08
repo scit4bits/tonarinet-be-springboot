@@ -50,9 +50,9 @@ public class OrganizationService {
         Organization savedOrganization = organizationRepository.save(organization);
 
         Board newBoard = Board.builder()
-            .title(request.getName().concat(" Board"))
-            .organization(savedOrganization)
-            .build();
+                .title(request.getName().concat(" Board"))
+                .organization(savedOrganization)
+                .build();
 
         boardRepository.save(newBoard);
 
@@ -67,19 +67,21 @@ public class OrganizationService {
                 .toList();
     }
 
-    public PagedResponse<OrganizationDTO> searchOrganization(String searchBy, String search, Integer page, Integer pageSize, String sortBy, String sortDirection) {
-        log.info("Searching organizations with searchBy: {}, search: {}, page: {}, pageSize: {}, sortBy: {}, sortDirection: {}", 
+    public PagedResponse<OrganizationDTO> searchOrganization(String searchBy, String search, Integer page,
+            Integer pageSize, String sortBy, String sortDirection) {
+        log.info(
+                "Searching organizations with searchBy: {}, search: {}, page: {}, pageSize: {}, sortBy: {}, sortDirection: {}",
                 searchBy, search, page, pageSize, sortBy, sortDirection);
-        
+
         // 기본값 설정
         int pageNum = (page != null) ? page : 0;
         int pageSizeNum = (pageSize != null) ? pageSize : 10;
         String sortByField = (sortBy != null && !sortBy.isEmpty()) ? sortBy : "all";
         String direction = (sortDirection != null && !sortDirection.isEmpty()) ? sortDirection : "asc";
-        
+
         // 정렬 방향 설정
         Sort.Direction sortDir = "desc".equalsIgnoreCase(direction) ? Sort.Direction.DESC : Sort.Direction.ASC;
-        
+
         // sortBy 필드명 매핑 (엔티티 필드명과 일치하도록)
         String entityFieldName;
         switch (sortByField.toLowerCase()) {
@@ -99,13 +101,13 @@ public class OrganizationService {
                 entityFieldName = "id"; // 기본값
                 break;
         }
-        
+
         // 정렬 및 페이징 설정
         Sort sort = Sort.by(sortDir, entityFieldName);
         Pageable pageable = PageRequest.of(pageNum, pageSizeNum, sort);
-        
+
         Page<Organization> organizationPage;
-        
+
         // searchBy에 따른 검색 로직
         if (search == null || search.trim().isEmpty()) {
             // 검색어가 없으면 모든 조직 조회
@@ -128,7 +130,8 @@ public class OrganizationService {
                     organizationPage = organizationRepository.findByNameContainingIgnoreCase(search.trim(), pageable);
                     break;
                 case "country":
-                    organizationPage = organizationRepository.findByCountryCodeContainingIgnoreCase(search.trim(), pageable);
+                    organizationPage = organizationRepository.findByCountryCodeContainingIgnoreCase(search.trim(),
+                            pageable);
                     break;
                 case "type":
                     organizationPage = organizationRepository.findByTypeContainingIgnoreCase(search.trim(), pageable);
@@ -139,38 +142,37 @@ public class OrganizationService {
                     break;
             }
         }
-        
+
         // Entity를 DTO로 변환하여 반환
         int totalPages = organizationPage.getTotalPages();
-        //Integer totalEntities = organizationPage.
+        // Integer totalEntities = organizationPage.
         long totalCount = organizationPage.getTotalElements();
-
 
         List<OrganizationDTO> result = organizationPage.getContent().stream()
                 .map(OrganizationDTO::fromEntity)
                 .toList();
-        
+
         log.info("Found {} organizations out of {} total", result.size(), organizationPage.getTotalElements());
         return new PagedResponse<OrganizationDTO>(result, pageNum, pageSizeNum, totalCount, totalPages);
     }
 
     public void applyToOrganization(User user, Integer organizationId, String entryMessage) {
-        
+
         Organization organization = organizationRepository.findById(organizationId).get();
         log.info("User {} is applying to organization with id: {}", user.getEmail(), organization.getName());
-        
+
         // 중간자 엔티티를 사용한 올바른 방법
         UserRole.UserRoleId userRoleId = UserRole.UserRoleId.builder()
                 .userId(user.getId())
                 .orgId(organizationId)
                 .build();
-        
+
         // 이미 존재하는지 확인
         if (userRoleRepository.existsById(userRoleId)) {
             log.warn("User {} is already a member of organization {}", user.getEmail(), organization.getName());
             throw new IllegalStateException("User is already a member of organization");
         }
-        
+
         // UserRole 엔티티 생성 및 저장
         UserRole userRole = UserRole.builder()
                 .id(userRoleId)
@@ -180,7 +182,7 @@ public class OrganizationService {
                 .isGranted(false) // 초기에는 승인되지 않은 상태
                 .entryMessage(entryMessage) // 기본 메시지
                 .build();
-        
+
         // 중간자 테이블에 직접 저장 - 이것만으로 충분!
         userRoleRepository.save(userRole);
         log.info("User {} successfully applied to organization {}", user.getEmail(), organization.getName());
@@ -192,7 +194,7 @@ public class OrganizationService {
     public void approveOrganizationMembership(User adminUser, Integer targetUserId, Integer organizationId) {
         Organization organization = organizationRepository.findById(organizationId).get();
         User user = userRepository.findById(targetUserId).get();
-        if(!userRoleService.checkUsersRoleInOrg(user, organization,"admin")){
+        if (!userRoleService.checkUsersRoleInOrg(user, organization, "admin")) {
             throw new AccessDeniedException("Admin privileges required");
         }
 
@@ -202,9 +204,9 @@ public class OrganizationService {
                 .userId(targetUser.getId())
                 .orgId(organization.getId())
                 .build();
-        
+
         UserRole userRole = userRoleRepository.findById(userRoleId).get();
-        
+
         userRole.setIsGranted(true);
         userRoleRepository.save(userRole);
 
@@ -226,7 +228,7 @@ public class OrganizationService {
                 .userId(targetUser.getId())
                 .orgId(organization.getId())
                 .build();
-        
+
         userRoleRepository.deleteById(userRoleId);
         log.info("Removed user {} from organization {}", targetUser.getId(), organization.getId());
     }
@@ -234,10 +236,20 @@ public class OrganizationService {
     public void updateOrganization(OrganizationDTO organizationDTO) {
         Organization organization = organizationRepository.findById(organizationDTO.getId()).get();
 
-        organization.setName(organizationDTO.getName()!=null && !organizationDTO.getName().trim().isEmpty() ? organizationDTO.getName(): organization.getName());
-        organization.setDescription(organizationDTO.getDescription() != null && !organizationDTO.getDescription().trim().isEmpty() ? organizationDTO.getDescription() : organization.getDescription());
-        organization.setCountryCode(organizationDTO.getCountryCode() != null && !organizationDTO.getCountryCode().trim().isEmpty() ? organizationDTO.getCountryCode() : organization.getCountryCode());
-        organization.setType(organizationDTO.getType() != null && !organizationDTO.getType().trim().isEmpty() ? organizationDTO.getType() : organization.getType());
+        organization.setName(organizationDTO.getName() != null && !organizationDTO.getName().trim().isEmpty()
+                ? organizationDTO.getName()
+                : organization.getName());
+        organization.setDescription(
+                organizationDTO.getDescription() != null && !organizationDTO.getDescription().trim().isEmpty()
+                        ? organizationDTO.getDescription()
+                        : organization.getDescription());
+        organization.setCountryCode(
+                organizationDTO.getCountryCode() != null && !organizationDTO.getCountryCode().trim().isEmpty()
+                        ? organizationDTO.getCountryCode()
+                        : organization.getCountryCode());
+        organization.setType(organizationDTO.getType() != null && !organizationDTO.getType().trim().isEmpty()
+                ? organizationDTO.getType()
+                : organization.getType());
         organizationRepository.save(organization);
     }
 
@@ -249,8 +261,26 @@ public class OrganizationService {
     public List<OrganizationDTO> getMyOrganizations(User user) {
         User dbUser = userRepository.findById(user.getId()).get();
         List<Organization> organizations = dbUser.getOrganizations();
+
+        for (Organization org : organizations) {
+            String role = userRoleRepository.findById(UserRole.UserRoleId.builder()
+                    .userId(user.getId())
+                    .orgId(org.getId())
+                    .build())
+                    .get().getRole();
+        }
+
         return organizations.stream()
-                .map(OrganizationDTO::fromEntity)
+                .map(org -> {
+                    String role = userRoleRepository.findById(UserRole.UserRoleId.builder()
+                            .userId(user.getId())
+                            .orgId(org.getId())
+                            .build())
+                            .get().getRole();
+                    OrganizationDTO dto = OrganizationDTO.fromEntity(org);
+                    dto.setRole(role);
+                    return dto;
+                })
                 .collect(Collectors.toList());
     }
 }

@@ -45,7 +45,7 @@ public class TeamController {
         if (user == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-        
+
         try {
             TeamResponseDTO team = teamService.createTeam(request, user);
             return ResponseEntity.status(HttpStatus.CREATED).body(team);
@@ -82,6 +82,21 @@ public class TeamController {
         }
     }
 
+    @GetMapping("/my")
+    public ResponseEntity<List<TeamResponseDTO>> getMyTeams(@AuthenticationPrincipal User user) {
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        try {
+            List<TeamResponseDTO> teams = teamService.getMyTeams(user);
+            return ResponseEntity.ok(teams);
+        } catch (Exception e) {
+            log.error("Error fetching user's teams: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
     @GetMapping("/organization/{orgId}")
     @Operation(summary = "Get teams by organization ID")
     public ResponseEntity<List<TeamResponseDTO>> getTeamsByOrgId(@PathVariable("orgId") Integer orgId) {
@@ -103,15 +118,15 @@ public class TeamController {
         if (user == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-        
+
         try {
             TeamResponseDTO team = teamService.updateTeam(id, request, user);
             return ResponseEntity.ok(team);
         } catch (RuntimeException e) {
             if (e.getMessage().contains("not found")) {
                 return ResponseEntity.notFound().build();
-            } else if (e.getMessage().contains("Only the team leader") || 
-                      e.getMessage().contains("admin")) {
+            } else if (e.getMessage().contains("Only the team leader") ||
+                    e.getMessage().contains("admin")) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
             }
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
@@ -129,15 +144,15 @@ public class TeamController {
         if (user == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-        
+
         try {
             teamService.deleteTeam(id, user);
             return ResponseEntity.ok(new SimpleResponse("Team deleted successfully"));
         } catch (RuntimeException e) {
             if (e.getMessage().contains("not found")) {
                 return ResponseEntity.notFound().build();
-            } else if (e.getMessage().contains("Only the team leader") || 
-                      e.getMessage().contains("admin")) {
+            } else if (e.getMessage().contains("Only the team leader") ||
+                    e.getMessage().contains("admin")) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
             }
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
@@ -158,7 +173,7 @@ public class TeamController {
             @RequestParam(name = "sortDirection", defaultValue = "asc") String sortDirection) {
         try {
             PagedResponse<TeamResponseDTO> teams = teamService.searchTeams(
-                searchBy, search, page, pageSize, sortBy, sortDirection);
+                    searchBy, search, page, pageSize, sortBy, sortDirection);
             return ResponseEntity.ok(teams);
         } catch (Exception e) {
             log.error("Error searching teams: {}", e.getMessage());
@@ -174,7 +189,7 @@ public class TeamController {
         if (user == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-        
+
         try {
             teamService.joinTeam(id, user);
             return ResponseEntity.ok(new SimpleResponse("Joined team successfully"));
@@ -197,7 +212,7 @@ public class TeamController {
         if (user == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-        
+
         try {
             teamService.leaveTeam(id, user);
             return ResponseEntity.ok(new SimpleResponse("Left team successfully"));

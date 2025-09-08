@@ -28,26 +28,26 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 @Transactional
 public class TeamService {
-    
+
     private final TeamRepository teamRepository;
     private final UserTeamRepository userTeamRepository;
     private final UserRepository userRepository;
 
     public TeamResponseDTO createTeam(TeamRequestDTO request, User creator) {
-        log.info("Creating team with name: {} for organization: {} by user: {}", 
+        log.info("Creating team with name: {} for organization: {} by user: {}",
                 request.getName(), request.getOrgId(), creator.getId());
-        
+
         Team team = Team.builder()
                 .name(request.getName())
                 .leaderUserId(request.getMembers().get(0).getId()) // 첫번째 사람이 리더
                 .orgId(request.getOrgId())
                 .build();
-        
+
         Team savedTeam = teamRepository.save(team);
 
         List<User> memberList = new ArrayList<>();
 
-        for(UserDTO member : request.getMembers()) {
+        for (UserDTO member : request.getMembers()) {
             User dbUser = userRepository.findById(member.getId()).get();
             memberList.add(dbUser);
         }
@@ -82,21 +82,32 @@ public class TeamService {
                 .toList();
     }
 
+    public List<TeamResponseDTO> getMyTeams(User user) {
+        User dbUser = userRepository.findById(user.getId())
+                .orElseThrow(() -> new RuntimeException("User not found with id: " + user.getId()));
+
+        List<Team> teams = dbUser.getTeams();
+        return teams.stream()
+                .map(TeamResponseDTO::fromEntity)
+                .toList();
+    }
+
     public TeamResponseDTO updateTeam(Integer id, TeamRequestDTO request, User user) {
         log.info("Updating team with id: {} by user: {}", id, user.getId());
-        
+
         Team team = teamRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Team not found with id: " + id));
-        
+
         // Check if user is the leader or admin
         if (!team.getLeaderUserId().equals(user.getId()) && !user.getIsAdmin()) {
             throw new RuntimeException("Only the team leader or admin can update the team");
         }
-        
-        team.setName(request.getName() != null && !request.getName().trim().isEmpty() 
-                    ? request.getName() : team.getName());
+
+        team.setName(request.getName() != null && !request.getName().trim().isEmpty()
+                ? request.getName()
+                : team.getName());
         team.setOrgId(request.getOrgId() != null ? request.getOrgId() : team.getOrgId());
-        
+
         Team savedTeam = teamRepository.save(team);
         log.info("Team updated successfully");
         return TeamResponseDTO.fromEntity(savedTeam);
@@ -104,34 +115,34 @@ public class TeamService {
 
     public void deleteTeam(Integer id, User user) {
         log.info("Deleting team with id: {} by user: {}", id, user.getId());
-        
+
         Team team = teamRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Team not found with id: " + id));
-        
+
         // Check if user is the leader or admin
         if (!team.getLeaderUserId().equals(user.getId()) && !user.getIsAdmin()) {
             throw new RuntimeException("Only the team leader or admin can delete the team");
         }
-        
+
         teamRepository.deleteById(id);
         log.info("Team deleted successfully");
     }
 
     @Transactional(readOnly = true)
-    public PagedResponse<TeamResponseDTO> searchTeams(String searchBy, String search, Integer page, 
-                                                     Integer pageSize, String sortBy, String sortDirection) {
-        log.info("Searching teams with searchBy: {}, search: {}, page: {}, pageSize: {}, sortBy: {}, sortDirection: {}", 
+    public PagedResponse<TeamResponseDTO> searchTeams(String searchBy, String search, Integer page,
+            Integer pageSize, String sortBy, String sortDirection) {
+        log.info("Searching teams with searchBy: {}, search: {}, page: {}, pageSize: {}, sortBy: {}, sortDirection: {}",
                 searchBy, search, page, pageSize, sortBy, sortDirection);
-        
+
         // 기본값 설정
         int pageNum = (page != null) ? page : 0;
         int pageSizeNum = (pageSize != null) ? pageSize : 10;
         String sortByField = (sortBy != null && !sortBy.isEmpty()) ? sortBy : "id";
         String direction = (sortDirection != null && !sortDirection.isEmpty()) ? sortDirection : "asc";
-        
+
         // 정렬 방향 설정
         Sort.Direction sortDir = "desc".equalsIgnoreCase(direction) ? Sort.Direction.DESC : Sort.Direction.ASC;
-        
+
         // sortBy 필드명 매핑
         String entityFieldName;
         switch (sortByField.toLowerCase()) {
@@ -151,12 +162,12 @@ public class TeamService {
                 entityFieldName = "id";
                 break;
         }
-        
+
         Sort sort = Sort.by(sortDir, entityFieldName);
         Pageable pageable = PageRequest.of(pageNum, pageSizeNum, sort);
-        
+
         Page<Team> teamPage;
-        
+
         if (search == null || search.trim().isEmpty()) {
             teamPage = teamRepository.findAll(pageable);
         } else {
@@ -200,36 +211,36 @@ public class TeamService {
                     break;
             }
         }
-        
+
         List<TeamResponseDTO> result = teamPage.getContent().stream()
                 .map(TeamResponseDTO::fromEntity)
                 .toList();
-        
+
         log.info("Found {} teams out of {} total", result.size(), teamPage.getTotalElements());
         return new PagedResponse<>(result, pageNum, pageSizeNum, teamPage.getTotalElements(), teamPage.getTotalPages());
     }
 
     public void joinTeam(Integer teamId, User user) {
         log.info("User {} joining team {}", user.getId(), teamId);
-        
+
         teamRepository.findById(teamId)
                 .orElseThrow(() -> new RuntimeException("Team not found with id: " + teamId));
-        
+
         // Check if user is already in the team
         // This would need to be implemented with the UserTeam junction table
-        
+
         log.info("User {} joined team {} successfully", user.getId(), teamId);
     }
 
     public void leaveTeam(Integer teamId, User user) {
         log.info("User {} leaving team {}", user.getId(), teamId);
-        
+
         teamRepository.findById(teamId)
                 .orElseThrow(() -> new RuntimeException("Team not found with id: " + teamId));
-        
+
         // Check if user is in the team and handle leaving
         // Leaders cannot leave unless they transfer leadership first
-        
+
         log.info("User {} left team {} successfully", user.getId(), teamId);
     }
 }

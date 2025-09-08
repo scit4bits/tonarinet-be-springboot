@@ -1,0 +1,255 @@
+package org.scit4bits.tonarinetserver.controller;
+
+import java.security.Principal;
+import java.util.List;
+import java.util.Map;
+
+import org.scit4bits.tonarinetserver.config.WebSocketConfig.UserPrincipal;
+import org.scit4bits.tonarinetserver.dto.ChatMessageRequestDTO;
+import org.scit4bits.tonarinetserver.dto.ChatMessageResponseDTO;
+import org.scit4bits.tonarinetserver.dto.SimpleResponse;
+import org.scit4bits.tonarinetserver.entity.User;
+import org.scit4bits.tonarinetserver.repository.UserRepository;
+import org.scit4bits.tonarinetserver.service.ChatMessageService;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.handler.annotation.DestinationVariable;
+import org.springframework.messaging.handler.annotation.Header;
+import org.springframework.messaging.handler.annotation.Headers;
+import org.springframework.messaging.handler.annotation.MessageMapping;
+import org.springframework.messaging.handler.annotation.Payload;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+@RestController
+@Slf4j
+@RequiredArgsConstructor
+@RequestMapping("/api/chat")
+@Tag(name = "Chat Message", description = "Real-time chat messaging API")
+public class ChatMessageController {
+
+    private final ChatMessageService chatMessageService;
+    private final SimpMessagingTemplate messagingTemplate;
+    private final UserRepository userRepository;
+
+    /**
+     * WebSocket endpoint for sending messages
+     * Clients should send messages to /app/chat/send/{roomId}
+     */
+    @MessageMapping("/chat/send/{roomId}")
+    public void sendMessage(@DestinationVariable Integer roomId,
+            @Payload ChatMessageRequestDTO messageRequest,
+            UserPrincipal principal) {
+        try {
+            // Get the authenticated user (you may need to implement this based on your
+            // security setup)
+            // User sender = getUserFromPrincipal(user);
+
+            // Set the room ID from the path variable
+            messageRequest.setChatroomId(roomId);
+
+            log.debug("roomId {}, messageRequest {}, Principal {}", roomId, messageRequest,
+                    principal.getName());
+
+            // Send the message
+            ChatMessageResponseDTO savedMessage = chatMessageService.sendMessage(messageRequest, principal.getId());
+
+            // Broadcast the message to all subscribers of the chat room
+            messagingTemplate.convertAndSend("/topic/chat/room/" + roomId, savedMessage);
+
+            log.info("Message sent to room {} by user {}", roomId, principal.getId());
+
+        } catch (Exception e) {
+            log.error("Error sending message to room {}: {}", roomId, e.getMessage());
+            // Send error message back to the senderd
+            messagingTemplate.convertAndSendToUser(principal.getName(), "/queue/errors",
+                    "Failed to send message: " + e.getMessage());
+        }
+    }
+
+    /**
+     * REST endpoint to get chat history
+     */
+    @GetMapping("/room/{roomId}/messages")
+    @Operation(summary = "Get chat messages for a room", security = @SecurityRequirement(name = "bearerAuth"))
+    public ResponseEntity<List<ChatMessageResponseDTO>> getMessages(
+            @PathVariable Integer roomId,
+            @RequestParam(defaultValue = "0") Integer page,
+            @RequestParam(defaultValue = "50") Integer size,
+            @AuthenticationPrincipal User user) {
+
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        try {
+            List<ChatMessageResponseDTO> messages = chatMessageService.getMessagesByChatRoom(roomId, page, size, user);
+            return ResponseEntity.ok(messages);
+        } catch (RuntimeException e) {
+            log.error("Error fetching messages for room {}: {}", roomId, e.getMessage());
+            if (e.getMessage().contains("not a member")) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+            }
+            return ResponseEntity.notFound().build();
+        } catch (Exception e) {
+            log.error("Error fetching messages for room {}: {}", roomId, e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    /**
+     * REST endpoint to get all messages in a chat room
+     */
+    @GetMapping("/room/{roomId}/messages/all")
+    @Operation(summary = "Get all chat messages for a room", security = @SecurityRequirement(name = "bearerAuth"))
+    public ResponseEntity<List<ChatMessageResponseDTO>> getAllMessages(
+            @PathVariable Integer roomId,
+            @AuthenticationPrincipal User user) {
+
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        try {
+            List<ChatMessageResponseDTO> messages = chatMessageService.getAllMessagesByChatRoom(roomId, user);
+            return ResponseEntity.ok(messages);
+        } catch (RuntimeException e) {
+            log.error("Error fetching all messages for room {}: {}", roomId, e.getMessage());
+            if (e.getMessage().contains("not a member")) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+            }
+            return ResponseEntity.notFound().build();
+        } catch (Exception e) {
+            log.error("Error fetching all messages for room {}: {}", roomId, e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    /**
+     * REST endpoint to send a message (alternative to WebSocket)
+     */
+    @PostMapping("/room/{roomId}/send")
+    @Operation(summary = "Send a message to a chat room", security = @SecurityRequirement(name = "bearerAuth"))
+    public ResponseEntity<ChatMessageResponseDTO> sendMessageRest(
+            @PathVariable Integer roomId,
+            @Valid @RequestBody ChatMessageRequestDTO messageRequest,
+            @AuthenticationPrincipal User user) {
+
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        try {
+            messageRequest.setChatroomId(roomId);
+            ChatMessageResponseDTO savedMessage = chatMessageService.sendMessage(messageRequest, user.getId());
+
+            // Also broadcast via WebSocket if available
+            try {
+                messagingTemplate.convertAndSend("/topic/chat/room/" + roomId, savedMessage);
+            } catch (Exception e) {
+                log.warn("Failed to broadcast message via WebSocket: {}", e.getMessage());
+            }
+
+            return ResponseEntity.ok(savedMessage);
+        } catch (RuntimeException e) {
+            log.error("Error sending message to room {}: {}", roomId, e.getMessage());
+            if (e.getMessage().contains("not a member")) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+            } else if (e.getMessage().contains("not found")) {
+                return ResponseEntity.notFound().build();
+            }
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        } catch (Exception e) {
+            log.error("Error sending message to room {}: {}", roomId, e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    /**
+     * REST endpoint to mark messages as read
+     */
+    @PostMapping("/room/{roomId}/read")
+    @Operation(summary = "Mark messages as read", security = @SecurityRequirement(name = "bearerAuth"))
+    public ResponseEntity<SimpleResponse> markAsRead(
+            @PathVariable Integer roomId,
+            @AuthenticationPrincipal User user) {
+
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        try {
+            chatMessageService.markMessagesAsRead(roomId, user);
+            return ResponseEntity.ok(new SimpleResponse("Messages marked as read"));
+        } catch (RuntimeException e) {
+            log.error("Error marking messages as read for room {}: {}", roomId, e.getMessage());
+            if (e.getMessage().contains("not a member")) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+            }
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        } catch (Exception e) {
+            log.error("Error marking messages as read for room {}: {}", roomId, e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    /**
+     * REST endpoint to delete a message
+     */
+    @DeleteMapping("/message/{messageId}")
+    @Operation(summary = "Delete a chat message", security = @SecurityRequirement(name = "bearerAuth"))
+    public ResponseEntity<SimpleResponse> deleteMessage(
+            @PathVariable Integer messageId,
+            @AuthenticationPrincipal User user) {
+
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        try {
+            chatMessageService.deleteMessage(messageId, user);
+            return ResponseEntity.ok(new SimpleResponse("Message deleted successfully"));
+        } catch (RuntimeException e) {
+            log.error("Error deleting message {}: {}", messageId, e.getMessage());
+            if (e.getMessage().contains("not found")) {
+                return ResponseEntity.notFound().build();
+            } else if (e.getMessage().contains("Only the sender") || e.getMessage().contains("admin")) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+            }
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        } catch (Exception e) {
+            log.error("Error deleting message {}: {}", messageId, e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    /**
+     * Helper method to get User from Principal
+     * Based on the JWT authentication setup where the principal name is the user ID
+     */
+    private User getUserFromPrincipal(Principal user) {
+        try {
+            // In the JWT authentication setup, the principal name is the user ID
+            Integer userId = Integer.parseInt(user.getName());
+            return userRepository.findById(userId)
+                    .orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
+        } catch (NumberFormatException e) {
+            throw new RuntimeException("Invalid user ID in principal: " + user.getName());
+        }
+    }
+}
