@@ -5,8 +5,10 @@ import java.util.List;
 import org.scit4bits.tonarinetserver.dto.PagedResponse;
 import org.scit4bits.tonarinetserver.dto.TownReviewRequestDTO;
 import org.scit4bits.tonarinetserver.dto.TownReviewResponseDTO;
+import org.scit4bits.tonarinetserver.entity.Region;
 import org.scit4bits.tonarinetserver.entity.TownReview;
 import org.scit4bits.tonarinetserver.entity.User;
+import org.scit4bits.tonarinetserver.repository.RegionRepository;
 import org.scit4bits.tonarinetserver.repository.TownReviewRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -25,6 +27,7 @@ import lombok.extern.slf4j.Slf4j;
 public class TownReviewService {
     
     private final TownReviewRepository townReviewRepository;
+    private final RegionRepository regionRepository;
 
     public TownReviewResponseDTO createTownReview(TownReviewRequestDTO request, User creator) {
         log.info("Creating town review for region: {} by user: {}", request.getRegionId(), creator.getId());
@@ -38,12 +41,13 @@ public class TownReviewService {
                 .population(request.getPopulation())
                 .education(request.getEducation())
                 .regionId(request.getRegionId())
-                .countryCode(request.getCountryCode())
-                .longitude(request.getLongitude())
-                .latitude(request.getLatitude())
-                .radius(request.getRadius())
                 .likeCount(0)
                 .build();
+
+        Region region = regionRepository.findById(request.getRegionId())
+                .orElseThrow(() -> new RuntimeException("Region not found with ID: " + request.getRegionId()));
+
+        townReview.setCountryCode(region.getCountryCode());
         
         TownReview savedReview = townReviewRepository.save(townReview);
         log.info("Town review created successfully with id: {}", savedReview.getId());
@@ -105,16 +109,6 @@ public class TownReviewService {
                                ? request.getPopulation() : townReview.getPopulation());
         townReview.setEducation(request.getEducation() != null 
                               ? request.getEducation() : townReview.getEducation());
-        townReview.setRegionId(request.getRegionId() != null 
-                             ? request.getRegionId() : townReview.getRegionId());
-        townReview.setCountryCode(request.getCountryCode() != null && !request.getCountryCode().trim().isEmpty() 
-                                ? request.getCountryCode() : townReview.getCountryCode());
-        townReview.setLongitude(request.getLongitude() != null && !request.getLongitude().trim().isEmpty() 
-                              ? request.getLongitude() : townReview.getLongitude());
-        townReview.setLatitude(request.getLatitude() != null && !request.getLatitude().trim().isEmpty() 
-                             ? request.getLatitude() : townReview.getLatitude());
-        townReview.setRadius(request.getRadius() != null 
-                           ? request.getRadius() : townReview.getRadius());
         
         TownReview savedReview = townReviewRepository.save(townReview);
         log.info("Town review updated successfully");
@@ -245,21 +239,6 @@ public class TownReviewService {
                         reviewPage = Page.empty(pageable);
                     }
                     break;
-                case "longitude":
-                    reviewPage = townReviewRepository.findByLongitudeContainingIgnoreCase(search.trim(), pageable);
-                    break;
-                case "latitude":
-                    reviewPage = townReviewRepository.findByLatitudeContainingIgnoreCase(search.trim(), pageable);
-                    break;
-                case "radius":
-                    try {
-                        Integer radiusValue = Integer.parseInt(search.trim());
-                        reviewPage = townReviewRepository.findByRadius(radiusValue, pageable);
-                    } catch (NumberFormatException e) {
-                        log.warn("Invalid radius format for search: {}", search);
-                        reviewPage = Page.empty(pageable);
-                    }
-                    break;
                 default:
                     log.warn("Unknown searchBy parameter: {}. Using 'all' as default.", searchBy);
                     reviewPage = townReviewRepository.findByAllFieldsContaining(search.trim(), pageable);
@@ -273,29 +252,5 @@ public class TownReviewService {
         
         log.info("Found {} town reviews out of {} total", result.size(), reviewPage.getTotalElements());
         return new PagedResponse<>(result, pageNum, pageSizeNum, reviewPage.getTotalElements(), reviewPage.getTotalPages());
-    }
-
-    @Transactional(readOnly = true)
-    public List<TownReviewResponseDTO> getTownReviewsByLocation(String longitude, String latitude, Integer radius) {
-        log.info("Fetching town reviews by location: longitude={}, latitude={}, radius={}", longitude, latitude, radius);
-        return townReviewRepository.findByLongitudeAndLatitudeAndRadius(longitude, latitude, radius).stream()
-                .map(TownReviewResponseDTO::fromEntity)
-                .toList();
-    }
-
-    @Transactional(readOnly = true)
-    public List<TownReviewResponseDTO> getTownReviewsByMaxRadius(Integer maxRadius) {
-        log.info("Fetching town reviews with radius <= {}", maxRadius);
-        return townReviewRepository.findByRadiusLessThanEqual(maxRadius).stream()
-                .map(TownReviewResponseDTO::fromEntity)
-                .toList();
-    }
-
-    @Transactional(readOnly = true)
-    public List<TownReviewResponseDTO> getTownReviewsByMinRadius(Integer minRadius) {
-        log.info("Fetching town reviews with radius >= {}", minRadius);
-        return townReviewRepository.findByRadiusGreaterThanEqual(minRadius).stream()
-                .map(TownReviewResponseDTO::fromEntity)
-                .toList();
     }
 }

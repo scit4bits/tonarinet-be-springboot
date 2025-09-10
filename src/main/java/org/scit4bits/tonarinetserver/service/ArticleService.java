@@ -16,6 +16,7 @@ import org.scit4bits.tonarinetserver.repository.ArticleRepository;
 import org.scit4bits.tonarinetserver.repository.BoardRepository;
 import org.scit4bits.tonarinetserver.repository.OrganizationRepository;
 import org.scit4bits.tonarinetserver.repository.TagRepository;
+import org.scit4bits.tonarinetserver.repository.UserRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -40,6 +41,8 @@ public class ArticleService {
     private final OrganizationRepository organizationRepository;
     private final TagRepository tagRepository;
     private final FileAttachmentService fileAttachmentService;
+    private final UserRepository userRepository;
+    private final NotificationService notificationService;
 
     public Article getArticleById(Integer articleId) {
         return articleRepository.findById(articleId).orElse(null);
@@ -106,6 +109,28 @@ public class ArticleService {
                 tagEntity.setArticle(savedArticle);
                 log.debug("Saving tag: {}", tagEntity);
                 tagRepository.save(tagEntity);
+            }
+        }
+
+        log.debug("Article category: {}", savedArticle.getCategory());
+
+        if(savedArticle.getCategory().equals("notice")){
+            log.debug("Sending notifications for notice article: {}", savedArticle.getTitle());
+            if(board.getId() == 0){
+                // site-wide notice
+                log.debug("Site-wide notice, notifying all users");
+                List<User> allUsers = userRepository.findAll();
+                for(User u : allUsers){
+                    notificationService.addNotification(u.getId(), "New notice", "/board/view/" + savedArticle.getId());
+                }
+            }
+            else if(board.getOrgId() != null){
+                log.debug("Organization notice, notifying all users in organization {}", board.getOrgId());
+                Organization organization = organizationRepository.findById(board.getOrgId()).get();
+                List<User> orgUsers = organization.getUsers();
+                for(User u : orgUsers){
+                    notificationService.addNotification(u.getId(), "New notice", "/board/view/" + savedArticle.getId());
+                }
             }
         }
     }

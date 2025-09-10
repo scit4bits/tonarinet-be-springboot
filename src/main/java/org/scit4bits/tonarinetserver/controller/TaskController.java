@@ -123,7 +123,7 @@ public class TaskController {
     @GetMapping("/user/{userId}")
     @Operation(summary = "Get tasks assigned to specific user", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<List<TaskResponseDTO>> getTasksByUserId(
-            @PathVariable Integer userId,
+            @PathVariable("userId") Integer userId,
             @AuthenticationPrincipal User user) {
         if (user == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
@@ -146,7 +146,7 @@ public class TaskController {
     @GetMapping("/team/{teamId}")
     @Operation(summary = "Get tasks assigned to team", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<List<TaskResponseDTO>> getTasksByTeamId(
-            @PathVariable Integer teamId,
+            @PathVariable("teamId") Integer teamId,
             @AuthenticationPrincipal User user) {
         if (user == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
@@ -165,7 +165,7 @@ public class TaskController {
     @DeleteMapping("/{id}")
     @Operation(summary = "Delete a task", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<SimpleResponse> deleteTask(
-            @PathVariable Integer id,
+            @PathVariable("id") Integer id,
             @AuthenticationPrincipal User user) {
         if (user == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
@@ -191,8 +191,8 @@ public class TaskController {
     @PatchMapping("/{id}/score")
     @Operation(summary = "Update task score", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<TaskResponseDTO> updateTaskScore(
-            @PathVariable Integer id,
-            @RequestParam Integer score,
+            @PathVariable("id") Integer id,
+            @RequestParam("score") Integer score,
             @AuthenticationPrincipal User user) {
         if (user == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
@@ -271,4 +271,14 @@ public class TaskController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
+
+    @GetMapping("/{id}/canmgmt")
+    public ResponseEntity<Boolean> getPrivilegeOfTask(@PathVariable("id") String id, @AuthenticationPrincipal User user) {
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        boolean hasPrivilege = taskService.checkTaskPrivilege(user, id);
+        return ResponseEntity.ok(hasPrivilege);
+    }
+    
 }

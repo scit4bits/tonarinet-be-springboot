@@ -81,7 +81,7 @@ public class LiveReportController {
 
     @GetMapping("/{id}")
     @Operation(summary = "Get live report by ID")
-    public ResponseEntity<LiveReportResponseDTO> getLiveReportById(@PathVariable Integer id) {
+    public ResponseEntity<LiveReportResponseDTO> getLiveReportById(@PathVariable("id") Integer id) {
         try {
             LiveReportResponseDTO report = liveReportService.getLiveReportById(id);
             return ResponseEntity.ok(report);
@@ -97,9 +97,9 @@ public class LiveReportController {
     @GetMapping("/near")
     @Operation(summary = "Get live reports near location")
     public ResponseEntity<List<LiveReportResponseDTO>> getLiveReportsNearLocation(
-            @RequestParam Double longitude,
-            @RequestParam Double latitude,
-            @RequestParam(defaultValue = "0.1") Double range) {
+            @RequestParam("longitude") Double longitude,
+            @RequestParam("latitude") Double latitude,
+            @RequestParam(name="range", defaultValue = "0.1") Double range) {
         try {
             List<LiveReportResponseDTO> reports = liveReportService.getLiveReportsNearLocation(longitude, latitude, range);
             return ResponseEntity.ok(reports);
@@ -112,7 +112,7 @@ public class LiveReportController {
     @DeleteMapping("/{id}")
     @Operation(summary = "Delete a live report", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<SimpleResponse> deleteLiveReport(
-            @PathVariable Integer id,
+            @PathVariable("id") Integer id,
             @AuthenticationPrincipal User user) {
         if (user == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
@@ -138,7 +138,7 @@ public class LiveReportController {
     @PostMapping("/{id}/like")
     @Operation(summary = "Like a live report", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<LiveReportResponseDTO> likeLiveReport(
-            @PathVariable Integer id,
+            @PathVariable("id") Integer id,
             @AuthenticationPrincipal User user) {
         if (user == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();

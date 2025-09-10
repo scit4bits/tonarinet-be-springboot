@@ -22,7 +22,7 @@ public class SpringSecurityConfig {
                         .configurationSource(request -> {
                             org.springframework.web.cors.CorsConfiguration config = new org.springframework.web.cors.CorsConfiguration();
                             config.setAllowedOrigins(java.util.List.of("*"));
-                            config.setAllowedMethods(java.util.List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+                            config.setAllowedMethods(java.util.List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
                             config.setAllowedHeaders(java.util.List.of("*", "Authorization"));
                             config.setExposedHeaders(java.util.List.of("Content-Disposition"));
                             config.setAllowCredentials(false);

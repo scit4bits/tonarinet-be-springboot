@@ -106,7 +106,7 @@ public class ReplyController {
     @PutMapping("/{id}")
     @Operation(summary = "Update a reply", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<ReplyResponseDTO> updateReply(
-            @PathVariable Integer id,
+            @PathVariable("id") Integer id,
             @Valid @RequestBody ReplyRequestDTO request,
             @AuthenticationPrincipal User user) {
         if (user == null) {
@@ -133,7 +133,7 @@ public class ReplyController {
     @DeleteMapping("/{id}")
     @Operation(summary = "Delete a reply", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<SimpleResponse> deleteReply(
-            @PathVariable Integer id,
+            @PathVariable("id") Integer id,
             @AuthenticationPrincipal User user) {
         if (user == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();

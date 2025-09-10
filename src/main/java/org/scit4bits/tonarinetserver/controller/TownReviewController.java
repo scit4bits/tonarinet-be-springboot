@@ -69,7 +69,7 @@ public class TownReviewController {
 
     @GetMapping("/{id}")
     @Operation(summary = "Get town review by ID")
-    public ResponseEntity<TownReviewResponseDTO> getTownReviewById(@PathVariable Integer id) {
+    public ResponseEntity<TownReviewResponseDTO> getTownReviewById(@PathVariable("id") Integer id) {
         try {
             TownReviewResponseDTO review = townReviewService.getTownReviewById(id);
             return ResponseEntity.ok(review);
@@ -84,7 +84,7 @@ public class TownReviewController {
 
     @GetMapping("/region/{regionId}")
     @Operation(summary = "Get town reviews by region ID")
-    public ResponseEntity<List<TownReviewResponseDTO>> getTownReviewsByRegionId(@PathVariable Integer regionId) {
+    public ResponseEntity<List<TownReviewResponseDTO>> getTownReviewsByRegionId(@PathVariable("regionId") Integer regionId) {
         try {
             List<TownReviewResponseDTO> reviews = townReviewService.getTownReviewsByRegionId(regionId);
             return ResponseEntity.ok(reviews);
@@ -96,7 +96,7 @@ public class TownReviewController {
 
     @GetMapping("/country/{countryCode}")
     @Operation(summary = "Get town reviews by country code")
-    public ResponseEntity<List<TownReviewResponseDTO>> getTownReviewsByCountryCode(@PathVariable String countryCode) {
+    public ResponseEntity<List<TownReviewResponseDTO>> getTownReviewsByCountryCode(@PathVariable("countryCode") String countryCode) {
         try {
             List<TownReviewResponseDTO> reviews = townReviewService.getTownReviewsByCountryCode(countryCode);
             return ResponseEntity.ok(reviews);
@@ -109,7 +109,7 @@ public class TownReviewController {
     @PutMapping("/{id}")
     @Operation(summary = "Update a town review", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<TownReviewResponseDTO> updateTownReview(
-            @PathVariable Integer id,
+            @PathVariable("id") Integer id,
             @Valid @RequestBody TownReviewRequestDTO request,
             @AuthenticationPrincipal User user) {
         if (user == null) {
@@ -136,7 +136,7 @@ public class TownReviewController {
     @DeleteMapping("/{id}")
     @Operation(summary = "Delete a town review", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<SimpleResponse> deleteTownReview(
-            @PathVariable Integer id,
+            @PathVariable("id") Integer id,
             @AuthenticationPrincipal User user) {
         if (user == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
@@ -162,7 +162,7 @@ public class TownReviewController {
     @PostMapping("/{id}/like")
     @Operation(summary = "Like a town review", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<TownReviewResponseDTO> likeTownReview(
-            @PathVariable Integer id,
+            @PathVariable("id") Integer id,
             @AuthenticationPrincipal User user) {
         if (user == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
@@ -197,45 +197,6 @@ public class TownReviewController {
             return ResponseEntity.ok(reviews);
         } catch (Exception e) {
             log.error("Error searching town reviews: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
-    }
-
-    @GetMapping("/location")
-    @Operation(summary = "Get town reviews by specific location")
-    public ResponseEntity<List<TownReviewResponseDTO>> getTownReviewsByLocation(
-            @RequestParam String longitude,
-            @RequestParam String latitude,
-            @RequestParam Integer radius) {
-        try {
-            List<TownReviewResponseDTO> reviews = townReviewService.getTownReviewsByLocation(longitude, latitude, radius);
-            return ResponseEntity.ok(reviews);
-        } catch (Exception e) {
-            log.error("Error fetching town reviews by location: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
-    }
-
-    @GetMapping("/radius/max/{maxRadius}")
-    @Operation(summary = "Get town reviews with radius less than or equal to specified value")
-    public ResponseEntity<List<TownReviewResponseDTO>> getTownReviewsByMaxRadius(@PathVariable Integer maxRadius) {
-        try {
-            List<TownReviewResponseDTO> reviews = townReviewService.getTownReviewsByMaxRadius(maxRadius);
-            return ResponseEntity.ok(reviews);
-        } catch (Exception e) {
-            log.error("Error fetching town reviews by max radius: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
-    }
-
-    @GetMapping("/radius/min/{minRadius}")
-    @Operation(summary = "Get town reviews with radius greater than or equal to specified value")
-    public ResponseEntity<List<TownReviewResponseDTO>> getTownReviewsByMinRadius(@PathVariable Integer minRadius) {
-        try {
-            List<TownReviewResponseDTO> reviews = townReviewService.getTownReviewsByMinRadius(minRadius);
-            return ResponseEntity.ok(reviews);
-        } catch (Exception e) {
-            log.error("Error fetching town reviews by min radius: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }

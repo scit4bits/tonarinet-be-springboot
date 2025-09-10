@@ -36,6 +36,7 @@ public class TaskService {
     private final TaskRepository taskRepository;
     private final TeamRepository teamRepository;
     private final TaskGroupRepository taskGroupRepository;    
+    private final NotificationService notificationService;
 
     public void createTask(TaskRequestDTO request, User creator) {
         log.info("Creating task with name: {} by user: {} for organization: {}", request.getTitle(), creator.getId(), request.getOrgId());
@@ -150,6 +151,10 @@ public class TaskService {
         task.setScore(score);
         Task savedTask = taskRepository.save(task);
         log.info("Task score updated successfully");
+
+        // send notification to the user
+        notificationService.addNotification(task.getUserId(), "Task score updated", "/task/" + task.getId());
+
         return TaskResponseDTO.fromEntity(savedTask);
     }
 
@@ -258,5 +263,29 @@ public class TaskService {
         
         log.info("Found {} tasks out of {} total", result.size(), taskPage.getTotalElements());
         return new PagedResponse<>(result, pageNum, pageSizeNum, taskPage.getTotalElements(), taskPage.getTotalPages());
+    }
+
+    public boolean checkTaskPrivilege(User user, String taskId) {
+        User dbUser = userRepository.findById(user.getId())
+                .orElseThrow(() -> new RuntimeException("User not found with id: " + user.getId()));
+        if (dbUser.getIsAdmin()) {
+            return true;
+        }
+        Task task = taskRepository.findById(Integer.parseInt(taskId))
+                .orElseThrow(() -> new RuntimeException("Task not found with id: " + taskId));
+        
+        // Check if user is the creator
+        if (task.getCreatedById().equals(dbUser.getId())) {
+            return true;
+        }
+
+        
+        Integer targetOrgId = task.getTaskGroup().getOrgId();
+
+        if (dbUser.getUserRoles().stream().anyMatch(role -> role.getId().getOrgId().equals(targetOrgId) && role.getRole().equals("admin"))) {
+            return true;
+        }
+
+        return false;
     }
 }

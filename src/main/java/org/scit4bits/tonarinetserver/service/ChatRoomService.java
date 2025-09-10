@@ -9,6 +9,7 @@ import org.scit4bits.tonarinetserver.dto.PagedResponse;
 import org.scit4bits.tonarinetserver.entity.ChatRoom;
 import org.scit4bits.tonarinetserver.entity.User;
 import org.scit4bits.tonarinetserver.entity.UserChatRoom;
+import org.scit4bits.tonarinetserver.repository.ChatMessageRepository;
 import org.scit4bits.tonarinetserver.repository.ChatRoomRepository;
 import org.scit4bits.tonarinetserver.repository.UserChatRoomRepository;
 import org.scit4bits.tonarinetserver.repository.UserRepository;
@@ -29,6 +30,7 @@ public class ChatRoomService {
     private final ChatRoomRepository chatRoomRepository;
     private final UserRepository userRepository;
     private final UserChatRoomRepository userChatRoomRepository;
+    private final ChatMessageRepository chatMessageRepository;
 
     public ChatRoomResponseDTO createChatRoom(ChatRoomRequestDTO requestDTO, User currentUser) {
         // Create the chat room
@@ -251,5 +253,23 @@ public class ChatRoomService {
             .totalElements(chatRoomPage.getTotalElements())
             .totalPages(chatRoomPage.getTotalPages())
             .build();
+    }
+
+    @Transactional(readOnly = true)
+    public int getUnreadMessagesCount(Integer userId) {
+        // Get all chat rooms the user is a member of
+        List<ChatRoom> userChatRooms = chatRoomRepository.findByUserId(userId);
+        
+        int totalUnreadCount = 0;
+        
+        // For each chat room, count unread messages not sent by the user
+        for (ChatRoom chatRoom : userChatRooms) {
+            // Count unread messages in this chat room that were not sent by the user
+            long unreadInRoom = chatMessageRepository.countByChatroomIdAndIsReadFalseAndSenderIdNot(
+                chatRoom.getId(), userId);
+            totalUnreadCount += unreadInRoom;
+        }
+        
+        return totalUnreadCount;
     }
 }

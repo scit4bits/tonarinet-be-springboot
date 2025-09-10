@@ -88,9 +88,9 @@ public class LiveReportService {
         
         liveReport.setContents(request.getContents() != null && !request.getContents().trim().isEmpty() 
                               ? request.getContents() : liveReport.getContents());
-        liveReport.setLongitude(request.getLongitude() != null && !request.getLongitude().trim().isEmpty() 
+        liveReport.setLongitude(request.getLongitude() != null 
                                ? request.getLongitude() : liveReport.getLongitude());
-        liveReport.setLatitude(request.getLatitude() != null && !request.getLatitude().trim().isEmpty() 
+        liveReport.setLatitude(request.getLatitude() != null 
                               ? request.getLatitude() : liveReport.getLatitude());
         
         LiveReport savedReport = liveReportRepository.save(liveReport);

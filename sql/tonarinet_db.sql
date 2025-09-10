@@ -1,258 +1,369 @@
-CREATE TABLE `article` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `category` varchar(20) DEFAULT NULL,
-  `title` text NOT NULL,
-  `contents` text NOT NULL,
-  `created_by` int NOT NULL,
-  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  `board_id` int NOT NULL,
-  PRIMARY KEY (`id`),
-  KEY `Article_Board_id_fk` (`board_id`),
-  KEY `Article_User_id_fk` (`created_by`),
-  CONSTRAINT `Article_Board_id_fk` FOREIGN KEY (`board_id`) REFERENCES `board` (`id`),
-  CONSTRAINT `Article_User_id_fk` FOREIGN KEY (`created_by`) REFERENCES `user` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+create table tonarinet.country
+(
+    country_code varchar(5) not null
+        primary key,
+    name         text       not null,
+    description  text       null
+);
 
-CREATE TABLE `board` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `title` text NOT NULL,
-  `description` text,
-  `country_code` varchar(5) DEFAULT NULL,
-  `org_id` int DEFAULT NULL,
-  PRIMARY KEY (`id`),
-  KEY `Board_Country_country_code_fk` (`country_code`),
-  KEY `Board_Organization_id_fk` (`org_id`),
-  CONSTRAINT `Board_Country_country_code_fk` FOREIGN KEY (`country_code`) REFERENCES `country` (`country_code`),
-  CONSTRAINT `Board_Organization_id_fk` FOREIGN KEY (`org_id`) REFERENCES `organization` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+create table tonarinet.organization
+(
+    id           int auto_increment
+        primary key,
+    name         varchar(100)               not null,
+    description  text                       null,
+    country_code varchar(5)                 not null,
+    type         enum ('SCHOOL', 'COMPANY') not null,
+    constraint Organization_pk_2
+        unique (name),
+    constraint Organization_Country_country_code_fk
+        foreign key (country_code) references tonarinet.country (country_code)
+);
 
-CREATE TABLE `chatmessage` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `sender` int NOT NULL,
-  `message` text NOT NULL,
-  `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
-  `is_read` tinyint(1) NOT NULL DEFAULT '0',
-  `chatroom_id` int NOT NULL,
-  PRIMARY KEY (`id`),
-  KEY `ChatMessage_ChatRoom_id_fk` (`chatroom_id`),
-  KEY `ChatMessage_User_id_fk` (`sender`),
-  CONSTRAINT `ChatMessage_ChatRoom_id_fk` FOREIGN KEY (`chatroom_id`) REFERENCES `chatroom` (`id`),
-  CONSTRAINT `ChatMessage_User_id_fk` FOREIGN KEY (`sender`) REFERENCES `user` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+create table tonarinet.board
+(
+    id           int auto_increment
+        primary key,
+    title        text       not null,
+    description  text       null,
+    country_code varchar(5) null,
+    org_id       int        null,
+    constraint Board_Country_country_code_fk
+        foreign key (country_code) references tonarinet.country (country_code),
+    constraint Board_Organization_id_fk
+        foreign key (org_id) references tonarinet.organization (id)
+            on delete cascade
+);
 
-CREATE TABLE `chatroom` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `title` text NOT NULL,
-  `force_remain` tinyint(1) NOT NULL DEFAULT '0',
-  `description` text,
-  `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
-  `leader_user_id` int NOT NULL,
-  PRIMARY KEY (`id`),
-  KEY `ChatRoom_User_id_fk` (`leader_user_id`),
-  CONSTRAINT `ChatRoom_User_id_fk` FOREIGN KEY (`leader_user_id`) REFERENCES `user` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+create table tonarinet.region
+(
+    id           int auto_increment
+        primary key,
+    country_code varchar(5)  not null,
+    category1    varchar(20) null,
+    category2    varchar(20) null,
+    category3    varchar(20) null,
+    category4    varchar(20) null,
+    longitude    double      not null,
+    latitude     double      not null,
+    radius       int         not null,
+    constraint Region_Country_country_code_fk
+        foreign key (country_code) references tonarinet.country (country_code)
+);
 
-CREATE TABLE `country` (
-  `country_code` varchar(5) NOT NULL,
-  `name` text NOT NULL,
-  `description` text,
-  PRIMARY KEY (`country_code`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+create table tonarinet.taskgroup
+(
+    id         int auto_increment
+        primary key,
+    title      varchar(100)                       null,
+    contents   text                               not null,
+    created_at datetime default CURRENT_TIMESTAMP not null,
+    due_date   datetime                           null,
+    max_score  int                                null,
+    org_id     int                                not null,
+    constraint taskgroup_organization_id_fk
+        foreign key (org_id) references tonarinet.organization (id)
+);
 
-CREATE TABLE `livereport` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `contents` text NOT NULL,
-  `like_count` int NOT NULL DEFAULT '0',
-  `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
-  `created_by` int NOT NULL,
-  `longitude` text NOT NULL,
-  `latitude` text NOT NULL,
-  PRIMARY KEY (`id`),
-  KEY `LiveReport_User_id_fk` (`created_by`),
-  CONSTRAINT `LiveReport_User_id_fk` FOREIGN KEY (`created_by`) REFERENCES `user` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+create table tonarinet.user
+(
+    id          int auto_increment
+        primary key,
+    email       varchar(50)                          not null,
+    password    text                                 not null,
+    name        text                                 not null,
+    birth       date                                 null,
+    nickname    varchar(10)                          not null,
+    phone       varchar(20)                          null,
+    description text                                 null,
+    created_at  datetime   default CURRENT_TIMESTAMP null,
+    provider    varchar(10)                          null,
+    oauth_id    text                                 null,
+    is_admin    tinyint(1) default 0                 not null,
+    gender      varchar(10)                          null,
+    nationality varchar(5) default 'kor'             not null,
+    constraint User_pk
+        unique (nickname),
+    constraint User_pk_2
+        unique (email),
+    constraint user_country_country_code_fk
+        foreign key (nationality) references tonarinet.country (country_code)
+);
 
-CREATE TABLE `notification` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `user_id` int NOT NULL,
-  `contents` text NOT NULL,
-  `link` text,
-  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `is_read` tinyint(1) NOT NULL DEFAULT '0',
-  PRIMARY KEY (`id`),
-  KEY `Notification_User_id_fk` (`user_id`),
-  CONSTRAINT `Notification_User_id_fk` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+create table tonarinet.article
+(
+    id         int auto_increment
+        primary key,
+    category   varchar(20)                        null,
+    title      text                               not null,
+    contents   text                               not null,
+    created_by int                                not null,
+    created_at datetime default CURRENT_TIMESTAMP not null,
+    updated_at datetime default CURRENT_TIMESTAMP not null on update CURRENT_TIMESTAMP,
+    board_id   int                                not null,
+    views      int      default 0                 not null,
+    constraint Article_Board_id_fk
+        foreign key (board_id) references tonarinet.board (id),
+    constraint Article_User_id_fk
+        foreign key (created_by) references tonarinet.user (id)
+);
 
-CREATE TABLE `organization` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `kor_name` varchar(60) NOT NULL,
-  `description` text,
-  `country_code` varchar(5) NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `Organization_pk_2` (`kor_name`),
-  KEY `Organization_Country_country_code_fk` (`country_code`),
-  CONSTRAINT `Organization_Country_country_code_fk` FOREIGN KEY (`country_code`) REFERENCES `country` (`country_code`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+create table tonarinet.chatroom
+(
+    id             int auto_increment
+        primary key,
+    title          text                                 not null,
+    force_remain   tinyint(1) default 0                 not null,
+    description    text                                 null,
+    created_at     datetime   default CURRENT_TIMESTAMP null,
+    leader_user_id int                                  not null,
+    constraint ChatRoom_User_id_fk
+        foreign key (leader_user_id) references tonarinet.user (id)
+);
 
-CREATE TABLE `party` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `name` text NOT NULL,
-  `leader_user_id` int NOT NULL,
-  PRIMARY KEY (`id`),
-  KEY `Party_User_id_fk` (`leader_user_id`),
-  CONSTRAINT `Party_User_id_fk` FOREIGN KEY (`leader_user_id`) REFERENCES `user` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+create table tonarinet.chatmessage
+(
+    id          int auto_increment
+        primary key,
+    sender      int                                  not null,
+    message     text                                 not null,
+    created_at  datetime   default CURRENT_TIMESTAMP null,
+    is_read     tinyint(1) default 0                 not null,
+    chatroom_id int                                  not null,
+    constraint ChatMessage_ChatRoom_id_fk
+        foreign key (chatroom_id) references tonarinet.chatroom (id),
+    constraint ChatMessage_User_id_fk
+        foreign key (sender) references tonarinet.user (id)
+);
 
-CREATE TABLE `region` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `country_code` varchar(5) NOT NULL,
-  `category1` varchar(20) DEFAULT NULL,
-  `category2` varchar(20) DEFAULT NULL,
-  `category3` varchar(20) DEFAULT NULL,
-  `category4` varchar(20) DEFAULT NULL,
-  PRIMARY KEY (`id`),
-  KEY `Region_Country_country_code_fk` (`country_code`),
-  CONSTRAINT `Region_Country_country_code_fk` FOREIGN KEY (`country_code`) REFERENCES `country` (`country_code`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+create table tonarinet.livereport
+(
+    id         int auto_increment
+        primary key,
+    contents   text                               not null,
+    like_count int      default 0                 not null,
+    created_at datetime default CURRENT_TIMESTAMP null,
+    created_by int                                not null,
+    longitude  double                             not null,
+    latitude   double                             not null,
+    constraint LiveReport_User_id_fk
+        foreign key (created_by) references tonarinet.user (id)
+);
 
-CREATE TABLE `reply` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `created_by` int NOT NULL,
-  `contents` text,
-  `article_id` int NOT NULL,
-  PRIMARY KEY (`id`),
-  KEY `Reply_Article_id_fk` (`article_id`),
-  KEY `Reply_User_id_fk` (`created_by`),
-  CONSTRAINT `Reply_Article_id_fk` FOREIGN KEY (`article_id`) REFERENCES `article` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `Reply_User_id_fk` FOREIGN KEY (`created_by`) REFERENCES `user` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+create table tonarinet.notification
+(
+    id         int auto_increment
+        primary key,
+    user_id    int                                  not null,
+    contents   text                                 not null,
+    link       text                                 null,
+    created_at datetime   default CURRENT_TIMESTAMP not null,
+    is_read    tinyint(1) default 0                 not null,
+    constraint Notification_User_id_fk
+        foreign key (user_id) references tonarinet.user (id)
+);
 
-CREATE TABLE `tag` (
-  `article_id` int NOT NULL,
-  `tag_name` varchar(20) NOT NULL,
-  PRIMARY KEY (`article_id`,`tag_name`),
-  CONSTRAINT `Tag_Article_id_fk` FOREIGN KEY (`article_id`) REFERENCES `article` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+create table tonarinet.party
+(
+    id             int auto_increment
+        primary key,
+    name           text                 not null,
+    leader_user_id int                  not null,
+    is_finished    tinyint(1) default 0 not null,
+    constraint Party_User_id_fk
+        foreign key (leader_user_id) references tonarinet.user (id)
+);
 
-CREATE TABLE `task` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `name` text NOT NULL,
-  `contents` text NOT NULL,
-  `created_by` int NOT NULL,
-  `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  `due_date` datetime DEFAULT NULL,
-  `user_id` int DEFAULT NULL,
-  `team_id` int DEFAULT NULL,
-  `score` int DEFAULT NULL,
-  `max_score` int DEFAULT NULL,
-  PRIMARY KEY (`id`),
-  KEY `Task_Team_id_fk` (`team_id`),
-  KEY `Task_User_id_fk` (`user_id`),
-  KEY `Task_User_id_fk_2` (`created_by`),
-  CONSTRAINT `Task_Team_id_fk` FOREIGN KEY (`team_id`) REFERENCES `team` (`id`),
-  CONSTRAINT `Task_User_id_fk` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`),
-  CONSTRAINT `Task_User_id_fk_2` FOREIGN KEY (`created_by`) REFERENCES `user` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+create table tonarinet.reply
+(
+    id         int auto_increment
+        primary key,
+    created_at datetime default CURRENT_TIMESTAMP not null,
+    created_by int                                not null,
+    contents   text                               null,
+    article_id int                                null,
+    constraint Reply_Article_id_fk
+        foreign key (article_id) references tonarinet.article (id)
+            on delete cascade
+);
 
-CREATE TABLE `team` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `name` text NOT NULL,
-  `leader_user_id` int NOT NULL,
-  `org_id` int NOT NULL,
-  PRIMARY KEY (`id`),
-  KEY `Group_User_id_fk` (`leader_user_id`),
-  KEY `Team_Organization_id_fk` (`org_id`),
-  CONSTRAINT `Group_User_id_fk` FOREIGN KEY (`leader_user_id`) REFERENCES `user` (`id`),
-  CONSTRAINT `Team_Organization_id_fk` FOREIGN KEY (`org_id`) REFERENCES `organization` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+create index Reply_User_id_fk
+    on tonarinet.reply (created_by);
 
-CREATE TABLE `townreview` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `contents` text NOT NULL,
-  `created_by` int NOT NULL,
-  `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
-  `transportation` int NOT NULL,
-  `safety` int NOT NULL,
-  `infra` int NOT NULL,
-  `population` int NOT NULL,
-  `education` int NOT NULL,
-  `region_id` int NOT NULL,
-  `country_code` varchar(5) NOT NULL,
-  `like_count` int NOT NULL DEFAULT '0',
-  PRIMARY KEY (`id`),
-  KEY `TownReview_Country_country_code_fk` (`country_code`),
-  KEY `TownReview_Region_id_fk` (`region_id`),
-  KEY `TownReview___fk` (`created_by`),
-  CONSTRAINT `TownReview___fk` FOREIGN KEY (`created_by`) REFERENCES `user` (`id`),
-  CONSTRAINT `TownReview_Country_country_code_fk` FOREIGN KEY (`country_code`) REFERENCES `country` (`country_code`),
-  CONSTRAINT `TownReview_Region_id_fk` FOREIGN KEY (`region_id`) REFERENCES `region` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+create table tonarinet.tag
+(
+    article_id int         not null,
+    tag_name   varchar(20) not null,
+    primary key (article_id, tag_name),
+    constraint Tag_Article_id_fk
+        foreign key (article_id) references tonarinet.article (id)
+);
 
-CREATE TABLE `user` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `email` varchar(50) NOT NULL,
-  `password` text NOT NULL,
-  `name` text NOT NULL,
-  `birth` date DEFAULT NULL,
-  `nickname` varchar(10) NOT NULL,
-  `phone` varchar(20) DEFAULT NULL,
-  `description` text,
-  `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
-  `provider` varchar(10) DEFAULT NULL,
-  `oauth_id` text,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `User_pk_2` (`email`),
-  UNIQUE KEY `User_pk` (`nickname`)
-) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+create table tonarinet.team
+(
+    id             int auto_increment
+        primary key,
+    name           text not null,
+    leader_user_id int  not null,
+    org_id         int  not null,
+    constraint Group_User_id_fk
+        foreign key (leader_user_id) references tonarinet.user (id),
+    constraint Team_Organization_id_fk
+        foreign key (org_id) references tonarinet.organization (id)
+);
 
-CREATE TABLE `userchatroom` (
-  `user_id` int NOT NULL,
-  `chatroom_id` int NOT NULL,
-  PRIMARY KEY (`user_id`,`chatroom_id`),
-  KEY `UserChatRoom_ChatRoom_id_fk` (`chatroom_id`),
-  CONSTRAINT `UserChatRoom_ChatRoom_id_fk` FOREIGN KEY (`chatroom_id`) REFERENCES `chatroom` (`id`),
-  CONSTRAINT `UserChatRoom_User_id_fk` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+create table tonarinet.task
+(
+    id           int auto_increment
+        primary key,
+    name         text                               not null,
+    taskgroup_Id int                                not null,
+    contents     text                               not null,
+    created_by   int                                not null,
+    created_at   datetime default CURRENT_TIMESTAMP null,
+    updated_at   datetime default CURRENT_TIMESTAMP null on update CURRENT_TIMESTAMP,
+    due_date     datetime                           null,
+    user_id      int                                null,
+    team_id      int                                null,
+    score        int                                null,
+    max_score    int                                null,
+    constraint Task_Team_id_fk
+        foreign key (team_id) references tonarinet.team (id),
+    constraint Task_User_id_fk
+        foreign key (user_id) references tonarinet.user (id),
+    constraint Task_User_id_fk_2
+        foreign key (created_by) references tonarinet.user (id),
+    constraint task_taskgroup_id_fk
+        foreign key (taskgroup_Id) references tonarinet.taskgroup (id)
+);
 
-CREATE TABLE `usercountry` (
-  `user_id` int NOT NULL,
-  `country_code` varchar(5) NOT NULL,
-  `role` varchar(20) NOT NULL,
-  PRIMARY KEY (`user_id`,`country_code`,`role`),
-  KEY `UserCountry_Country_country_code_fk` (`country_code`),
-  CONSTRAINT `UserCountry_Country_country_code_fk` FOREIGN KEY (`country_code`) REFERENCES `country` (`country_code`),
-  CONSTRAINT `UserCountry_User_id_fk` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+create table tonarinet.fileattachment
+(
+    filepath          text                                 not null,
+    original_filename text                                 not null,
+    is_private        tinyint(1) default 0                 not null,
+    id                int auto_increment
+        primary key,
+    uploaded_by       int                                  not null,
+    type              enum ('IMAGE', 'ATTACHMENT')         null,
+    uploaded_at       datetime   default CURRENT_TIMESTAMP not null,
+    article_id        int                                  null,
+    filesize          int                                  not null comment 'in byte',
+    submission_id     int                                  null,
+    constraint fileattachment_article_id_fk
+        foreign key (article_id) references tonarinet.article (id),
+    constraint fileattachment_task_id_fk
+        foreign key (submission_id) references tonarinet.task (id),
+    constraint fileattachment_user_id_fk
+        foreign key (uploaded_by) references tonarinet.user (id)
+);
 
-CREATE TABLE `userparty` (
-  `user_id` int NOT NULL,
-  `party_id` int NOT NULL,
-  KEY `UserParty_Party_id_fk` (`party_id`),
-  KEY `UserParty_User_id_fk` (`user_id`),
-  CONSTRAINT `UserParty_Party_id_fk` FOREIGN KEY (`party_id`) REFERENCES `party` (`id`),
-  CONSTRAINT `UserParty_User_id_fk` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+create table tonarinet.submission
+(
+    id         int auto_increment
+        primary key,
+    created_at datetime default CURRENT_TIMESTAMP not null,
+    created_by int                                not null,
+    contents   text                               null,
+    task_id    int                                not null,
+    constraint submission___fk
+        foreign key (task_id) references tonarinet.task (id),
+    constraint submission_user_id_fk
+        foreign key (created_by) references tonarinet.user (id)
+);
 
-CREATE TABLE `userrole` (
-  `user_id` int NOT NULL,
-  `org_id` int NOT NULL,
-  `role` varchar(20) NOT NULL,
-  PRIMARY KEY (`user_id`,`org_id`,`role`),
-  KEY `UserRole_Organization_id_fk` (`org_id`),
-  CONSTRAINT `UserRole_Organization_id_fk` FOREIGN KEY (`org_id`) REFERENCES `organization` (`id`),
-  CONSTRAINT `UserRole_User_id_fk` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+create table tonarinet.townreview
+(
+    id             int auto_increment
+        primary key,
+    contents       text                               not null,
+    created_by     int                                not null,
+    created_at     datetime default CURRENT_TIMESTAMP null,
+    transportation int                                not null,
+    safety         int                                not null,
+    infra          int                                not null,
+    population     int                                not null,
+    education      int                                not null,
+    region_id      int                                not null,
+    country_code   varchar(5)                         not null,
+    like_count     int      default 0                 not null,
+    constraint TownReview_Country_country_code_fk
+        foreign key (country_code) references tonarinet.country (country_code),
+    constraint TownReview_Region_id_fk
+        foreign key (region_id) references tonarinet.region (id),
+    constraint TownReview___fk
+        foreign key (created_by) references tonarinet.user (id)
+);
 
-CREATE TABLE `userteam` (
-  `team_id` int NOT NULL,
-  `user_id` int NOT NULL,
-  PRIMARY KEY (`user_id`,`team_id`),
-  KEY `UserTeam_Team_id_fk` (`team_id`),
-  CONSTRAINT `UserTeam_Team_id_fk` FOREIGN KEY (`team_id`) REFERENCES `team` (`id`),
-  CONSTRAINT `UserTeam_User_id_fk` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+create table tonarinet.userchatroom
+(
+    user_id     int not null,
+    chatroom_id int not null,
+    primary key (user_id, chatroom_id),
+    constraint UserChatRoom_ChatRoom_id_fk
+        foreign key (chatroom_id) references tonarinet.chatroom (id),
+    constraint UserChatRoom_User_id_fk
+        foreign key (user_id) references tonarinet.user (id)
+);
+
+create table tonarinet.usercountry
+(
+    user_id      int                        not null,
+    country_code varchar(5)                 not null,
+    role         varchar(20) default 'user' not null,
+    primary key (user_id, country_code),
+    constraint UserCountry_Country_country_code_fk
+        foreign key (country_code) references tonarinet.country (country_code),
+    constraint UserCountry_User_id_fk
+        foreign key (user_id) references tonarinet.user (id)
+            on delete cascade
+);
+
+create table tonarinet.userlikearticle
+(
+    user_id    int not null,
+    article_id int not null,
+    primary key (user_id, article_id),
+    constraint userlikearticle_article_id_fk
+        foreign key (article_id) references tonarinet.article (id),
+    constraint userlikearticle_user_id_fk
+        foreign key (user_id) references tonarinet.user (id)
+);
+
+create table tonarinet.userparty
+(
+    user_id       int        not null,
+    party_id      int        not null,
+    entry_message text       null,
+    is_granted    tinyint(1) null,
+    constraint UserParty_Party_id_fk
+        foreign key (party_id) references tonarinet.party (id),
+    constraint UserParty_User_id_fk
+        foreign key (user_id) references tonarinet.user (id)
+);
+
+create table tonarinet.userrole
+(
+    user_id       int                  not null,
+    org_id        int                  not null,
+    role          varchar(20)          not null,
+    is_granted    tinyint(1) default 0 not null,
+    entry_message text                 null,
+    primary key (user_id, org_id),
+    constraint UserRole_Organization_id_fk
+        foreign key (org_id) references tonarinet.organization (id),
+    constraint UserRole_User_id_fk
+        foreign key (user_id) references tonarinet.user (id)
+);
+
+create table tonarinet.userteam
+(
+    team_id int not null,
+    user_id int not null,
+    primary key (user_id, team_id),
+    constraint UserTeam_Team_id_fk
+        foreign key (team_id) references tonarinet.team (id),
+    constraint UserTeam_User_id_fk
+        foreign key (user_id) references tonarinet.user (id)
+);
 

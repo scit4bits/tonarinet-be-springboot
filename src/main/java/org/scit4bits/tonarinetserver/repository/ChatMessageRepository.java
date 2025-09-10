@@ -36,6 +36,11 @@ public interface ChatMessageRepository extends JpaRepository<ChatMessage, Intege
     Long countByChatroomId(Integer chatroomId);
 
     /**
+     * Count unread messages in a chat room excluding messages from a specific sender
+     */
+    Long countByChatroomIdAndIsReadFalseAndSenderIdNot(Integer chatroomId, Integer senderId);
+
+    /**
      * Find recent messages in a chat room (useful for initial load)
      */
     @Query("SELECT cm FROM ChatMessage cm WHERE cm.chatroomId = :chatroomId ORDER BY cm.createdAt DESC")

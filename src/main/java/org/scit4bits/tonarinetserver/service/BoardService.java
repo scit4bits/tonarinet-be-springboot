@@ -41,6 +41,7 @@ public class BoardService {
     private final FileAttachmentService fileAttachmentService;
     private final TagRepository tagRepository;
     private final UserCountryService userCountryService;
+    private final NotificationService notificationService;
 
     @Transactional(readOnly = true)
     public List<BoardDTO> getAccessibleBoards(User user){
@@ -151,6 +152,26 @@ public class BoardService {
                 tagEntity.setArticle(savedArticle);
                 log.debug("Saving tag: {}", tagEntity);
                 tagRepository.save(tagEntity);
+            }
+        }
+
+        if(savedArticle.getCategory().equals("notice")){
+            log.debug("Sending notifications for notice article: {}", savedArticle.getTitle());
+            if(board.getId() == 0){
+                // site-wide notice
+                log.debug("Site-wide notice, notifying all users");
+                List<User> allUsers = userRepository.findAll();
+                for(User u : allUsers){
+                    notificationService.addNotification(u.getId(), "New notice "+ article.getTitle(), "/board/view/" + savedArticle.getId());
+                }
+            }
+            else if(board.getOrgId() != null){
+                log.debug("Organization notice, notifying all users in organization {}", board.getOrgId());
+                Organization organization = organizationRepository.findById(board.getOrgId()).get();
+                List<User> orgUsers = organization.getUsers();
+                for(User u : orgUsers){
+                    notificationService.addNotification(u.getId(), "New notice "+article.getTitle(), "/board/view/" + savedArticle.getId());
+                }
             }
         }
 

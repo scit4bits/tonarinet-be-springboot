@@ -54,4 +54,14 @@ public class NotificationController {
         notificationService.readOneNotification(user.getId(), notiId);
         return ResponseEntity.ok(new SimpleResponse("Notification marked as read"));
     }
+
+    @GetMapping("/unreadCount")
+    public ResponseEntity<Integer> getUnreadCount(@AuthenticationPrincipal User user) {
+        if(user == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        int unreadCount = notificationService.getUnreadCount(user.getId());
+        return ResponseEntity.ok(unreadCount);
+    }
+    
 }

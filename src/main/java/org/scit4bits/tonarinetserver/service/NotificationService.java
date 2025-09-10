@@ -14,6 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 @Slf4j
 @RequiredArgsConstructor
+@Transactional
 public class NotificationService {
 
     private final NotificationRepository notificationRepository;
@@ -32,17 +33,34 @@ public class NotificationService {
                 .toList();
     }
 
-    @Transactional
     public void readAllNotifications(Integer userId) {
         List<Notification> notifications = notificationRepository.findAllByIsReadFalseAndUserId(userId);
         notifications.forEach(notification -> notification.setIsRead(true));
         notificationRepository.saveAll(notifications);
     }
 
-    @Transactional
     public void readOneNotification(Integer id, Integer notiId) {
         Notification notification = notificationRepository.findById(notiId).get();
         notification.setIsRead(true);
         notificationRepository.save(notification);
     }
+
+    public int getUnreadCount(Integer userId) {
+        return notificationRepository.countByIsReadFalseAndUserId(userId);
+    }
+
+    // add new Notification to the user
+    public void addNotification(Integer userId, String message, String link) {
+        Notification notification = Notification.builder()
+                .userId(userId)
+                .contents(message)
+                .link(link)
+                .isRead(false)
+                .build();
+        notificationRepository.save(notification);
+    }
+
+
+
+
 }

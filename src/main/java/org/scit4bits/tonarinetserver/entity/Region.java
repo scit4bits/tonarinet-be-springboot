@@ -42,6 +42,15 @@ public class Region {
     @Column(name = "category4", length = 20)
     private String category4;
     
+    @Column(name = "latitude")
+    private Double latitude;
+    
+    @Column(name = "longitude")
+    private Double longitude;
+
+    @Column(name = "radius")
+    private Integer radius;
+    
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "country_code", insertable = false, updatable = false)
     private Country country;

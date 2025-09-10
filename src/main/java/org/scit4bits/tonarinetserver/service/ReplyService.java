@@ -7,6 +7,7 @@ import org.scit4bits.tonarinetserver.dto.ReplyRequestDTO;
 import org.scit4bits.tonarinetserver.dto.ReplyResponseDTO;
 import org.scit4bits.tonarinetserver.entity.Reply;
 import org.scit4bits.tonarinetserver.entity.User;
+import org.scit4bits.tonarinetserver.repository.ArticleRepository;
 import org.scit4bits.tonarinetserver.repository.ReplyRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -25,6 +26,8 @@ import lombok.extern.slf4j.Slf4j;
 public class ReplyService {
     
     private final ReplyRepository replyRepository;
+    private final NotificationService notificationService;
+    private final ArticleRepository articleRepository;
 
     public ReplyResponseDTO createReply(ReplyRequestDTO request, User creator) {
         log.info("Creating reply for article: {} by user: {}", request.getArticleId(), creator.getId());
@@ -37,6 +40,21 @@ public class ReplyService {
         
         Reply savedReply = replyRepository.save(reply);
         log.info("Reply created successfully with id: {}", savedReply.getId());
+
+        // send notification to creator of the article
+        articleRepository.findById(request.getArticleId()).ifPresent(article -> {
+            if (!article.getCreatedById().equals(creator.getId())) {
+                notificationService.addNotification(article.getCreatedById(), 
+                    "New reply to your article: " +
+                    "User " + creator.getUsername() + " replied to your article.", 
+                    "/board/view/" + article.getId());
+                log.info("Notification sent to article creator: {}", article.getCreatedById());
+            } else {
+                log.info("No notification sent as the replier is the article creator.");
+            }
+        });
+
+
         return ReplyResponseDTO.fromEntity(savedReply);
     }
 

@@ -38,6 +38,9 @@ public class UserParty {
     @Column(name="entry_message")
     private String entryMessage;
 
+    @Column(name="is_granted")
+    private Boolean isGranted;
+
     @Embeddable
     @Data
     @NoArgsConstructor

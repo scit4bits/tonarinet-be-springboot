@@ -59,9 +59,6 @@ public class TownReviewResponseDTO {
                 .countryCode(townReview.getCountryCode())
                 .countryName(townReview.getCountry() != null ? townReview.getCountry().getName() : null)
                 .likeCount(townReview.getLikeCount())
-                .longitude(townReview.getLongitude())
-                .latitude(townReview.getLatitude())
-                .radius(townReview.getRadius())
                 .averageRating(Math.round(avgRating * 10.0) / 10.0) // Round to 1 decimal place
                 .build();
     }

@@ -30,8 +30,8 @@ public interface LiveReportRepository extends JpaRepository<LiveReport, Integer>
     
     // 특정 위치 근처의 리포트들 (간단한 범위 검색)
     @Query("SELECT lr FROM LiveReport lr WHERE " +
-           "ABS(CAST(lr.longitude AS double) - :longitude) <= :range AND " +
-           "ABS(CAST(lr.latitude AS double) - :latitude) <= :range")
+           "ABS(lr.longitude - :longitude) <= :range AND " +
+           "ABS(lr.latitude - :latitude) <= :range")
     List<LiveReport> findByLocationRange(@Param("longitude") Double longitude, @Param("latitude") Double latitude, @Param("range") Double range);
     
     // 전체 검색을 위한 커스텀 쿼리

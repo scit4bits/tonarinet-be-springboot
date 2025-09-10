@@ -149,4 +149,20 @@ public class ChatRoomController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
+
+    @GetMapping("/unreadCount")
+    public ResponseEntity<Integer> getUnreadMessagesCount(@AuthenticationPrincipal User user) {
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        try {
+            int unreadCount = chatRoomService.getUnreadMessagesCount(user.getId());
+            return ResponseEntity.ok(unreadCount);
+        } catch (Exception e) {
+            log.error("Error fetching unread messages count: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+    
 }

@@ -48,11 +48,11 @@ public class LiveReport {
     @Column(name = "created_by", nullable = false)
     private Integer createdById;
     
-    @Column(name = "longitude", nullable = false, columnDefinition = "TEXT")
-    private String longitude;
+    @Column(name = "longitude", nullable = false)
+    private Double longitude;
     
-    @Column(name = "latitude", nullable = false, columnDefinition = "TEXT")
-    private String latitude;
+    @Column(name = "latitude", nullable = false)
+    private Double latitude;
     
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by", insertable = false, updatable = false)

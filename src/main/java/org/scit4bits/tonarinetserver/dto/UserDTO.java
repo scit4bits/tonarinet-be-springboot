@@ -25,6 +25,7 @@ public class UserDTO {
     private String description;
     private Boolean isAdmin;
     private LocalDateTime createdAt;
+    private String entryMessage; // 직접 주입
     private Boolean isGranted; // 직접 주입
     private String role; // 직접 주입
 

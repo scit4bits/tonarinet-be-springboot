@@ -319,7 +319,7 @@ public class UserService {
 
             UserRole userRole = userRoleRepository
                     .findById(UserRole.UserRoleId.builder().userId(user.getId()).orgId(organizationId).build()).get();
-
+            userDTO.setEntryMessage(userRole.getEntryMessage());
             userDTO.setIsGranted(userRole.getIsGranted());
             userDTO.setRole(userRole.getRole());
             result.add(userDTO);

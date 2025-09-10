@@ -1,6 +1,6 @@
 package org.scit4bits.tonarinetserver.dto;
 
-import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -12,12 +12,12 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class LiveReportRequestDTO {
     
-    @NotBlank(message = "Contents is required")
+    @NotNull(message = "Contents is required")
     private String contents;
     
-    @NotBlank(message = "Longitude is required")
-    private String longitude;
+    @NotNull(message = "Longitude is required")
+    private Double longitude;
     
-    @NotBlank(message = "Latitude is required")
-    private String latitude;
+    @NotNull(message = "Latitude is required")
+    private Double latitude;
 }

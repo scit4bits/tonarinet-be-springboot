@@ -69,15 +69,6 @@ public class TownReview {
     @Column(name = "like_count", nullable = false)
     private Integer likeCount = 0;
     
-    @Column(name = "longitude", nullable = false)
-    private String longitude;
-    
-    @Column(name = "latitude", nullable = false)
-    private String latitude;
-    
-    @Column(name = "radius", nullable = false)
-    private Integer radius;
-    
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by", insertable = false, updatable = false)
     private User createdBy;

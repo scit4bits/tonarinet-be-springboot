@@ -133,7 +133,7 @@ public class SubmissionController {
 
     @GetMapping("/{id}")
     @Operation(summary = "Get submission by ID", security = @SecurityRequirement(name = "bearerAuth"))
-    public ResponseEntity<SubmissionResponseDTO> getSubmissionById(@PathVariable Integer id, @AuthenticationPrincipal User user) {
+    public ResponseEntity<SubmissionResponseDTO> getSubmissionById(@PathVariable("id") Integer id, @AuthenticationPrincipal User user) {
         if (user == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
@@ -159,7 +159,7 @@ public class SubmissionController {
     @GetMapping("/user/{userId}")
     @Operation(summary = "Get submissions by user ID", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<List<SubmissionResponseDTO>> getSubmissionsByUserId(
-            @PathVariable Integer userId, 
+            @PathVariable("userId") Integer userId, 
             @AuthenticationPrincipal User user) {
         if (user == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
@@ -227,7 +227,7 @@ public class SubmissionController {
     @PutMapping("/{id}")
     @Operation(summary = "Update a submission", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<SubmissionResponseDTO> updateSubmission(
-            @PathVariable Integer id,
+            @PathVariable("id") Integer id,
             @Valid @RequestBody SubmissionRequestDTO request,
             @AuthenticationPrincipal User user) {
         if (user == null) {
@@ -254,7 +254,7 @@ public class SubmissionController {
     @DeleteMapping("/{id}")
     @Operation(summary = "Delete a submission", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<SimpleResponse> deleteSubmission(
-            @PathVariable Integer id,
+            @PathVariable("id") Integer id,
             @AuthenticationPrincipal User user) {
         if (user == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
@@ -310,7 +310,7 @@ public class SubmissionController {
     @GetMapping("/{id}/attachments")
     @Operation(summary = "Get file attachments for a submission", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<List<FileAttachmentResponseDTO>> getSubmissionAttachments(
-            @PathVariable Integer id,
+            @PathVariable("id") Integer id,
             @AuthenticationPrincipal User user) {
         if (user == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();

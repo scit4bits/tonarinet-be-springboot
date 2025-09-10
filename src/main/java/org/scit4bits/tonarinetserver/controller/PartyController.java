@@ -84,7 +84,7 @@ public class PartyController {
 
     @GetMapping("/{id}")
     @Operation(summary = "Get party by ID")
-    public ResponseEntity<PartyResponseDTO> getPartyById(@PathVariable Integer id) {
+    public ResponseEntity<PartyResponseDTO> getPartyById(@PathVariable("id") Integer id) {
         try {
             PartyResponseDTO party = partyService.getPartyById(id);
             return ResponseEntity.ok(party);
@@ -100,7 +100,7 @@ public class PartyController {
     @PutMapping("/{id}")
     @Operation(summary = "Update a party", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<PartyResponseDTO> updateParty(
-            @PathVariable Integer id,
+            @PathVariable("id") Integer id,
             @Valid @RequestBody PartyRequestDTO request,
             @AuthenticationPrincipal User user) {
         if (user == null) {
@@ -127,7 +127,7 @@ public class PartyController {
     @DeleteMapping("/{id}")
     @Operation(summary = "Delete a party", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<SimpleResponse> deleteParty(
-            @PathVariable Integer id,
+            @PathVariable("id") Integer id,
             @AuthenticationPrincipal User user) {
         if (user == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
@@ -172,7 +172,7 @@ public class PartyController {
     @PostMapping("/{id}/join")
     @Operation(summary = "Join a party", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<SimpleResponse> joinParty(
-            @PathVariable Integer id,
+            @PathVariable("id") Integer id,
             @AuthenticationPrincipal User user) {
         if (user == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
@@ -195,7 +195,7 @@ public class PartyController {
     @PostMapping("/{id}/leave")
     @Operation(summary = "Leave a party", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<SimpleResponse> leaveParty(
-            @PathVariable Integer id,
+            @PathVariable("id") Integer id,
             @AuthenticationPrincipal User user) {
         if (user == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
@@ -211,6 +211,61 @@ public class PartyController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         } catch (Exception e) {
             log.error("Error leaving party: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    @PostMapping("/{id}/grant/{userId}")
+    @Operation(summary = "Grant user access to party", security = @SecurityRequirement(name = "bearerAuth"))
+    public ResponseEntity<SimpleResponse> grantUserForParty(
+            @PathVariable("id") Integer id,
+            @PathVariable("userId") Integer userId,
+            @AuthenticationPrincipal User user) {
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        try {
+            partyService.grantUserForParty(id, userId, user);
+            return ResponseEntity.ok(new SimpleResponse("User access granted successfully"));
+        } catch (RuntimeException e) {
+            log.debug("Exception message: {}", e.getMessage());
+            if (e.getMessage().contains("not found")) {
+                return ResponseEntity.notFound().build();
+            } else if (e.getMessage().contains("Only the party leader") ||
+                    e.getMessage().contains("admin")) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+            }
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        } catch (Exception e) {
+            log.error("Error granting user access to party: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    @PostMapping("/{id}/reject/{userId}")
+    @Operation(summary = "Reject user access to party", security = @SecurityRequirement(name = "bearerAuth"))
+    public ResponseEntity<SimpleResponse> rejectUserForParty(
+            @PathVariable("id") Integer id,
+            @PathVariable("userId") Integer userId,
+            @AuthenticationPrincipal User user) {
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        try {
+            partyService.rejectUserForParty(id, userId, user);
+            return ResponseEntity.ok(new SimpleResponse("User access rejected successfully"));
+        } catch (RuntimeException e) {
+            if (e.getMessage().contains("not found")) {
+                return ResponseEntity.notFound().build();
+            } else if (e.getMessage().contains("Only the party leader") ||
+                    e.getMessage().contains("admin")) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+            }
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        } catch (Exception e) {
+            log.error("Error rejecting user access to party: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }

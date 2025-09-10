@@ -20,8 +20,8 @@ public class LiveReportResponseDTO {
     private LocalDateTime createdAt;
     private Integer createdById;
     private String createdByName;
-    private String longitude;
-    private String latitude;
+    private Double longitude;
+    private Double latitude;
 
     public static LiveReportResponseDTO fromEntity(LiveReport liveReport) {
         return LiveReportResponseDTO.builder()
