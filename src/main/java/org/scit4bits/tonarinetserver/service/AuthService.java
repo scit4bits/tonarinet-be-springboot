@@ -6,6 +6,7 @@ import java.util.List;
 
 import org.apache.tomcat.util.json.JSONParser;
 import org.scit4bits.tonarinetserver.dto.AuthCheckResponse;
+import org.scit4bits.tonarinetserver.dto.ChatRoomRequestDTO;
 import org.scit4bits.tonarinetserver.dto.GenerateStateResponse;
 import org.scit4bits.tonarinetserver.dto.SignUpRequest;
 import org.scit4bits.tonarinetserver.entity.Country;
@@ -20,6 +21,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.reactive.function.BodyInserters;
@@ -34,6 +36,7 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 @Slf4j
 @RequiredArgsConstructor
+@Transactional
 public class AuthService {
     
     private final UserRepository userRepository;
@@ -43,6 +46,7 @@ public class AuthService {
     private final BCryptPasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final EmailService emailService;
+    private final ChatRoomService chatRoomService;
     
     @Value("${line.api.client_id}")
     private String lineApiClientId;
@@ -248,6 +252,32 @@ public class AuthService {
             user.setNationality(countryEntity);
 
             userRepository.save(user);
+
+            // 1. create new chatroom (chat room name is "AI Chatbot" and chatroom leader is user 0)
+            // 2. let user 0 join the chatroom
+            // 3. let new user join the chatroom
+            try {
+                // Find or create system user for AI Chatbot (try ID 0 first, then find any admin user)
+                User systemUser = userRepository.findById(0).get();
+                
+                // Create ChatRoomRequestDTO for AI Chatbot room
+                ChatRoomRequestDTO chatRoomRequest = ChatRoomRequestDTO.builder()
+                    .title("AI Chatbot")
+                    .description("Welcome to your personal AI assistant chatroom!")
+                    .forceRemain(true)
+                    .userIds(List.of(user.getId()))
+                    .build();
+                
+                // Create the chatroom with system user as leader
+                chatRoomService.createChatRoom(chatRoomRequest, systemUser);
+                log.debug("Created AI Chatbot room for user: {} with leader: {}", user.getId(), systemUser.getId());
+            } catch (Exception e) {
+                log.warn("Failed to create AI Chatbot room for user {}: {}", user.getId(), e.getMessage());
+                // Don't fail the signup process if chatroom creation fails
+            }
+
+
+    
             
             return true;
         }catch(Exception e){

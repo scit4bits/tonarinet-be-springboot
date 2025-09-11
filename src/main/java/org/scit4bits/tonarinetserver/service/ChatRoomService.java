@@ -81,6 +81,12 @@ public class ChatRoomService {
         return ChatRoomResponseDTO.fromEntity(savedChatRoom);
     }
 
+    public boolean checkIfAIChatroom(Integer roomId){
+        ChatRoom chatroom = chatRoomRepository.findById(roomId)
+                .orElseThrow(() -> new RuntimeException("Chat room not found with ID: " + roomId));
+        return chatroom.getLeaderUserId().equals(0);
+    }
+
     @Transactional(readOnly = true)
     public List<ChatRoomResponseDTO> getAllChatRooms() {
         List<ChatRoom> chatRooms = chatRoomRepository.findAll();

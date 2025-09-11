@@ -45,8 +45,7 @@ public class ReplyService {
         articleRepository.findById(request.getArticleId()).ifPresent(article -> {
             if (!article.getCreatedById().equals(creator.getId())) {
                 notificationService.addNotification(article.getCreatedById(), 
-                    "New reply to your article: " +
-                    "User " + creator.getUsername() + " replied to your article.", 
+                    "{\"messageType\": \"newReplyToArticle\", \"articleTitle\": \"" + article.getTitle() + "\", \"userName\": \"" + creator.getUsername() + "\"}", 
                     "/board/view/" + article.getId());
                 log.info("Notification sent to article creator: {}", article.getCreatedById());
             } else {

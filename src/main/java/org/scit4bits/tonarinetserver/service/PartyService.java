@@ -275,8 +275,8 @@ public class PartyService {
         userPartyRepository.save(userParty);
 
         // Create notification for party leader about join request
-        notificationService.addNotification(party.getLeaderUserId(), 
-                "User " + user.getName() + " requested to join party " + party.getName(), 
+        notificationService.addNotification(party.getLeaderUserId(),
+                "{\"messageType\": \"incomingPartyRequest\", \"partyName\": \"" + party.getName() + "\", \"userName\": \"" + user.getName() + "\"}",
                 "/party/" + partyId);
 
         log.info("User {} requested to join party {} successfully (pending approval)", user.getId(), partyId);
@@ -338,7 +338,7 @@ public class PartyService {
 
         // Create notification for target user about being granted access
         notificationService.addNotification(targetUserId, 
-                "Your request to join party " + party.getName() + " has been approved!", 
+                "{\"messageType\": \"approvedPartyRequest\", \"partyName\": \"" + party.getName() + "\"}", 
                 "/party/" + partyId);
 
         log.info("User {} granted access to party {} successfully", targetUserId, partyId);
@@ -374,7 +374,7 @@ public class PartyService {
 
         // Create notification for target user about being rejected
         notificationService.addNotification(targetUserId, 
-                "Your request to join party " + party.getName() + " has been rejected.", 
+                "{\"messageType\": \"rejectedPartyRequest\", \"partyName\": \"" + party.getName() + "\"}", 
                 "/party/" + partyId);
 
         log.info("User {} rejected from party {} successfully", targetUserId, partyId);

@@ -121,7 +121,7 @@ public class ArticleService {
                 log.debug("Site-wide notice, notifying all users");
                 List<User> allUsers = userRepository.findAll();
                 for(User u : allUsers){
-                    notificationService.addNotification(u.getId(), "New notice", "/board/view/" + savedArticle.getId());
+                    notificationService.addNotification(u.getId(), "{\"messageType\": \"newNotice\"}", "/board/view/" + savedArticle.getId());
                 }
             }
             else if(board.getOrgId() != null){
@@ -129,7 +129,7 @@ public class ArticleService {
                 Organization organization = organizationRepository.findById(board.getOrgId()).get();
                 List<User> orgUsers = organization.getUsers();
                 for(User u : orgUsers){
-                    notificationService.addNotification(u.getId(), "New notice", "/board/view/" + savedArticle.getId());
+                    notificationService.addNotification(u.getId(), "{\"messageType\": \"newOrgNotice\"}", "/board/view/" + savedArticle.getId());
                 }
             }
         }

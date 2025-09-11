@@ -3,6 +3,7 @@ package org.scit4bits.tonarinetserver.controller;
 import java.security.Principal;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 
 import org.scit4bits.tonarinetserver.config.WebSocketConfig.UserPrincipal;
 import org.scit4bits.tonarinetserver.dto.ChatMessageRequestDTO;
@@ -10,7 +11,9 @@ import org.scit4bits.tonarinetserver.dto.ChatMessageResponseDTO;
 import org.scit4bits.tonarinetserver.dto.SimpleResponse;
 import org.scit4bits.tonarinetserver.entity.User;
 import org.scit4bits.tonarinetserver.repository.UserRepository;
+import org.scit4bits.tonarinetserver.service.AIService;
 import org.scit4bits.tonarinetserver.service.ChatMessageService;
+import org.scit4bits.tonarinetserver.service.ChatRoomService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
@@ -44,8 +47,10 @@ import lombok.extern.slf4j.Slf4j;
 public class ChatMessageController {
 
     private final ChatMessageService chatMessageService;
+    private final ChatRoomService chatRoomService;
     private final SimpMessagingTemplate messagingTemplate;
     private final UserRepository userRepository;
+    private final AIService aiService;
 
     /**
      * WebSocket endpoint for sending messages
@@ -56,11 +61,7 @@ public class ChatMessageController {
             @Payload ChatMessageRequestDTO messageRequest,
             UserPrincipal principal) {
         try {
-            // Get the authenticated user (you may need to implement this based on your
-            // security setup)
-            // User sender = getUserFromPrincipal(user);
-
-            // Set the room ID from the path variable
+            
             messageRequest.setChatroomId(roomId);
 
             log.debug("roomId {}, messageRequest {}, Principal {}", roomId, messageRequest,
@@ -73,7 +74,19 @@ public class ChatMessageController {
             messagingTemplate.convertAndSend("/topic/chat/room/" + roomId, savedMessage);
 
             log.info("Message sent to room {} by user {}", roomId, principal.getId());
-
+            
+            // background task create : AI response and send back to the room
+            if(chatRoomService.checkIfAIChatroom(roomId)){
+                CompletableFuture.runAsync(() -> {
+                    String aiResponse = aiService.generateResponseWithMemory(messageRequest.getMessage(), roomId);
+                    ChatMessageResponseDTO aiMessage = chatMessageService.sendMessage(
+                            ChatMessageRequestDTO.builder()
+                                    .chatroomId(roomId)
+                                    .message(aiResponse)
+                                    .build(), 0);
+                    messagingTemplate.convertAndSend("/topic/chat/room/" + roomId, aiMessage);
+                });
+            }
         } catch (Exception e) {
             log.error("Error sending message to room {}: {}", roomId, e.getMessage());
             // Send error message back to the senderd

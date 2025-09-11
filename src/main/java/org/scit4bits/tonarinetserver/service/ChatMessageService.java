@@ -7,6 +7,7 @@ import org.scit4bits.tonarinetserver.config.WebSocketConfig.UserPrincipal;
 import org.scit4bits.tonarinetserver.dto.ChatMessageRequestDTO;
 import org.scit4bits.tonarinetserver.dto.ChatMessageResponseDTO;
 import org.scit4bits.tonarinetserver.entity.ChatMessage;
+import org.scit4bits.tonarinetserver.entity.ChatRoom;
 import org.scit4bits.tonarinetserver.entity.User;
 import org.scit4bits.tonarinetserver.repository.ChatMessageRepository;
 import org.scit4bits.tonarinetserver.repository.ChatRoomRepository;
@@ -28,6 +29,7 @@ public class ChatMessageService {
     private final ChatMessageRepository chatMessageRepository;
     private final ChatRoomRepository chatRoomRepository;
     private final UserChatRoomRepository userChatRoomRepository;
+    private final AIService aiService;
 
     /**
      * Send a message to a chat room
@@ -43,20 +45,18 @@ public class ChatMessageService {
         // throw new RuntimeException("User is not a member of this chat room");
         // }
 
-        // Create and save the chat message
         ChatMessage chatMessage = ChatMessage.builder()
                 .chatroomId(requestDTO.getChatroomId())
                 .senderId(senderId)
                 .message(requestDTO.getMessage())
                 .isRead(false)
                 .build();
-
-        chatMessage = chatMessageRepository.save(chatMessage);
+        chatMessageRepository.save(chatMessage);
 
         // Fetch the saved message with sender information
         ChatMessage savedMessage = chatMessageRepository.findById(chatMessage.getId())
                 .orElseThrow(() -> new RuntimeException("Failed to retrieve saved message"));
-
+        
         return ChatMessageResponseDTO.fromEntity(savedMessage);
     }
 
