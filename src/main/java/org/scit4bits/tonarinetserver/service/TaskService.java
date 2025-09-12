@@ -184,7 +184,7 @@ public class TaskService {
         log.info("Task score updated successfully");
 
         // send notification to the user
-        notificationService.addNotification(task.getUserId(), "{\"messageType\": \"taskScoreUpdated\"}", "/task/" + task.getId());
+        notificationService.addNotification(task.getUserId(), "{\"messageType\": \"taskScoreUpdated\", \"taskTitle\": \"" + task.getName() + "\"}", "/task/" + task.getId());
 
         return TaskResponseDTO.fromEntity(savedTask);
     }
