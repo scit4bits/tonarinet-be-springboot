@@ -28,6 +28,7 @@ public class TaskResponseDTO {
     private String teamName;
     private Integer score;
     private Integer maxScore;
+    private String feedback;
     private Integer taskGroupId;
 
     public static TaskResponseDTO fromEntity(Task task) {

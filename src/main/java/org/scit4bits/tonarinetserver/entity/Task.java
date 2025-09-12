@@ -69,6 +69,9 @@ public class Task {
     
     @Column(name = "max_score")
     private Integer maxScore;
+
+    @Column(name = "feedback", columnDefinition = "TEXT")
+    private String feedback;
     
     @Column(name = "taskgroup_id", nullable = false)
     private Integer taskGroupId;

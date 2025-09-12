@@ -91,8 +91,8 @@ public interface ArticleRepository extends JpaRepository<Article, Integer> {
     // 특정 게시판의 생성자 ID로 검색 (counsel 카테고리 제외)
     Page<Article> findByBoardIdAndCreatedByIdAndCategoryNot(Integer boardId, Integer createdById, String category, Pageable pageable);
     
-    // 특정 게시판에서 특정 카테고리 제외하고 좋아요 10개 이상인 게시글 검색
-    @Query("SELECT a FROM Article a WHERE a.boardId = :boardId AND a.category != :category AND SIZE(a.likedByUsers) >= 10")
+    // 특정 게시판에서 특정 카테고리 제외하고 좋아요 5개 이상인 게시글 검색
+    @Query("SELECT a FROM Article a WHERE a.boardId = :boardId AND a.category != :category AND SIZE(a.likedByUsers) >= 5")
     Page<Article> findByBoardIdAndCategoryNotAndLikedByUsersCountGreaterThanEqual(@Param("boardId") Integer boardId, @Param("category") String category, Pageable pageable);
     
     // 특정 게시판에서 특정 카테고리 제외하고 좋아요 10개 이상인 게시글 검색 (List 반환)

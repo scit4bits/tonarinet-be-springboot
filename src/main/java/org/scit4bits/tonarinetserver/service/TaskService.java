@@ -6,16 +6,16 @@ import java.util.List;
 import org.scit4bits.tonarinetserver.dto.PagedResponse;
 import org.scit4bits.tonarinetserver.dto.TaskRequestDTO;
 import org.scit4bits.tonarinetserver.dto.TaskResponseDTO;
-import org.scit4bits.tonarinetserver.dto.TeamResponseDTO;
-import org.scit4bits.tonarinetserver.dto.UserDTO;
 import org.scit4bits.tonarinetserver.entity.Task;
 import org.scit4bits.tonarinetserver.entity.TaskGroup;
 import org.scit4bits.tonarinetserver.entity.Team;
 import org.scit4bits.tonarinetserver.entity.User;
+import org.scit4bits.tonarinetserver.entity.UserTeam;
 import org.scit4bits.tonarinetserver.repository.TaskGroupRepository;
 import org.scit4bits.tonarinetserver.repository.TaskRepository;
 import org.scit4bits.tonarinetserver.repository.TeamRepository;
 import org.scit4bits.tonarinetserver.repository.UserRepository;
+import org.scit4bits.tonarinetserver.repository.UserTeamRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -37,6 +37,7 @@ public class TaskService {
     private final TeamRepository teamRepository;
     private final TaskGroupRepository taskGroupRepository;    
     private final NotificationService notificationService;
+    private final UserTeamRepository userTeamRepository;
 
     public void createTask(TaskRequestDTO request, User creator) {
         log.info("Creating task with name: {} by user: {} for organization: {}", request.getTitle(), creator.getId(), request.getOrgId());
@@ -104,7 +105,36 @@ public class TaskService {
     @Transactional(readOnly = true)
     public List<TaskResponseDTO> getTasksByUserId(Integer userId) {
         log.info("Fetching tasks for user: {}", userId);
-        return taskRepository.findByUserIdOrderByDueDateAsc(userId).stream()
+        
+        // Get tasks directly assigned to the user
+        List<Task> userTasks = taskRepository.findByUserIdOrderByDueDateAsc(userId);
+        
+        // Get team IDs that the user has joined
+        List<UserTeam> userTeams = userTeamRepository.findByIdUserId(userId);
+        List<Integer> teamIds = userTeams.stream()
+                .map(userTeam -> userTeam.getId().getTeamId())
+                .toList();
+        
+        // Get tasks assigned to those teams
+        List<Task> teamTasks = new ArrayList<>();
+        for (Integer teamId : teamIds) {
+            teamTasks.addAll(taskRepository.findByTeamIdOrderByDueDateAsc(teamId));
+        }
+        
+        // Combine both lists
+        List<Task> allTasks = new ArrayList<>();
+        allTasks.addAll(userTasks);
+        allTasks.addAll(teamTasks);
+        
+        // Convert to DTOs and sort by due date
+        return allTasks.stream()
+                .distinct() // Remove duplicates if any
+                .sorted((t1, t2) -> {
+                    if (t1.getDueDate() == null && t2.getDueDate() == null) return 0;
+                    if (t1.getDueDate() == null) return 1;
+                    if (t2.getDueDate() == null) return -1;
+                    return t1.getDueDate().compareTo(t2.getDueDate());
+                })
                 .map(TaskResponseDTO::fromEntity)
                 .toList();
     }
@@ -133,7 +163,7 @@ public class TaskService {
         log.info("Task deleted successfully");
     }
 
-    public TaskResponseDTO updateTaskScore(Integer id, Integer score, User user) {
+    public TaskResponseDTO updateTaskScore(Integer id, Integer score, String feedback, User user) {
         log.info("Updating task score for task id: {} to {} by user: {}", id, score, user.getId());
         
         Task task = taskRepository.findById(id)
@@ -149,6 +179,7 @@ public class TaskService {
         }
         
         task.setScore(score);
+        task.setFeedback(feedback);
         Task savedTask = taskRepository.save(task);
         log.info("Task score updated successfully");
 

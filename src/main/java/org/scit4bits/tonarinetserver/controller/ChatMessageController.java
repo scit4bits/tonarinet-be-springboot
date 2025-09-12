@@ -74,9 +74,22 @@ public class ChatMessageController {
             messagingTemplate.convertAndSend("/topic/chat/room/" + roomId, savedMessage);
 
             log.info("Message sent to room {} by user {}", roomId, principal.getId());
+
             
             // background task create : AI response and send back to the room
             if(chatRoomService.checkIfAIChatroom(roomId)){
+                // send message to chatroom that notices AI response is being generated
+                ChatMessageResponseDTO aiNoticeMessage = chatMessageService.sendMessage(
+                        ChatMessageRequestDTO.builder()
+                                .chatroomId(roomId)
+                                .message("AI is generating a response...")
+                                .build(), 0);
+
+                messagingTemplate.convertAndSend("/topic/chat/room/" + roomId, aiNoticeMessage);
+
+                
+
+
                 CompletableFuture.runAsync(() -> {
                     String aiResponse = aiService.generateResponseWithMemory(messageRequest.getMessage(), roomId);
                     ChatMessageResponseDTO aiMessage = chatMessageService.sendMessage(

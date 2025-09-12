@@ -7,6 +7,7 @@ import org.scit4bits.tonarinetserver.dto.SimpleResponse;
 import org.scit4bits.tonarinetserver.dto.TaskGroupResponseDTO;
 import org.scit4bits.tonarinetserver.dto.TaskRequestDTO;
 import org.scit4bits.tonarinetserver.dto.TaskResponseDTO;
+import org.scit4bits.tonarinetserver.dto.TaskScoreUpdateRequestDTO;
 import org.scit4bits.tonarinetserver.entity.User;
 import org.scit4bits.tonarinetserver.service.TaskGroupService;
 import org.scit4bits.tonarinetserver.service.TaskService;
@@ -192,14 +193,14 @@ public class TaskController {
     @Operation(summary = "Update task score", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<TaskResponseDTO> updateTaskScore(
             @PathVariable("id") Integer id,
-            @RequestParam("score") Integer score,
+            @RequestBody TaskScoreUpdateRequestDTO request,
             @AuthenticationPrincipal User user) {
         if (user == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
         
         try {
-            TaskResponseDTO task = taskService.updateTaskScore(id, score, user);
+            TaskResponseDTO task = taskService.updateTaskScore(id, request.getScore(), request.getFeedback(), user);
             return ResponseEntity.ok(task);
         } catch (RuntimeException e) {
             if (e.getMessage().contains("not found")) {

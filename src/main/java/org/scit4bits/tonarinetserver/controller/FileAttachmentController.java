@@ -4,7 +4,6 @@ import java.util.List;
 
 import org.scit4bits.tonarinetserver.dto.FileAttachmentRequestDTO;
 import org.scit4bits.tonarinetserver.dto.FileAttachmentResponseDTO;
-import org.scit4bits.tonarinetserver.dto.PagedResponse;
 import org.scit4bits.tonarinetserver.entity.FileAttachment.FileType;
 import org.scit4bits.tonarinetserver.entity.User;
 import org.scit4bits.tonarinetserver.service.FileAttachmentService;
@@ -14,14 +13,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
@@ -100,6 +95,11 @@ public class FileAttachmentController {
             byte[] fileContent = fileAttachmentService.downloadFile(id, user);
             
             ByteArrayResource resource = new ByteArrayResource(fileContent);
+            
+            // Generate ETag based on file ID and last modified time for cache validation
+            String etag = "\"" + fileInfo.getId() + "-" + (fileInfo.getUploadedAt() != null ? 
+                fileInfo.getUploadedAt().hashCode() : fileContent.hashCode()) + "\"";
+            
             switch(fileInfo.getType()){
                 case ATTACHMENT:
                     return ResponseEntity.ok()
@@ -107,14 +107,18 @@ public class FileAttachmentController {
                             "attachment; filename=\"" + fileInfo.getOriginalFilename() + "\"")
                         .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_OCTET_STREAM_VALUE)
                         .header(HttpHeaders.CONTENT_LENGTH, String.valueOf(fileContent.length))
+                        .header(HttpHeaders.CACHE_CONTROL, "private, max-age=3600") // Cache for 1 hour
+                        .header(HttpHeaders.ETAG, etag)
                         .body(resource);
                 case IMAGE:
-                    // Handle image case
+                    // Handle image case - images can be cached longer
                     return ResponseEntity.ok()
                         .header(HttpHeaders.CONTENT_DISPOSITION,
                             "inline; filename=\"" + fileInfo.getOriginalFilename() + "\"")
                         .header(HttpHeaders.CONTENT_TYPE, MediaType.IMAGE_JPEG_VALUE)
                         .header(HttpHeaders.CONTENT_LENGTH, String.valueOf(fileContent.length))
+                        .header(HttpHeaders.CACHE_CONTROL, "private, max-age=86400") // Cache for 24 hours
+                        .header(HttpHeaders.ETAG, etag)
                         .body(resource);
                 default:
                     throw new IllegalArgumentException("Unsupported file type: " + fileInfo.getType());
