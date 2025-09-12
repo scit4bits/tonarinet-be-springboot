@@ -43,7 +43,7 @@ public class TownReviewResponseDTO {
                 .id(townReview.getId())
                 .contents(townReview.getContents())
                 .createdById(townReview.getCreatedById())
-                .createdByName(townReview.getCreatedBy() != null ? townReview.getCreatedBy().getName() : null)
+                .createdByName(townReview.getCreatedBy() != null ? townReview.getCreatedBy().getNickname() : null)
                 .createdAt(townReview.getCreatedAt())
                 .transportation(townReview.getTransportation())
                 .safety(townReview.getSafety())

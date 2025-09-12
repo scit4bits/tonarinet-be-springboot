@@ -37,7 +37,7 @@ public class ArticleDTO {
                 .title(article.getTitle())
                 .contents(article.getContents())
                 .createdById(article.getCreatedById())
-                .createdByName(article.getCreatedBy() != null ? article.getCreatedBy().getName() : null)
+                .createdByName(article.getCreatedBy() != null ? article.getCreatedBy().getNickname() : null)
                 .createdAt(article.getCreatedAt())
                 .updatedAt(article.getUpdatedAt())
                 .boardId(article.getBoardId())

@@ -30,7 +30,7 @@ public class LiveReportResponseDTO {
                 .likeCount(liveReport.getLikeCount())
                 .createdAt(liveReport.getCreatedAt())
                 .createdById(liveReport.getCreatedById())
-                .createdByName(liveReport.getCreatedBy() != null ? liveReport.getCreatedBy().getName() : null)
+                .createdByName(liveReport.getCreatedBy() != null ? liveReport.getCreatedBy().getNickname() : null)
                 .longitude(liveReport.getLongitude())
                 .latitude(liveReport.getLatitude())
                 .build();

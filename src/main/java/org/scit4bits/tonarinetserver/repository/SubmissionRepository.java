@@ -33,8 +33,8 @@ public interface SubmissionRepository extends JpaRepository<Submission, Integer>
     Page<Submission> findByTaskId(@Param("taskId") Integer taskId, Pageable pageable);
 
     @Query("SELECT s FROM Submission s LEFT JOIN FETCH s.createdBy LEFT JOIN FETCH s.task " +
-           "WHERE LOWER(s.createdBy.name) LIKE LOWER(CONCAT('%', :name, '%'))")
-    Page<Submission> findByCreatedByNameContaining(@Param("name") String name, Pageable pageable);
+           "WHERE LOWER(s.createdBy.nickname) LIKE LOWER(CONCAT('%', :name, '%'))")
+    Page<Submission> findByCreatedByNicknameContaining(@Param("name") String name, Pageable pageable);
 
     @Query("SELECT s FROM Submission s LEFT JOIN FETCH s.createdBy LEFT JOIN FETCH s.task " +
            "WHERE LOWER(s.task.name) LIKE LOWER(CONCAT('%', :taskName, '%'))")

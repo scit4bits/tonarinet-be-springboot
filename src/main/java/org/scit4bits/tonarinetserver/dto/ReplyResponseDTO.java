@@ -27,7 +27,7 @@ public class ReplyResponseDTO {
                 .id(reply.getId())
                 .contents(reply.getContents())
                 .createdById(reply.getCreatedById())
-                .createdByName(reply.getCreatedBy() != null ? reply.getCreatedBy().getName() : null)
+                .createdByName(reply.getCreatedBy() != null ? reply.getCreatedBy().getNickname() : null)
                 .createdAt(reply.getCreatedAt())
                 .articleId(reply.getArticleId())
                 .articleTitle(reply.getArticle() != null ? reply.getArticle().getTitle() : null)

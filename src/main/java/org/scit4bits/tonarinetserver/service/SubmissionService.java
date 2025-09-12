@@ -159,7 +159,7 @@ public class SubmissionService {
                 submissionPage = submissionRepository.findByContentsContaining(search, pageable);
                 break;
             case "creator":
-                submissionPage = submissionRepository.findByCreatedByNameContaining(search, pageable);
+                submissionPage = submissionRepository.findByCreatedByNicknameContaining(search, pageable);
                 break;
             case "task":
                 submissionPage = submissionRepository.findByTaskNameContaining(search, pageable);
@@ -169,7 +169,7 @@ public class SubmissionService {
                     Integer createdById = Integer.parseInt(search);
                     submissionPage = submissionRepository.findByCreatedById(createdById, pageable);
                 } catch (NumberFormatException e) {
-                    submissionPage = submissionRepository.findByCreatedByNameContaining(search, pageable);
+                    submissionPage = submissionRepository.findByCreatedByNicknameContaining(search, pageable);
                 }
                 break;
             case "taskid":

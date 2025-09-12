@@ -37,7 +37,7 @@ public class TaskResponseDTO {
                 .name(task.getName())
                 .contents(task.getContents())
                 .createdById(task.getCreatedById())
-                .createdByName(task.getCreatedBy() != null ? task.getCreatedBy().getName() : null)
+                .createdByName(task.getCreatedBy() != null ? task.getCreatedBy().getNickname() : null)
                 .createdAt(task.getCreatedAt())
                 .updatedAt(task.getUpdatedAt())
                 .dueDate(task.getDueDate())
