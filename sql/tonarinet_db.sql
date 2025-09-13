@@ -82,6 +82,7 @@ create table tonarinet.user
     is_admin    tinyint(1) default 0                 not null,
     gender      varchar(10)                          null,
     nationality varchar(5) default 'kor'             not null,
+    reset_token text                                 null,
     constraint User_pk
         unique (nickname),
     constraint User_pk_2
@@ -108,6 +109,22 @@ create table tonarinet.article
         foreign key (created_by) references tonarinet.user (id)
 );
 
+create table tonarinet.chatmessage
+(
+    id          int auto_increment
+        primary key,
+    sender      int                                  not null,
+    message     text                                 not null,
+    created_at  datetime   default CURRENT_TIMESTAMP null,
+    is_read     tinyint(1) default 0                 not null,
+    chatroom_id int                                  not null,
+    constraint ChatMessage_User_id_fk
+        foreign key (sender) references tonarinet.user (id)
+);
+
+create index ChatMessage_ChatRoom_id_fk
+    on tonarinet.chatmessage (chatroom_id);
+
 create table tonarinet.chatroom
 (
     id             int auto_increment
@@ -119,21 +136,6 @@ create table tonarinet.chatroom
     leader_user_id int                                  not null,
     constraint ChatRoom_User_id_fk
         foreign key (leader_user_id) references tonarinet.user (id)
-);
-
-create table tonarinet.chatmessage
-(
-    id          int auto_increment
-        primary key,
-    sender      int                                  not null,
-    message     text                                 not null,
-    created_at  datetime   default CURRENT_TIMESTAMP null,
-    is_read     tinyint(1) default 0                 not null,
-    chatroom_id int                                  not null,
-    constraint ChatMessage_ChatRoom_id_fk
-        foreign key (chatroom_id) references tonarinet.chatroom (id),
-    constraint ChatMessage_User_id_fk
-        foreign key (sender) references tonarinet.user (id)
 );
 
 create table tonarinet.livereport
@@ -227,6 +229,7 @@ create table tonarinet.task
     team_id      int                                null,
     score        int                                null,
     max_score    int                                null,
+    feedback     text                               null,
     constraint Task_Team_id_fk
         foreign key (team_id) references tonarinet.team (id),
     constraint Task_User_id_fk
@@ -235,6 +238,20 @@ create table tonarinet.task
         foreign key (created_by) references tonarinet.user (id),
     constraint task_taskgroup_id_fk
         foreign key (taskgroup_Id) references tonarinet.taskgroup (id)
+);
+
+create table tonarinet.submission
+(
+    id         int auto_increment
+        primary key,
+    created_at datetime default CURRENT_TIMESTAMP not null,
+    created_by int                                not null,
+    contents   text                               null,
+    task_id    int                                not null,
+    constraint submission___fk
+        foreign key (task_id) references tonarinet.task (id),
+    constraint submission_user_id_fk
+        foreign key (created_by) references tonarinet.user (id)
 );
 
 create table tonarinet.fileattachment
@@ -251,25 +268,13 @@ create table tonarinet.fileattachment
     filesize          int                                  not null comment 'in byte',
     submission_id     int                                  null,
     constraint fileattachment_article_id_fk
-        foreign key (article_id) references tonarinet.article (id),
-    constraint fileattachment_task_id_fk
-        foreign key (submission_id) references tonarinet.task (id),
+        foreign key (article_id) references tonarinet.article (id)
+            on delete set null,
+    constraint fileattachment_submission_id_fk
+        foreign key (submission_id) references tonarinet.submission (id)
+            on delete set null,
     constraint fileattachment_user_id_fk
         foreign key (uploaded_by) references tonarinet.user (id)
-);
-
-create table tonarinet.submission
-(
-    id         int auto_increment
-        primary key,
-    created_at datetime default CURRENT_TIMESTAMP not null,
-    created_by int                                not null,
-    contents   text                               null,
-    task_id    int                                not null,
-    constraint submission___fk
-        foreign key (task_id) references tonarinet.task (id),
-    constraint submission_user_id_fk
-        foreign key (created_by) references tonarinet.user (id)
 );
 
 create table tonarinet.townreview
@@ -332,12 +337,13 @@ create table tonarinet.userlikearticle
 
 create table tonarinet.userparty
 (
-    user_id       int        not null,
-    party_id      int        not null,
-    entry_message text       null,
-    is_granted    tinyint(1) null,
+    user_id       int                  not null,
+    party_id      int                  not null,
+    entry_message text                 null,
+    is_granted    tinyint(1) default 0 null,
     constraint UserParty_Party_id_fk
-        foreign key (party_id) references tonarinet.party (id),
+        foreign key (party_id) references tonarinet.party (id)
+            on delete cascade,
     constraint UserParty_User_id_fk
         foreign key (user_id) references tonarinet.user (id)
 );
@@ -362,7 +368,8 @@ create table tonarinet.userteam
     user_id int not null,
     primary key (user_id, team_id),
     constraint UserTeam_Team_id_fk
-        foreign key (team_id) references tonarinet.team (id),
+        foreign key (team_id) references tonarinet.team (id)
+            on delete cascade,
     constraint UserTeam_User_id_fk
         foreign key (user_id) references tonarinet.user (id)
 );
