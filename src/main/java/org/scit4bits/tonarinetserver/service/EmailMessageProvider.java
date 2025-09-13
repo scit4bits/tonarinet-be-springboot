@@ -51,7 +51,7 @@ public class EmailMessageProvider {
         koMessages.put("footer.copyright", "© 2025 Tonarinet. All rights reserved.");
         koMessages.put("footer.support", "문의사항이 있으시면 support@tonarinet.com으로 연락해주세요.");
 
-        messages.put(EmailLanguage.KO, koMessages);
+        messages.put(EmailLanguage.KOR, koMessages);
 
         // English messages
         Map<String, String> enMessages = new HashMap<>();
@@ -89,7 +89,7 @@ public class EmailMessageProvider {
         enMessages.put("footer.copyright", "© 2025 Tonarinet. All rights reserved.");
         enMessages.put("footer.support", "For inquiries, please contact us at support@tonarinet.com.");
 
-        messages.put(EmailLanguage.EN, enMessages);
+        messages.put(EmailLanguage.ENG, enMessages);
 
         // Japanese messages
         Map<String, String> jaMessages = new HashMap<>();
@@ -126,13 +126,13 @@ public class EmailMessageProvider {
         jaMessages.put("footer.copyright", "© 2025 となりネット All rights reserved.");
         jaMessages.put("footer.support", "お問い合わせは support@tonarinet.com までご連絡ください。");
 
-        messages.put(EmailLanguage.JA, jaMessages);
+        messages.put(EmailLanguage.JPN, jaMessages);
     }
 
     public String getMessage(EmailLanguage language, String key, Object... args) {
         Map<String, String> langMessages = messages.get(language);
         if (langMessages == null) {
-            langMessages = messages.get(EmailLanguage.KO); // Fallback to Korean
+            langMessages = messages.get(EmailLanguage.ENG); // Fallback to Korean
         }
 
         String message = langMessages.get(key);

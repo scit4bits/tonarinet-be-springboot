@@ -1,9 +1,9 @@
 package org.scit4bits.tonarinetserver.enums;
 
 public enum EmailLanguage {
-    KO("ko", "한국어"),
-    EN("en", "English"),
-    JA("ja", "日本語");
+    KOR("kor", "한국어"),
+    ENG("eng", "English"),
+    JPN("jpn", "日本語");
 
     private final String code;
     private final String displayName;
@@ -23,7 +23,7 @@ public enum EmailLanguage {
 
     public static EmailLanguage fromCode(String code) {
         if (code == null || code.trim().isEmpty()) {
-            return KO; // Default to Korean
+            return ENG; // Default to English
         }
 
         for (EmailLanguage lang : values()) {
@@ -31,6 +31,6 @@ public enum EmailLanguage {
                 return lang;
             }
         }
-        return KO; // Fallback to Korean
+        return ENG; // Fallback to English
     }
 }
