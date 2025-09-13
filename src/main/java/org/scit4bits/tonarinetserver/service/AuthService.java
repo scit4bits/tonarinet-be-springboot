@@ -38,7 +38,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 @Transactional
 public class AuthService {
-    
+
     private final UserRepository userRepository;
     private final CountryRepository countryRepository;
     private final OrganizationRepository organizationRepository;
@@ -47,7 +47,7 @@ public class AuthService {
     private final JwtService jwtService;
     private final EmailService emailService;
     private final ChatRoomService chatRoomService;
-    
+
     @Value("${line.api.client_id}")
     private String lineApiClientId;
 
@@ -75,14 +75,12 @@ public class AuthService {
     @Value("${kakao.redirect_uri}")
     private String kakaoRedirectUri;
 
-
-
     public GenerateStateResponse generateState() {
         String state = java.util.UUID.randomUUID().toString();
         String nonce = java.util.UUID.randomUUID().toString();
         log.debug("Generated state: {}, nonce: {}", state, nonce);
 
-        return new GenerateStateResponse(state,nonce);
+        return new GenerateStateResponse(state, nonce);
     }
 
     public AuthCheckResponse getLineCheck(String code, String state) {
@@ -97,15 +95,14 @@ public class AuthService {
 
         try {
             String response = webClient.post()
-            .uri("https://api.line.me/oauth2/v2.1/token")
-            .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-            .body(BodyInserters.fromFormData(formData))
-            .retrieve()
-            .bodyToMono(String.class)
-            .block();
+                    .uri("https://api.line.me/oauth2/v2.1/token")
+                    .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                    .body(BodyInserters.fromFormData(formData))
+                    .retrieve()
+                    .bodyToMono(String.class)
+                    .block();
 
             log.debug("Line token response: {}", response);
-
 
             JSONParser parser = new JSONParser(response);
             LinkedHashMap<String, Object> jsonMap = parser.parseObject();
@@ -114,8 +111,8 @@ public class AuthService {
 
             // Decode the JWT token
             DecodedJWT decodedJWT = JWT.decode(idToken);
-            log.debug("Decoded JWT - Subject: {}, Issuer: {}, Audience: {}", 
-                decodedJWT.getSubject(), decodedJWT.getIssuer(), decodedJWT.getAudience());
+            log.debug("Decoded JWT - Subject: {}, Issuer: {}, Audience: {}",
+                    decodedJWT.getSubject(), decodedJWT.getIssuer(), decodedJWT.getAudience());
 
             // Extract claims
             String userId = decodedJWT.getSubject();
@@ -123,7 +120,7 @@ public class AuthService {
             String picture = decodedJWT.getClaim("picture").asString();
 
             log.debug("User ID: {}, Name: {}, Picture: {}", userId, name, picture);
-            
+
             return new AuthCheckResponse(userId, name, picture);
         } catch (Exception e) {
             log.error("Error parsing JSON response: {}", e.getMessage());
@@ -143,12 +140,12 @@ public class AuthService {
 
         try {
             String response = webClient.post()
-                .uri("https://oauth2.googleapis.com/token")
-                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                .body(BodyInserters.fromFormData(formData))
-                .retrieve()
-                .bodyToMono(String.class)
-                .block();
+                    .uri("https://oauth2.googleapis.com/token")
+                    .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                    .body(BodyInserters.fromFormData(formData))
+                    .retrieve()
+                    .bodyToMono(String.class)
+                    .block();
 
             log.debug("Google token response: {}", response);
 
@@ -159,10 +156,10 @@ public class AuthService {
 
             // Decode the JWT token
             DecodedJWT decodedJWT = JWT.decode(idToken);
-            log.debug("Decoded JWT - Subject: {}, Issuer: {}, Audience: {}", 
-                decodedJWT.getSubject(), decodedJWT.getIssuer(), decodedJWT.getAudience());
+            log.debug("Decoded JWT - Subject: {}, Issuer: {}, Audience: {}",
+                    decodedJWT.getSubject(), decodedJWT.getIssuer(), decodedJWT.getAudience());
 
-            // Extract claims   
+            // Extract claims
             String userId = decodedJWT.getSubject();
             String name = decodedJWT.getClaim("name").asString();
             String email = decodedJWT.getClaim("email").asString();
@@ -189,12 +186,12 @@ public class AuthService {
 
         try {
             String response = webClient.post()
-                .uri("https://kauth.kakao.com/oauth/token")
-                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                .body(BodyInserters.fromFormData(formData))
-                .retrieve()
-                .bodyToMono(String.class)
-                .block();
+                    .uri("https://kauth.kakao.com/oauth/token")
+                    .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                    .body(BodyInserters.fromFormData(formData))
+                    .retrieve()
+                    .bodyToMono(String.class)
+                    .block();
 
             log.debug("Kakao token response: {}", response);
 
@@ -205,10 +202,10 @@ public class AuthService {
 
             // Decode the JWT token
             DecodedJWT decodedJWT = JWT.decode(idToken);
-            log.debug("Decoded JWT - Subject: {}, Issuer: {}, Audience: {}", 
-                decodedJWT.getSubject(), decodedJWT.getIssuer(), decodedJWT.getAudience());
+            log.debug("Decoded JWT - Subject: {}, Issuer: {}, Audience: {}",
+                    decodedJWT.getSubject(), decodedJWT.getIssuer(), decodedJWT.getAudience());
 
-            // Extract claims   
+            // Extract claims
             String userId = decodedJWT.getSubject();
             String name = decodedJWT.getClaim("nickname").asString();
             String picture = decodedJWT.getClaim("picture").asString();
@@ -227,7 +224,7 @@ public class AuthService {
     }
 
     public boolean userSignUp(SignUpRequest userJson) {
-        try{
+        try {
             log.debug("userJson: {}", userJson);
             User user = User.builder()
                     .email(userJson.getEmail())
@@ -253,21 +250,23 @@ public class AuthService {
 
             userRepository.save(user);
 
-            // 1. create new chatroom (chat room name is "AI Chatbot" and chatroom leader is user 0)
+            // 1. create new chatroom (chat room name is "AI Chatbot" and chatroom leader is
+            // user 0)
             // 2. let user 0 join the chatroom
             // 3. let new user join the chatroom
             try {
-                // Find or create system user for AI Chatbot (try ID 0 first, then find any admin user)
+                // Find or create system user for AI Chatbot (try ID 0 first, then find any
+                // admin user)
                 User systemUser = userRepository.findById(0).get();
-                
+
                 // Create ChatRoomRequestDTO for AI Chatbot room
                 ChatRoomRequestDTO chatRoomRequest = ChatRoomRequestDTO.builder()
-                    .title("AI Chatbot")
-                    .description("Welcome to your personal AI assistant chatroom!")
-                    .forceRemain(true)
-                    .userIds(List.of(user.getId()))
-                    .build();
-                
+                        .title("AI Chatbot")
+                        .description("Welcome to your personal AI assistant chatroom!")
+                        .forceRemain(true)
+                        .userIds(List.of(user.getId()))
+                        .build();
+
                 // Create the chatroom with system user as leader
                 chatRoomService.createChatRoom(chatRoomRequest, systemUser);
                 log.debug("Created AI Chatbot room for user: {} with leader: {}", user.getId(), systemUser.getId());
@@ -276,19 +275,19 @@ public class AuthService {
                 // Don't fail the signup process if chatroom creation fails
             }
 
+            // Send mail
+            emailService.sendWelcomeEmail(userJson.getNationality(), user.getEmail(), user.getName());
 
-    
-            
             return true;
-        }catch(Exception e){
+        } catch (Exception e) {
             log.error("Error signing up user: {}", e.getMessage());
             return false;
         }
     }
 
-    public String signInWithPassword(String email, String password){
+    public String signInWithPassword(String email, String password) {
         User user = userRepository.findByEmail(email).get();
-        if(user != null && passwordEncoder.matches(password, user.getPassword())){
+        if (user != null && passwordEncoder.matches(password, user.getPassword())) {
             log.debug("User authenticated successfully: {}", user.getEmail());
             return jwtService.generateToken(user);
         } else {
@@ -297,9 +296,9 @@ public class AuthService {
         }
     }
 
-    public String signInWithOAuth(String provider, String oauthid){ // OAuthID from IDToken (sub)
+    public String signInWithOAuth(String provider, String oauthid) { // OAuthID from IDToken (sub)
         User user = userRepository.findByOauthidAndProvider(oauthid, provider).get();
-        if(user != null) {
+        if (user != null) {
             log.debug("User authenticated successfully with OAuth: {}", user.getEmail());
             return jwtService.generateToken(user);
         } else {
@@ -308,7 +307,4 @@ public class AuthService {
         }
     }
 
-    
-
-    
 }
