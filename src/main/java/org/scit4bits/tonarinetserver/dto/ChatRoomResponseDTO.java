@@ -1,18 +1,16 @@
 package org.scit4bits.tonarinetserver.dto;
 
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.stream.Collectors;
-
-import org.scit4bits.tonarinetserver.entity.ChatRoom;
-
 import com.fasterxml.jackson.annotation.JsonFormat;
-
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.scit4bits.tonarinetserver.entity.ChatRoom;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Data
 @Builder
@@ -54,12 +52,12 @@ public class ChatRoomResponseDTO {
 
     public static ChatRoomResponseDTO fromEntity(ChatRoom chatRoom) {
         ChatRoomResponseDTOBuilder builder = ChatRoomResponseDTO.builder()
-            .id(chatRoom.getId())
-            .title(chatRoom.getTitle())
-            .description(chatRoom.getDescription())
-            .forceRemain(chatRoom.getForceRemain())
-            .createdAt(chatRoom.getCreatedAt())
-            .leaderUserId(chatRoom.getLeaderUserId());
+                .id(chatRoom.getId())
+                .title(chatRoom.getTitle())
+                .description(chatRoom.getDescription())
+                .forceRemain(chatRoom.getForceRemain())
+                .createdAt(chatRoom.getCreatedAt())
+                .leaderUserId(chatRoom.getLeaderUserId());
 
         // Add leader user if available
         if (chatRoom.getLeaderUser() != null) {
@@ -69,8 +67,8 @@ public class ChatRoomResponseDTO {
         // Add users if available
         if (chatRoom.getUsers() != null) {
             List<UserDTO> userDTOs = chatRoom.getUsers().stream()
-                .map(UserDTO::fromEntity)
-                .collect(Collectors.toList());
+                    .map(UserDTO::fromEntity)
+                    .collect(Collectors.toList());
             builder.users(userDTOs);
             builder.userCount(userDTOs.size());
         } else {

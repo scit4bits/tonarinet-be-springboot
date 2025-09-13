@@ -1,11 +1,10 @@
 package org.scit4bits.tonarinetserver.dto;
 
-import org.scit4bits.tonarinetserver.entity.Organization;
-
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.scit4bits.tonarinetserver.entity.Organization;
 
 @Data
 @Builder
@@ -21,7 +20,7 @@ public class OrganizationDTO {
 
     /**
      * Organization 엔티티를 OrganizationDTO로 변환하는 static 메서드
-     * 
+     *
      * @param organization Organization 엔티티
      * @return OrganizationDTO
      */

@@ -1,13 +1,8 @@
 package org.scit4bits.tonarinetserver.service;
 
-import java.util.List;
-
-import org.scit4bits.tonarinetserver.dto.ChatRoomRequestDTO;
-import org.scit4bits.tonarinetserver.dto.ChatRoomResponseDTO;
-import org.scit4bits.tonarinetserver.dto.PagedResponse;
-import org.scit4bits.tonarinetserver.dto.PartyRequestDTO;
-import org.scit4bits.tonarinetserver.dto.PartyResponseDTO;
-import org.scit4bits.tonarinetserver.dto.UserDTO;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.scit4bits.tonarinetserver.dto.*;
 import org.scit4bits.tonarinetserver.entity.Party;
 import org.scit4bits.tonarinetserver.entity.User;
 import org.scit4bits.tonarinetserver.entity.UserParty;
@@ -21,8 +16,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.util.List;
 
 @Service
 @Slf4j
@@ -48,14 +42,14 @@ public class PartyService {
 
 
         UserParty newUserParty = UserParty.builder()
-        .id(UserParty.UserPartyId.builder()
-                .userId(creator.getId())
-                .partyId(savedParty.getId())
-                .build())
-        .user(creator)
-        .party(savedParty)
-        .isGranted(true) // Party creator is automatically granted
-        .build();
+                .id(UserParty.UserPartyId.builder()
+                        .userId(creator.getId())
+                        .partyId(savedParty.getId())
+                        .build())
+                .user(creator)
+                .party(savedParty)
+                .isGranted(true) // Party creator is automatically granted
+                .build();
         // Add creator to party members
         // The many-to-many relationship should handle this through userParty table
         userPartyRepository.save(newUserParty);
@@ -66,10 +60,10 @@ public class PartyService {
                 .description("Chat room for party: " + savedParty.getName())
                 .forceRemain(false)
                 .build();
-        
+
         ChatRoomResponseDTO chatRoomResponse = chatRoomService.createChatRoom(chatRoomRequest, creator);
-        log.info("ChatRoom created successfully with id: {} for party: {}", 
-                 chatRoomResponse.getId(), savedParty.getId());
+        log.info("ChatRoom created successfully with id: {} for party: {}",
+                chatRoomResponse.getId(), savedParty.getId());
 
         log.info("Party created successfully with id: {}", savedParty.getId());
         return createPartyResponseDTOWithUserPartyData(savedParty);
@@ -100,20 +94,20 @@ public class PartyService {
             enrichedUsers = party.getUsers().stream()
                     .map(user -> {
                         UserDTO userDTO = UserDTO.fromEntity(user);
-                        
+
                         // Fetch UserParty data to get entryMessage and isGranted
                         UserParty.UserPartyId userPartyId = UserParty.UserPartyId.builder()
                                 .userId(user.getId())
                                 .partyId(party.getId())
                                 .build();
-                        
+
                         userPartyRepository.findById(userPartyId).ifPresent(userParty -> {
                             log.debug("Injecting UserParty data for user {} in party {}: entryMessage='{}', isGranted={}",
                                     user.getId(), party.getId(), userParty.getEntryMessage(), userParty.getIsGranted());
                             userDTO.setEntryMessage(userParty.getEntryMessage());
                             userDTO.setIsGranted(userParty.getIsGranted());
                         });
-                        
+
                         return userDTO;
                     })
                     .toList();
@@ -166,7 +160,7 @@ public class PartyService {
 
     @Transactional(readOnly = true)
     public PagedResponse<PartyResponseDTO> searchParties(String searchBy, String search, Integer page,
-            Integer pageSize, String sortBy, String sortDirection) {
+                                                         Integer pageSize, String sortBy, String sortDirection) {
         log.info(
                 "Searching parties with searchBy: {}, search: {}, page: {}, pageSize: {}, sortBy: {}, sortDirection: {}",
                 searchBy, search, page, pageSize, sortBy, sortDirection);
@@ -298,7 +292,7 @@ public class PartyService {
                 .userId(targetUserId)
                 .partyId(partyId)
                 .build();
-        
+
         UserParty userParty = userPartyRepository.findById(userPartyId)
                 .orElseThrow(() -> new RuntimeException("User is not requesting to join this party"));
 
@@ -317,17 +311,17 @@ public class PartyService {
 
         try {
             List<ChatRoomResponseDTO> chatRooms = chatRoomService.searchChatRooms("title", party.getName(), 0, 10, "id", "asc").getData();
-            
+
             // Find exact match for party name
             ChatRoomResponseDTO matchingChatRoom = chatRooms.stream()
                     .filter(cr -> cr.getTitle().equals(party.getName()))
                     .findFirst()
                     .orElse(null);
-            
+
             if (matchingChatRoom != null) {
                 chatRoomService.joinChatRoom(matchingChatRoom.getId(), targetUser);
-                log.info("User {} joined corresponding ChatRoom {} for party {}", 
-                         targetUserId, matchingChatRoom.getId(), partyId);
+                log.info("User {} joined corresponding ChatRoom {} for party {}",
+                        targetUserId, matchingChatRoom.getId(), partyId);
             } else {
                 log.warn("No matching ChatRoom found for party {} with name '{}'", partyId, party.getName());
             }
@@ -337,8 +331,8 @@ public class PartyService {
         }
 
         // Create notification for target user about being granted access
-        notificationService.addNotification(targetUserId, 
-                "{\"messageType\": \"approvedPartyRequest\", \"partyName\": \"" + party.getName() + "\"}", 
+        notificationService.addNotification(targetUserId,
+                "{\"messageType\": \"approvedPartyRequest\", \"partyName\": \"" + party.getName() + "\"}",
                 null);
 
         log.info("User {} granted access to party {} successfully", targetUserId, partyId);
@@ -360,7 +354,7 @@ public class PartyService {
                 .userId(targetUserId)
                 .partyId(partyId)
                 .build();
-        
+
         UserParty userParty = userPartyRepository.findById(userPartyId)
                 .orElseThrow(() -> new RuntimeException("User is not requesting to join this party"));
 
@@ -373,8 +367,8 @@ public class PartyService {
         userPartyRepository.delete(userParty);
 
         // Create notification for target user about being rejected
-        notificationService.addNotification(targetUserId, 
-                "{\"messageType\": \"rejectedPartyRequest\", \"partyName\": \"" + party.getName() + "\"}", 
+        notificationService.addNotification(targetUserId,
+                "{\"messageType\": \"rejectedPartyRequest\", \"partyName\": \"" + party.getName() + "\"}",
                 null);
 
         log.info("User {} rejected from party {} successfully", targetUserId, partyId);

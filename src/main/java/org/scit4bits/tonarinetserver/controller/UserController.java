@@ -1,8 +1,7 @@
 package org.scit4bits.tonarinetserver.controller;
 
-import java.util.List;
-
-import org.apache.catalina.connector.Response;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.scit4bits.tonarinetserver.dto.ArticleDTO;
 import org.scit4bits.tonarinetserver.dto.PagedResponse;
 import org.scit4bits.tonarinetserver.dto.SimpleResponse;
@@ -14,11 +13,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.bind.annotation.RequestParam;
+import java.util.List;
 
 @RestController
 @Slf4j
@@ -30,7 +28,7 @@ public class UserController {
 
     @GetMapping("/list")
     public ResponseEntity<List<UserDTO>> getUsers(@AuthenticationPrincipal User user) {
-        if (user == null || user.getIsAdmin() == false) {
+        if (user == null || !user.getIsAdmin()) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
         List<UserDTO> users = userService.getAllUsers();
@@ -50,8 +48,8 @@ public class UserController {
 
     @GetMapping("/toggleAdmin")
     public ResponseEntity<SimpleResponse> toggleAdmin(@AuthenticationPrincipal User user,
-            @RequestParam("userId") Integer userId) {
-        if (user.getIsAdmin() == false) {
+                                                      @RequestParam("userId") Integer userId) {
+        if (!user.getIsAdmin()) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body(new SimpleResponse("You are not authorized to perform this action"));
         }
@@ -66,7 +64,7 @@ public class UserController {
 
     @GetMapping("/toggleGrant")
     public ResponseEntity<SimpleResponse> toggleGrant(@AuthenticationPrincipal User user,
-            @RequestParam("userId") Integer userId, @RequestParam("orgId") Integer orgId) {
+                                                      @RequestParam("userId") Integer userId, @RequestParam("orgId") Integer orgId) {
         if (user == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
@@ -81,8 +79,8 @@ public class UserController {
 
     @GetMapping("changeRole")
     public ResponseEntity<SimpleResponse> changeRole(@AuthenticationPrincipal User user,
-            @RequestParam("userId") Integer userId, @RequestParam("orgId") Integer orgId,
-            @RequestParam("newRole") String newRole) {
+                                                     @RequestParam("userId") Integer userId, @RequestParam("orgId") Integer orgId,
+                                                     @RequestParam("newRole") String newRole) {
         if (user == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
@@ -104,7 +102,7 @@ public class UserController {
             @RequestParam(name = "sortBy", defaultValue = "id") String sortBy,
             @RequestParam(name = "sortDirection", defaultValue = "asc") String sortDirection,
             @AuthenticationPrincipal User user) {
-        if (user == null || user.getIsAdmin() == false) {
+        if (user == null || !user.getIsAdmin()) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
 
@@ -122,7 +120,7 @@ public class UserController {
             @RequestParam(name = "sortBy", defaultValue = "id") String sortBy,
             @RequestParam(name = "sortDirection", defaultValue = "asc") String sortDirection,
             @AuthenticationPrincipal User user) {
-        if (user == null || user.getIsAdmin() == false) {
+        if (user == null || !user.getIsAdmin()) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
 

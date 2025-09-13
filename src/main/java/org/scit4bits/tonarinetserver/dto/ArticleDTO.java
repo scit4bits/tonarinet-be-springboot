@@ -1,15 +1,13 @@
 package org.scit4bits.tonarinetserver.dto;
 
-import java.time.LocalDateTime;
-import java.util.List;
-
-import org.scit4bits.tonarinetserver.entity.Article;
-import org.scit4bits.tonarinetserver.entity.FileAttachment;
-
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.scit4bits.tonarinetserver.entity.Article;
+
+import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @Builder

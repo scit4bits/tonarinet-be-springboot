@@ -1,13 +1,12 @@
 package org.scit4bits.tonarinetserver.dto;
 
-import java.time.LocalDateTime;
-
-import org.scit4bits.tonarinetserver.entity.TownReview;
-
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.scit4bits.tonarinetserver.entity.TownReview;
+
+import java.time.LocalDateTime;
 
 @Data
 @Builder
@@ -35,10 +34,10 @@ public class TownReviewResponseDTO {
     private Double averageRating;
 
     public static TownReviewResponseDTO fromEntity(TownReview townReview) {
-        double avgRating = (townReview.getTransportation() + townReview.getSafety() + 
-                          townReview.getInfra() + townReview.getPopulation() + 
-                          townReview.getEducation()) / 5.0;
-        
+        double avgRating = (townReview.getTransportation() + townReview.getSafety() +
+                townReview.getInfra() + townReview.getPopulation() +
+                townReview.getEducation()) / 5.0;
+
         return TownReviewResponseDTO.builder()
                 .id(townReview.getId())
                 .contents(townReview.getContents())
@@ -51,11 +50,11 @@ public class TownReviewResponseDTO {
                 .population(townReview.getPopulation())
                 .education(townReview.getEducation())
                 .regionId(townReview.getRegionId())
-                .regionName(townReview.getRegion() != null ? 
-                    (townReview.getRegion().getCategory1() + 
-                     (townReview.getRegion().getCategory2() != null ? " " + townReview.getRegion().getCategory2() : "") +
-                     (townReview.getRegion().getCategory3() != null ? " " + townReview.getRegion().getCategory3() : "") +
-                     (townReview.getRegion().getCategory4() != null ? " " + townReview.getRegion().getCategory4() : "")) : null)
+                .regionName(townReview.getRegion() != null ?
+                        (townReview.getRegion().getCategory1() +
+                                (townReview.getRegion().getCategory2() != null ? " " + townReview.getRegion().getCategory2() : "") +
+                                (townReview.getRegion().getCategory3() != null ? " " + townReview.getRegion().getCategory3() : "") +
+                                (townReview.getRegion().getCategory4() != null ? " " + townReview.getRegion().getCategory4() : "")) : null)
                 .countryCode(townReview.getCountryCode())
                 .countryName(townReview.getCountry() != null ? townReview.getCountry().getName() : null)
                 .likeCount(townReview.getLikeCount())

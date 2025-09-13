@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class PartyRequestDTO {
-    
+
     @NotBlank(message = "Party name is required")
     private String name;
 }

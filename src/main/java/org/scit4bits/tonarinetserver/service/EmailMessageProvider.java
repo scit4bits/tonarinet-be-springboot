@@ -1,10 +1,10 @@
 package org.scit4bits.tonarinetserver.service;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import org.scit4bits.tonarinetserver.enums.EmailLanguage;
 import org.springframework.stereotype.Component;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @Component
 public class EmailMessageProvider {

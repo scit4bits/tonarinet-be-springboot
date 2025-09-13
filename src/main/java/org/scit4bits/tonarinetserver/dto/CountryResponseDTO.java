@@ -1,11 +1,10 @@
 package org.scit4bits.tonarinetserver.dto;
 
-import org.scit4bits.tonarinetserver.entity.Country;
-
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.scit4bits.tonarinetserver.entity.Country;
 
 @Data
 @Builder

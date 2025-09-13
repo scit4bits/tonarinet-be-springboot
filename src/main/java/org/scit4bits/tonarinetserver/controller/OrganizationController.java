@@ -1,13 +1,7 @@
 package org.scit4bits.tonarinetserver.controller;
 
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
-import java.util.List;
-
 import org.scit4bits.tonarinetserver.dto.OrganizationDTO;
 import org.scit4bits.tonarinetserver.dto.PagedResponse;
 import org.scit4bits.tonarinetserver.dto.SimpleResponse;
@@ -17,11 +11,9 @@ import org.scit4bits.tonarinetserver.service.OrganizationService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 
 
 @RestController
@@ -39,7 +31,7 @@ public class OrganizationController {
 
     @GetMapping("/my")
     public ResponseEntity<List<OrganizationDTO>> getMyOrganizations(@AuthenticationPrincipal User user) {
-        if(user == null) {
+        if (user == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
         List<OrganizationDTO> organizations = organizationService.getMyOrganizations(user);
@@ -48,13 +40,13 @@ public class OrganizationController {
 
     @GetMapping("/search")
     public ResponseEntity<PagedResponse<OrganizationDTO>> getOrganizationSearch(
-        @RequestParam(name="searchBy", defaultValue = "all") String searchBy,
-        @RequestParam(name="search", defaultValue = "") String search,
-        @RequestParam(name="page", defaultValue = "0") Integer page,
-        @RequestParam(name="pageSize", defaultValue = "10") Integer pageSize,
-        @RequestParam(name="sortBy", defaultValue = "id") String sortBy,
-        @RequestParam(name="sortDirection", defaultValue = "asc") String sortDirection
-    ){
+            @RequestParam(name = "searchBy", defaultValue = "all") String searchBy,
+            @RequestParam(name = "search", defaultValue = "") String search,
+            @RequestParam(name = "page", defaultValue = "0") Integer page,
+            @RequestParam(name = "pageSize", defaultValue = "10") Integer pageSize,
+            @RequestParam(name = "sortBy", defaultValue = "id") String sortBy,
+            @RequestParam(name = "sortDirection", defaultValue = "asc") String sortDirection
+    ) {
         PagedResponse<OrganizationDTO> organizations = organizationService.searchOrganization(searchBy, search, page, pageSize, sortBy, sortDirection);
         return ResponseEntity.ok(organizations);
     }
@@ -62,7 +54,7 @@ public class OrganizationController {
     @PostMapping("/apply")
     public ResponseEntity<SimpleResponse> postOrganizationApply(
             @RequestParam("organizationId") Integer organizationId,
-            @RequestParam(name="entryMessage", defaultValue = "") String entryMessage,
+            @RequestParam(name = "entryMessage", defaultValue = "") String entryMessage,
             @AuthenticationPrincipal User user) {
         try {
             organizationService.applyToOrganization(user, organizationId, entryMessage);

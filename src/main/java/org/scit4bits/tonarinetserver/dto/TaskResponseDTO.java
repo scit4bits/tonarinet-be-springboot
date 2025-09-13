@@ -1,13 +1,12 @@
 package org.scit4bits.tonarinetserver.dto;
 
-import java.time.LocalDateTime;
-
-import org.scit4bits.tonarinetserver.entity.Task;
-
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.scit4bits.tonarinetserver.entity.Task;
+
+import java.time.LocalDateTime;
 
 @Data
 @Builder

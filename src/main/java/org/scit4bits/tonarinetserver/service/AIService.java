@@ -1,9 +1,6 @@
 package org.scit4bits.tonarinetserver.service;
 
-import java.util.List;
-
-import org.scit4bits.tonarinetserver.dto.ChatMessageResponseDTO;
-import org.scit4bits.tonarinetserver.entity.ChatMessage;
+import lombok.extern.slf4j.Slf4j;
 import org.scit4bits.tonarinetserver.repository.ChatMessageRepository;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
@@ -15,9 +12,6 @@ import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.openai.OpenAiChatModel;
 import org.springframework.stereotype.Service;
-
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 @Service
 @Slf4j
@@ -42,7 +36,7 @@ public class AIService {
     private final OpenAiChatModel chatModel;
 
     public AIService(ChatClient.Builder chatClientBuilder, ChatMessageRepository chatMessageRepository,
-            OpenAiChatModel chatModel) {
+                     OpenAiChatModel chatModel) {
         this.chatMemory = MessageWindowChatMemory.builder().maxMessages(20).build();
         this.chatClient = chatClientBuilder.defaultSystem(SYSTEM_PROMPT)
                 .defaultAdvisors(

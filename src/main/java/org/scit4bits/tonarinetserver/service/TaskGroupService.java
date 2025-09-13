@@ -1,5 +1,7 @@
 package org.scit4bits.tonarinetserver.service;
 
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.scit4bits.tonarinetserver.dto.PagedResponse;
 import org.scit4bits.tonarinetserver.dto.TaskGroupResponseDTO;
 import org.scit4bits.tonarinetserver.entity.TaskGroup;
@@ -10,9 +12,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
 
@@ -34,25 +33,25 @@ public class TaskGroupService {
 
     @Transactional(readOnly = true)
     public PagedResponse<TaskGroupResponseDTO> searchTaskGroups(String searchBy, String search, Integer orgId,
-                                                               Integer page, Integer pageSize, String sortBy, String sortDirection) {
-        log.info("Searching task groups within organization {} with searchBy: {}, search: {}, page: {}, pageSize: {}, sortBy: {}, sortDirection: {}", 
+                                                                Integer page, Integer pageSize, String sortBy, String sortDirection) {
+        log.info("Searching task groups within organization {} with searchBy: {}, search: {}, page: {}, pageSize: {}, sortBy: {}, sortDirection: {}",
                 orgId, searchBy, search, page, pageSize, sortBy, sortDirection);
-        
+
         // Validate required organization ID
         if (orgId == null) {
             log.error("Organization ID is required for all TaskGroup searches");
             throw new IllegalArgumentException("Organization ID is required for all TaskGroup operations");
         }
-        
+
         // 기본값 설정
         int pageNum = (page != null) ? page : 0;
         int pageSizeNum = (pageSize != null) ? pageSize : 10;
         String sortByField = (sortBy != null && !sortBy.isEmpty()) ? sortBy : "id";
         String direction = (sortDirection != null && !sortDirection.isEmpty()) ? sortDirection : "asc";
-        
+
         // 정렬 방향 설정
         Sort.Direction sortDir = "desc".equalsIgnoreCase(direction) ? Sort.Direction.DESC : Sort.Direction.ASC;
-        
+
         // sortBy 필드명 매핑
         String entityFieldName;
         switch (sortByField.toLowerCase()) {
@@ -75,12 +74,12 @@ public class TaskGroupService {
                 entityFieldName = "id";
                 break;
         }
-        
+
         Sort sort = Sort.by(sortDir, entityFieldName);
         Pageable pageable = PageRequest.of(pageNum, pageSizeNum, sort);
-        
+
         Page<TaskGroup> taskGroupPage;
-        
+
         if (search == null || search.trim().isEmpty()) {
             // If no search term, get all TaskGroups for the organization
             taskGroupPage = taskGroupRepository.findByOrgId(orgId, pageable);
@@ -110,11 +109,11 @@ public class TaskGroupService {
                     break;
             }
         }
-        
+
         List<TaskGroupResponseDTO> result = taskGroupPage.getContent().stream()
                 .map(TaskGroupResponseDTO::fromEntity)
                 .toList();
-        
+
         log.info("Found {} task groups out of {} total", result.size(), taskGroupPage.getTotalElements());
         return new PagedResponse<>(result, pageNum, pageSizeNum, taskGroupPage.getTotalElements(), taskGroupPage.getTotalPages());
     }

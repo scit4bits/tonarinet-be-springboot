@@ -1,24 +1,12 @@
 package org.scit4bits.tonarinetserver.entity;
 
-import java.util.List;
-
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.JoinTable;
-import jakarta.persistence.ManyToMany;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.util.List;
 
 @Entity
 @Table(name = "team")
@@ -27,37 +15,37 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Builder
 public class Team {
-    
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
     private Integer id;
-    
+
     @Column(name = "name", nullable = false, columnDefinition = "TEXT")
     private String name;
-    
+
     @Column(name = "leader_user_id", nullable = false)
     private Integer leaderUserId;
-    
+
     @Column(name = "org_id", nullable = false)
     private Integer orgId;
-    
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "leader_user_id", insertable = false, updatable = false)
     private User leaderUser;
-    
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "org_id", insertable = false, updatable = false)
     private Organization organization;
-    
+
     @ManyToMany
     @JoinTable(
-        name = "userteam",
-        joinColumns = @JoinColumn(name = "team_id"),
-        inverseJoinColumns = @JoinColumn(name = "user_id")
+            name = "userteam",
+            joinColumns = @JoinColumn(name = "team_id"),
+            inverseJoinColumns = @JoinColumn(name = "user_id")
     )
     private List<User> users;
-    
+
     @OneToMany(mappedBy = "team", cascade = CascadeType.ALL)
     private List<Task> tasks;
 }

@@ -1,18 +1,16 @@
 package org.scit4bits.tonarinetserver.dto;
 
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.stream.Collectors;
-
-import org.scit4bits.tonarinetserver.entity.Submission;
-
 import com.fasterxml.jackson.annotation.JsonFormat;
-
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.scit4bits.tonarinetserver.entity.Submission;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Data
 @Builder
@@ -48,11 +46,11 @@ public class SubmissionResponseDTO {
 
     public static SubmissionResponseDTO fromEntity(Submission submission) {
         SubmissionResponseDTOBuilder builder = SubmissionResponseDTO.builder()
-            .id(submission.getId())
-            .createdAt(submission.getCreatedAt())
-            .createdById(submission.getCreatedById())
-            .contents(submission.getContents())
-            .taskId(submission.getTaskId());
+                .id(submission.getId())
+                .createdAt(submission.getCreatedAt())
+                .createdById(submission.getCreatedById())
+                .contents(submission.getContents())
+                .taskId(submission.getTaskId());
 
         // Add creator user if available
         if (submission.getCreatedBy() != null) {
@@ -67,8 +65,8 @@ public class SubmissionResponseDTO {
         // Add file attachments if available
         if (submission.getFileAttachments() != null && !submission.getFileAttachments().isEmpty()) {
             builder.fileAttachments(submission.getFileAttachments().stream()
-                .map(FileAttachmentResponseDTO::fromEntity)
-                .collect(Collectors.toList()));
+                    .map(FileAttachmentResponseDTO::fromEntity)
+                    .collect(Collectors.toList()));
         }
 
         return builder.build();

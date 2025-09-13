@@ -1,10 +1,11 @@
 package org.scit4bits.tonarinetserver.controller;
 
-import java.security.Principal;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.CompletableFuture;
-
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.scit4bits.tonarinetserver.config.WebSocketConfig.UserPrincipal;
 import org.scit4bits.tonarinetserver.dto.ChatMessageRequestDTO;
 import org.scit4bits.tonarinetserver.dto.ChatMessageResponseDTO;
@@ -17,27 +18,14 @@ import org.scit4bits.tonarinetserver.service.ChatRoomService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
-import org.springframework.messaging.handler.annotation.Header;
-import org.springframework.messaging.handler.annotation.Headers;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 @RestController
 @Slf4j
@@ -58,10 +46,10 @@ public class ChatMessageController {
      */
     @MessageMapping("/chat/send/{roomId}")
     public void sendMessage(@DestinationVariable("roomId") Integer roomId,
-            @Payload ChatMessageRequestDTO messageRequest,
-            UserPrincipal principal) {
+                            @Payload ChatMessageRequestDTO messageRequest,
+                            UserPrincipal principal) {
         try {
-            
+
             messageRequest.setChatroomId(roomId);
 
             log.debug("roomId {}, messageRequest {}, Principal {}", roomId, messageRequest,
@@ -75,20 +63,17 @@ public class ChatMessageController {
 
             log.info("Message sent to room {} by user {}", roomId, principal.getId());
 
-            
             // background task create : AI response and send back to the room
-            if(chatRoomService.checkIfAIChatroom(roomId)){
+            if (chatRoomService.checkIfAIChatroom(roomId)) {
                 // send message to chatroom that notices AI response is being generated
                 ChatMessageResponseDTO aiNoticeMessage = chatMessageService.sendMessage(
                         ChatMessageRequestDTO.builder()
                                 .chatroomId(roomId)
                                 .message("AI is generating a response...")
-                                .build(), 0);
+                                .build(),
+                        0);
 
                 messagingTemplate.convertAndSend("/topic/chat/room/" + roomId, aiNoticeMessage);
-
-                
-
 
                 CompletableFuture.runAsync(() -> {
                     String aiResponse = aiService.generateResponseWithMemory(messageRequest.getMessage(), roomId);
@@ -96,7 +81,8 @@ public class ChatMessageController {
                             ChatMessageRequestDTO.builder()
                                     .chatroomId(roomId)
                                     .message(aiResponse)
-                                    .build(), 0);
+                                    .build(),
+                            0);
                     messagingTemplate.convertAndSend("/topic/chat/room/" + roomId, aiMessage);
                 });
             }
@@ -261,21 +247,6 @@ public class ChatMessageController {
         } catch (Exception e) {
             log.error("Error deleting message {}: {}", messageId, e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
-    }
-
-    /**
-     * Helper method to get User from Principal
-     * Based on the JWT authentication setup where the principal name is the user ID
-     */
-    private User getUserFromPrincipal(Principal user) {
-        try {
-            // In the JWT authentication setup, the principal name is the user ID
-            Integer userId = Integer.parseInt(user.getName());
-            return userRepository.findById(userId)
-                    .orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
-        } catch (NumberFormatException e) {
-            throw new RuntimeException("Invalid user ID in principal: " + user.getName());
         }
     }
 }

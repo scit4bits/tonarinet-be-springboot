@@ -1,23 +1,11 @@
 package org.scit4bits.tonarinetserver.controller;
 
-import org.scit4bits.tonarinetserver.dto.AuthCheckResponse;
-import org.scit4bits.tonarinetserver.dto.GenerateStateResponse;
-import org.scit4bits.tonarinetserver.dto.PasswordResetRequestDTO;
-import org.scit4bits.tonarinetserver.dto.SignInEmailRequest;
-import org.scit4bits.tonarinetserver.dto.SignInOAuthRequest;
-import org.scit4bits.tonarinetserver.dto.SignUpRequest;
-import org.scit4bits.tonarinetserver.dto.SimpleResponse;
-import org.scit4bits.tonarinetserver.service.AuthService;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.scit4bits.tonarinetserver.dto.*;
+import org.scit4bits.tonarinetserver.service.AuthService;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @Slf4j
@@ -70,7 +58,7 @@ public class AuthController {
 
     @GetMapping("/line/check")
     public ResponseEntity<AuthCheckResponse> getLineCheck(@RequestParam("code") String code,
-            @RequestParam("state") String state) {
+                                                          @RequestParam("state") String state) {
         AuthCheckResponse response = authService.getLineCheck(code, state);
         if (response != null) {
             return ResponseEntity.ok(response);
@@ -81,7 +69,7 @@ public class AuthController {
 
     @GetMapping("/google/check")
     public ResponseEntity<AuthCheckResponse> getGoogleCheck(@RequestParam("code") String code,
-            @RequestParam("state") String state) {
+                                                            @RequestParam("state") String state) {
         AuthCheckResponse response = authService.getGoogleCheck(code, state);
         if (response != null) {
             return ResponseEntity.ok(response);
@@ -92,7 +80,7 @@ public class AuthController {
 
     @GetMapping("/kakao/check")
     public ResponseEntity<AuthCheckResponse> getKakaoCheck(@RequestParam("code") String code,
-            @RequestParam("state") String state) {
+                                                           @RequestParam("state") String state) {
         AuthCheckResponse response = authService.getKakaoCheck(code, state);
         if (response != null) {
             return ResponseEntity.ok(response);

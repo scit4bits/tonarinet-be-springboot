@@ -11,13 +11,13 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class LiveReportRequestDTO {
-    
+
     @NotNull(message = "Contents is required")
     private String contents;
-    
+
     @NotNull(message = "Longitude is required")
     private Double longitude;
-    
+
     @NotNull(message = "Latitude is required")
     private Double latitude;
 }

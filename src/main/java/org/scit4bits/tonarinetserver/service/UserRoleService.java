@@ -1,14 +1,13 @@
 package org.scit4bits.tonarinetserver.service;
 
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.scit4bits.tonarinetserver.entity.Organization;
 import org.scit4bits.tonarinetserver.entity.User;
 import org.scit4bits.tonarinetserver.entity.UserRole;
 import org.scit4bits.tonarinetserver.repository.UserRoleRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 @Service
 @Slf4j
@@ -17,23 +16,19 @@ import lombok.extern.slf4j.Slf4j;
 public class UserRoleService {
     private final UserRoleRepository userRoleRepository;
 
-    public boolean checkUsersRoleInOrg(User user, Organization organization, String role){
+    public boolean checkUsersRoleInOrg(User user, Organization organization, String role) {
 
         UserRole userRole = userRoleRepository.findById(
-            UserRole.UserRoleId.builder()
-                .userId(user.getId())
-                .orgId(organization.getId())
-                .build()
+                UserRole.UserRoleId.builder()
+                        .userId(user.getId())
+                        .orgId(organization.getId())
+                        .build()
         ).get();
 
-        if(!userRole.getIsGranted()){
+        if (!userRole.getIsGranted()) {
             return false;
         }
 
-        if(role != null && !userRole.getRole().equals(role)) {
-            return false;
-        }
-
-        return true;
+        return role == null || userRole.getRole().equals(role);
     }
 }

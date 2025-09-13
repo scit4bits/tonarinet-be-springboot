@@ -1,13 +1,12 @@
 package org.scit4bits.tonarinetserver.config;
 
-import java.io.File;
-
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import lombok.extern.slf4j.Slf4j;
+import java.io.File;
 
 @Configuration
 @Slf4j

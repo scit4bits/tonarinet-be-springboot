@@ -12,10 +12,10 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ReplyRequestDTO {
-    
+
     @NotBlank(message = "Contents is required")
     private String contents;
-    
-    @NotNull(message = "Article ID is required")  
+
+    @NotNull(message = "Article ID is required")
     private Integer articleId;
 }

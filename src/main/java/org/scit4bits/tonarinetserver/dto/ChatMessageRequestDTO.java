@@ -23,7 +23,7 @@ public class ChatMessageRequestDTO {
     @NotBlank(message = "Message content is required")
     private String message;
 
-    @Schema(description = "Message type", example = "CHAT", allowableValues = { "CHAT", "JOIN", "LEAVE" })
+    @Schema(description = "Message type", example = "CHAT", allowableValues = {"CHAT", "JOIN", "LEAVE"})
     @Builder.Default
     private MessageType type = MessageType.CHAT;
 

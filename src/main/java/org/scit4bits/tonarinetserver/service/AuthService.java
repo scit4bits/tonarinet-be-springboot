@@ -1,18 +1,16 @@
 package org.scit4bits.tonarinetserver.service;
 
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-
+import com.auth0.jwt.JWT;
+import com.auth0.jwt.interfaces.DecodedJWT;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.tomcat.util.json.JSONParser;
 import org.scit4bits.tonarinetserver.dto.AuthCheckResponse;
 import org.scit4bits.tonarinetserver.dto.ChatRoomRequestDTO;
 import org.scit4bits.tonarinetserver.dto.GenerateStateResponse;
 import org.scit4bits.tonarinetserver.dto.SignUpRequest;
 import org.scit4bits.tonarinetserver.entity.Country;
-import org.scit4bits.tonarinetserver.entity.Organization;
 import org.scit4bits.tonarinetserver.entity.User;
-import org.scit4bits.tonarinetserver.entity.UserRole;
 import org.scit4bits.tonarinetserver.repository.CountryRepository;
 import org.scit4bits.tonarinetserver.repository.OrganizationRepository;
 import org.scit4bits.tonarinetserver.repository.UserRepository;
@@ -27,11 +25,9 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
 
-import com.auth0.jwt.JWT;
-import com.auth0.jwt.interfaces.DecodedJWT;
-
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
 
 @Service
 @Slf4j

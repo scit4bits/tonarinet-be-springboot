@@ -1,15 +1,14 @@
 package org.scit4bits.tonarinetserver.service;
 
-import java.util.List;
-
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.scit4bits.tonarinetserver.dto.NotificationDTO;
 import org.scit4bits.tonarinetserver.entity.Notification;
 import org.scit4bits.tonarinetserver.repository.NotificationRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.util.List;
 
 @Service
 @Slf4j
@@ -20,7 +19,7 @@ public class NotificationService {
     private final NotificationRepository notificationRepository;
 
     @Transactional(readOnly = true)
-    public List<NotificationDTO> getUserNotifications(Integer userId){
+    public List<NotificationDTO> getUserNotifications(Integer userId) {
         /**
          * 두 가지 방법이 존재한다.
          * 1. User를 다시 가져와서 (dbUser) JPA를 이용, Notifcation을 Lazy Load
@@ -59,8 +58,6 @@ public class NotificationService {
                 .build();
         notificationRepository.save(notification);
     }
-
-
 
 
 }

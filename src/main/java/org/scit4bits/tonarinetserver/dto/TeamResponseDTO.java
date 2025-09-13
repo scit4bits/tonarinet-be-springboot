@@ -1,13 +1,12 @@
 package org.scit4bits.tonarinetserver.dto;
 
-import java.util.List;
-
-import org.scit4bits.tonarinetserver.entity.Team;
-
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.scit4bits.tonarinetserver.entity.Team;
+
+import java.util.List;
 
 @Data
 @Builder
@@ -31,8 +30,8 @@ public class TeamResponseDTO {
                 .leaderUserName(team.getLeaderUser() != null ? team.getLeaderUser().getName() : null)
                 .orgId(team.getOrgId())
                 .organizationName(team.getOrganization() != null ? team.getOrganization().getName() : null)
-                .users(team.getUsers() != null ? 
-                    team.getUsers().stream().map(UserDTO::fromEntity).toList() : null)
+                .users(team.getUsers() != null ?
+                        team.getUsers().stream().map(UserDTO::fromEntity).toList() : null)
                 .userCount(team.getUsers() != null ? team.getUsers().size() : 0)
                 .build();
     }

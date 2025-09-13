@@ -1,14 +1,13 @@
 package org.scit4bits.tonarinetserver.dto;
 
-import java.time.LocalDateTime;
-import java.util.List;
-
-import org.scit4bits.tonarinetserver.entity.TaskGroup;
-
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.scit4bits.tonarinetserver.entity.TaskGroup;
+
+import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @Builder
@@ -35,8 +34,8 @@ public class TaskGroupResponseDTO {
                 .maxScore(taskGroup.getMaxScore())
                 .orgId(taskGroup.getOrgId())
                 .organizationName(taskGroup.getOrganization() != null ? taskGroup.getOrganization().getName() : null)
-                .tasks(taskGroup.getTasks() != null ? 
-                    taskGroup.getTasks().stream().map(TaskResponseDTO::fromEntity).toList() : null)
+                .tasks(taskGroup.getTasks() != null ?
+                        taskGroup.getTasks().stream().map(TaskResponseDTO::fromEntity).toList() : null)
                 .build();
     }
 }

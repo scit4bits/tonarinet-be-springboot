@@ -12,15 +12,15 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ArticleRequestDTO {
-    
+
     private String category;
-    
+
     @NotBlank(message = "Title is required")
     private String title;
-    
+
     @NotBlank(message = "Contents is required")
     private String contents;
-    
+
     @NotNull(message = "Board ID is required")
     private Integer boardId;
 }

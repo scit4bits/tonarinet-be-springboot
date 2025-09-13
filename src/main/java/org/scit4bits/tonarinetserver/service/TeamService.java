@@ -1,15 +1,13 @@
 package org.scit4bits.tonarinetserver.service;
 
-import java.util.ArrayList;
-import java.util.List;
-
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.scit4bits.tonarinetserver.dto.PagedResponse;
 import org.scit4bits.tonarinetserver.dto.TeamRequestDTO;
 import org.scit4bits.tonarinetserver.dto.TeamResponseDTO;
 import org.scit4bits.tonarinetserver.dto.UserDTO;
 import org.scit4bits.tonarinetserver.entity.Team;
 import org.scit4bits.tonarinetserver.entity.User;
-import org.scit4bits.tonarinetserver.entity.UserTeam;
 import org.scit4bits.tonarinetserver.repository.TeamRepository;
 import org.scit4bits.tonarinetserver.repository.UserRepository;
 import org.scit4bits.tonarinetserver.repository.UserTeamRepository;
@@ -20,8 +18,8 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 @Slf4j
@@ -130,7 +128,7 @@ public class TeamService {
 
     @Transactional(readOnly = true)
     public PagedResponse<TeamResponseDTO> searchTeams(String searchBy, String search, Integer page,
-            Integer pageSize, String sortBy, String sortDirection) {
+                                                      Integer pageSize, String sortBy, String sortDirection) {
         log.info("Searching teams with searchBy: {}, search: {}, page: {}, pageSize: {}, sortBy: {}, sortDirection: {}",
                 searchBy, search, page, pageSize, sortBy, sortDirection);
 

@@ -1,22 +1,14 @@
 package org.scit4bits.tonarinetserver.service;
 
-import java.util.List;
-
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.scit4bits.tonarinetserver.dto.ArticleDTO;
 import org.scit4bits.tonarinetserver.dto.BoardWriteRequestDTO;
 import org.scit4bits.tonarinetserver.dto.FileAttachmentRequestDTO;
 import org.scit4bits.tonarinetserver.dto.PagedResponse;
-import org.scit4bits.tonarinetserver.entity.Article;
-import org.scit4bits.tonarinetserver.entity.Board;
+import org.scit4bits.tonarinetserver.entity.*;
 import org.scit4bits.tonarinetserver.entity.FileAttachment.FileType;
-import org.scit4bits.tonarinetserver.entity.Organization;
-import org.scit4bits.tonarinetserver.entity.Tag;
-import org.scit4bits.tonarinetserver.entity.User;
-import org.scit4bits.tonarinetserver.repository.ArticleRepository;
-import org.scit4bits.tonarinetserver.repository.BoardRepository;
-import org.scit4bits.tonarinetserver.repository.OrganizationRepository;
-import org.scit4bits.tonarinetserver.repository.TagRepository;
-import org.scit4bits.tonarinetserver.repository.UserRepository;
+import org.scit4bits.tonarinetserver.repository.*;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -26,8 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.util.List;
 
 @Service
 @Slf4j
@@ -51,22 +42,22 @@ public class ArticleService {
     public void createArticle(User user, Integer boardId, BoardWriteRequestDTO request, List<MultipartFile> files) {
         Board board = boardRepository.findById(boardId).get();
 
-        if(board.getCountryCode() != null){
-            if(!userCountryService.checkUserCountryAccess(user.getId(), board.getCountryCode())) {
+        if (board.getCountryCode() != null) {
+            if (!userCountryService.checkUserCountryAccess(user.getId(), board.getCountryCode())) {
                 // Handle insufficient permissions
                 log.debug("User {} does not have access to country board {}", user.getId(), board.getCountryCode());
                 throw new AccessDeniedException("User does not have permission to create articles in this board.");
             }
-        }else if(board.getOrgId() != null){
+        } else if (board.getOrgId() != null) {
             Organization organization = organizationRepository.findById(board.getOrgId()).get();
-            if(!userRoleService.checkUsersRoleInOrg(user, organization, null)) {
+            if (!userRoleService.checkUsersRoleInOrg(user, organization, null)) {
                 // Handle insufficient permissions
                 log.debug("User {} does not have access to organization board {}", user.getId(), organization.getName());
                 throw new AccessDeniedException("User does not have permission to create articles in this board.");
             }
-            
-            if(request.getCategory().equals("notice") && 
-             !userRoleService.checkUsersRoleInOrg(user, organization, "admin")) {
+
+            if (request.getCategory().equals("notice") &&
+                    !userRoleService.checkUsersRoleInOrg(user, organization, "admin")) {
                 log.debug("User {} does not have access to create notice articles in organization {}", user.getId(), organization.getName());
                 throw new AccessDeniedException("User does not have permission to create notice articles in this organization.");
             }
@@ -102,8 +93,8 @@ public class ArticleService {
             log.debug("Tags provided: {}", request.getTags());
             for (String tag : request.getTags()) {
                 Tag.TagId tagId = Tag.TagId.builder()
-                    .tagName(tag)
-                    .build();
+                        .tagName(tag)
+                        .build();
                 Tag tagEntity = new Tag();
                 tagEntity.setId(tagId);
                 tagEntity.setArticle(savedArticle);
@@ -114,27 +105,25 @@ public class ArticleService {
 
         log.debug("Article category: {}", savedArticle.getCategory());
 
-        if(savedArticle.getCategory().equals("notice")){
+        if (savedArticle.getCategory().equals("notice")) {
             log.debug("Sending notifications for notice article: {}", savedArticle.getTitle());
-            if(board.getId() == 0){
+            if (board.getId() == 0) {
                 // site-wide notice
                 log.debug("Site-wide notice, notifying all users");
                 List<User> allUsers = userRepository.findAll();
-                for(User u : allUsers){
+                for (User u : allUsers) {
                     notificationService.addNotification(u.getId(), "{\"messageType\": \"newNotice\"}", "/board/view/" + savedArticle.getId());
                 }
-            }
-            else if(board.getOrgId() != null){
+            } else if (board.getOrgId() != null) {
                 log.debug("Organization notice, notifying all users in organization {}", board.getOrgId());
                 Organization organization = organizationRepository.findById(board.getOrgId()).get();
                 List<User> orgUsers = organization.getUsers();
-                for(User u : orgUsers){
+                for (User u : orgUsers) {
                     notificationService.addNotification(u.getId(), "{\"messageType\": \"newOrgNotice\"}", "/board/view/" + savedArticle.getId());
                 }
             }
         }
     }
-
 
 
     public Article updateArticle(Integer articleId, Article article) {
@@ -144,7 +133,7 @@ public class ArticleService {
 
     public void deleteArticle(User user, Integer articleId) {
         Article article = articleRepository.findById(articleId).get();
-        if(!user.getIsAdmin() && !article.getCreatedById().equals(user.getId())){
+        if (!user.getIsAdmin() && !article.getCreatedById().equals(user.getId())) {
             log.debug("User {} does not have permission to delete article {}", user.getId(), articleId);
             throw new AccessDeniedException("User does not have permission to delete this article.");
         }
@@ -152,23 +141,23 @@ public class ArticleService {
         articleRepository.delete(article);
     }
 
-    public ArticleDTO readArticle(User user, Integer articleId){
+    public ArticleDTO readArticle(User user, Integer articleId) {
         Article article = articleRepository.findById(articleId).get();
         Board board = article.getBoard();
 
-        if(!user.getIsAdmin()){
-            if(board.getOrgId() != null && !userRoleService.checkUsersRoleInOrg(user, board.getOrganization(), null)) {
+        if (!user.getIsAdmin()) {
+            if (board.getOrgId() != null && !userRoleService.checkUsersRoleInOrg(user, board.getOrganization(), null)) {
                 log.debug("User {} does not have access to read articles in organization {}", user.getId(), board.getOrganization().getName());
                 throw new AccessDeniedException("User does not have permission to read articles in this organization.");
             }
-            if(board.getCountryCode() != null && !userCountryService.checkUserCountryAccess(user.getId(), board.getCountryCode())) {
+            if (board.getCountryCode() != null && !userCountryService.checkUserCountryAccess(user.getId(), board.getCountryCode())) {
                 log.debug("User {} does not have access to read articles in country {}", user.getId(), board.getCountryCode());
                 throw new AccessDeniedException("User does not have permission to read articles in this country.");
             }
         }
 
-        if(article.getCategory().equals("counsel")){
-            if(!user.getIsAdmin() && !article.getCreatedById().equals(user.getId()) && !userRoleService.checkUsersRoleInOrg(user, board.getOrganization(), "admin")) {
+        if (article.getCategory().equals("counsel")) {
+            if (!user.getIsAdmin() && !article.getCreatedById().equals(user.getId()) && !userRoleService.checkUsersRoleInOrg(user, board.getOrganization(), "admin")) {
                 log.debug("User {} does not have access to read notice/counsel articles in organization {}", user.getId(), board.getOrganization().getName());
                 throw new AccessDeniedException("User does not have permission to read notice/counsel articles in this organization.");
             }
@@ -193,7 +182,7 @@ public class ArticleService {
         List<ArticleDTO> result = articlePage.getContent().stream()
                 .map(ArticleDTO::fromEntity)
                 .toList();
-        
+
         log.info("Found {} hot articles out of {} total in board {} (excluding counsel articles)", result.size(), articlePage.getTotalElements(), boardId);
         return new PagedResponse<>(result, pageNum, pageSizeNum, articlePage.getTotalElements(), articlePage.getTotalPages());
     }
@@ -203,21 +192,21 @@ public class ArticleService {
      * All filtering is performed at the database level for optimal performance
      */
     @Transactional(readOnly = true)
-    public PagedResponse<ArticleDTO> searchArticles(User user, Integer boardId, String searchBy, String search, String category, Integer page, 
-        Integer pageSize, String sortBy, String sortDirection) {
+    public PagedResponse<ArticleDTO> searchArticles(User user, Integer boardId, String searchBy, String search, String category, Integer page,
+                                                    Integer pageSize, String sortBy, String sortDirection) {
 
         log.info("Searching articles with boardId: {}, searchBy: {}, search: {}, category: {}, page: {}, pageSize: {}, sortBy: {}, sortDirection: {}",
                 boardId, searchBy, search, category, page, pageSize, sortBy, sortDirection);
-        
+
         // 기본값 설정
         int pageNum = (page != null) ? page : 0;
         int pageSizeNum = (pageSize != null) ? pageSize : 10;
         String sortByField = (sortBy != null && !sortBy.isEmpty()) ? sortBy : "id";
         String direction = (sortDirection != null && !sortDirection.isEmpty()) ? sortDirection : "asc";
-        
+
         // 정렬 방향 설정
         Sort.Direction sortDir = "desc".equalsIgnoreCase(direction) ? Sort.Direction.DESC : Sort.Direction.ASC;
-        
+
         // sortBy 필드명 매핑
         String entityFieldName;
         switch (sortByField.toLowerCase()) {
@@ -243,16 +232,16 @@ public class ArticleService {
                 entityFieldName = "id";
                 break;
         }
-        
+
         Sort sort = Sort.by(sortDir, entityFieldName);
         Pageable pageable = PageRequest.of(pageNum, pageSizeNum, sort);
-        
+
         Page<Article> articlePage;
-        
+
         // Category filtering logic
         boolean shouldFilterByCategory = category != null && !category.trim().isEmpty() && !category.equals("all");
         String categoryFilter = (category != null && shouldFilterByCategory) ? category.trim() : null;
-        
+
         if (search == null || search.trim().isEmpty()) {
             // 검색어가 없으면 특정 게시판의 모든 게시글 조회
             if (shouldFilterByCategory) {
@@ -281,13 +270,13 @@ public class ArticleService {
                             if (shouldFilterByCategory) {
                                 if (article.getCategory().equals(categoryFilter)) {
                                     articlePage = new org.springframework.data.domain.PageImpl<>(
-                                        List.of(article), pageable, 1);
+                                            List.of(article), pageable, 1);
                                 } else {
                                     articlePage = Page.empty(pageable);
                                 }
                             } else if (!article.getCategory().equals("counsel")) {
                                 articlePage = new org.springframework.data.domain.PageImpl<>(
-                                    List.of(article), pageable, 1);
+                                        List.of(article), pageable, 1);
                             } else {
                                 articlePage = Page.empty(pageable);
                             }
@@ -353,14 +342,14 @@ public class ArticleService {
                     break;
             }
         }
-        
+
         List<ArticleDTO> result = articlePage.getContent().stream()
                 .map(ArticleDTO::fromEntity)
                 .toList();
-        
-        String filterInfo = shouldFilterByCategory ? 
-            String.format(" (filtered by category: %s)", categoryFilter) : 
-            " (excluding counsel articles)";
+
+        String filterInfo = shouldFilterByCategory ?
+                String.format(" (filtered by category: %s)", categoryFilter) :
+                " (excluding counsel articles)";
         log.info("Found {} articles out of {} total in board {}{}", result.size(), articlePage.getTotalElements(), boardId, filterInfo);
         return new PagedResponse<>(result, pageNum, pageSizeNum, articlePage.getTotalElements(), articlePage.getTotalPages());
     }

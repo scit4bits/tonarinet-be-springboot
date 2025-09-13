@@ -1,14 +1,13 @@
 package org.scit4bits.tonarinetserver.dto;
 
-import java.time.LocalDateTime;
-
-import org.scit4bits.tonarinetserver.entity.FileAttachment;
-import org.scit4bits.tonarinetserver.entity.FileAttachment.FileType;
-
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.scit4bits.tonarinetserver.entity.FileAttachment;
+import org.scit4bits.tonarinetserver.entity.FileAttachment.FileType;
+
+import java.time.LocalDateTime;
 
 @Data
 @Builder
@@ -28,7 +27,7 @@ public class FileAttachmentResponseDTO {
     private Integer filesize;
     private Integer submissionId;
     private String submissionContents;
-    
+
     public static FileAttachmentResponseDTO fromEntity(FileAttachment fileAttachment) {
         return FileAttachmentResponseDTO.builder()
                 .id(fileAttachment.getId())
@@ -36,17 +35,17 @@ public class FileAttachmentResponseDTO {
                 .originalFilename(fileAttachment.getOriginalFilename())
                 .isPrivate(fileAttachment.getIsPrivate())
                 .uploadedBy(fileAttachment.getUploadedBy())
-                .uploadedByName(fileAttachment.getUploadedByUser() != null ? 
-                    fileAttachment.getUploadedByUser().getName() : null)
+                .uploadedByName(fileAttachment.getUploadedByUser() != null ?
+                        fileAttachment.getUploadedByUser().getName() : null)
                 .type(fileAttachment.getType())
                 .uploadedAt(fileAttachment.getUploadedAt())
                 .articleId(fileAttachment.getArticleId())
-                .articleTitle(fileAttachment.getArticle() != null ? 
-                    fileAttachment.getArticle().getTitle() : null)
+                .articleTitle(fileAttachment.getArticle() != null ?
+                        fileAttachment.getArticle().getTitle() : null)
                 .filesize(fileAttachment.getFilesize())
                 .submissionId(fileAttachment.getSubmissionId())
-                .submissionContents(fileAttachment.getSubmission() != null ? 
-                    fileAttachment.getSubmission().getContents() : null)
+                .submissionContents(fileAttachment.getSubmission() != null ?
+                        fileAttachment.getSubmission().getContents() : null)
                 .build();
     }
 }

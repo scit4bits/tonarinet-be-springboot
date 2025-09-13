@@ -8,8 +8,8 @@ import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 @SpringBootApplication
 public class TonarinetserverApplication {
 
-	public static void main(String[] args) {
-		SpringApplication.run(TonarinetserverApplication.class, args);
-	}
+    public static void main(String[] args) {
+        SpringApplication.run(TonarinetserverApplication.class, args);
+    }
 
 }

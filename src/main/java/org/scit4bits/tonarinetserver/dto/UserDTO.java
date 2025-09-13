@@ -1,14 +1,13 @@
 package org.scit4bits.tonarinetserver.dto;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-
-import org.scit4bits.tonarinetserver.entity.User;
-
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.scit4bits.tonarinetserver.entity.User;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Data
 @Builder
@@ -32,16 +31,16 @@ public class UserDTO {
 
     public static UserDTO fromEntity(User user) {
         return UserDTO.builder()
-            .id(user.getId())
-            .email(user.getEmail())
-            .name(user.getName())
-            .birth(user.getBirth())
-            .nickname(user.getNickname())
-            .nationality(user.getNationality() != null ? user.getNationality().getCountryCode() : null)
-            .phone(user.getPhone())
-            .description(user.getDescription())
-            .isAdmin(user.getIsAdmin())
-            .createdAt(user.getCreatedAt())
-            .build();
+                .id(user.getId())
+                .email(user.getEmail())
+                .name(user.getName())
+                .birth(user.getBirth())
+                .nickname(user.getNickname())
+                .nationality(user.getNationality() != null ? user.getNationality().getCountryCode() : null)
+                .phone(user.getPhone())
+                .description(user.getDescription())
+                .isAdmin(user.getIsAdmin())
+                .createdAt(user.getCreatedAt())
+                .build();
     }
 }

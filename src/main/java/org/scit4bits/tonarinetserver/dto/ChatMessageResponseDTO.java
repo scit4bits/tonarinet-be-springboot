@@ -1,16 +1,14 @@
 package org.scit4bits.tonarinetserver.dto;
 
-import java.time.LocalDateTime;
-
-import org.scit4bits.tonarinetserver.entity.ChatMessage;
-
 import com.fasterxml.jackson.annotation.JsonFormat;
-
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.scit4bits.tonarinetserver.entity.ChatMessage;
+
+import java.time.LocalDateTime;
 
 @Data
 @Builder

@@ -1,13 +1,10 @@
 package org.scit4bits.tonarinetserver.service;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
-import org.scit4bits.tonarinetserver.config.WebSocketConfig.UserPrincipal;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.scit4bits.tonarinetserver.dto.ChatMessageRequestDTO;
 import org.scit4bits.tonarinetserver.dto.ChatMessageResponseDTO;
 import org.scit4bits.tonarinetserver.entity.ChatMessage;
-import org.scit4bits.tonarinetserver.entity.ChatRoom;
 import org.scit4bits.tonarinetserver.entity.User;
 import org.scit4bits.tonarinetserver.repository.ChatMessageRepository;
 import org.scit4bits.tonarinetserver.repository.ChatRoomRepository;
@@ -17,8 +14,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -56,7 +53,7 @@ public class ChatMessageService {
         // Fetch the saved message with sender information
         ChatMessage savedMessage = chatMessageRepository.findById(chatMessage.getId())
                 .orElseThrow(() -> new RuntimeException("Failed to retrieve saved message"));
-        
+
         return ChatMessageResponseDTO.fromEntity(savedMessage);
     }
 
@@ -65,7 +62,7 @@ public class ChatMessageService {
      */
     @Transactional(readOnly = true)
     public List<ChatMessageResponseDTO> getMessagesByChatRoom(Integer chatroomId, Integer page, Integer size,
-            User user) {
+                                                              User user) {
         // Verify that the user is a member of the chat room
         if (!userChatRoomRepository.existsByIdUserIdAndIdChatroomId(user.getId(), chatroomId)) {
             throw new RuntimeException("User is not a member of this chat room");

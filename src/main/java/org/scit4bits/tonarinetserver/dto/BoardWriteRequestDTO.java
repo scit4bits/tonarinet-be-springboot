@@ -1,12 +1,11 @@
 package org.scit4bits.tonarinetserver.dto;
 
-import java.util.List;
-
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.RequiredArgsConstructor;
+
+import java.util.List;
 
 @Data
 @Builder

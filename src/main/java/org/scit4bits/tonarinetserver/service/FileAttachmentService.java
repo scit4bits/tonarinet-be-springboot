@@ -1,15 +1,6 @@
 package org.scit4bits.tonarinetserver.service;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
-import java.util.stream.Collectors;
-
+import lombok.RequiredArgsConstructor;
 import org.scit4bits.tonarinetserver.dto.FileAttachmentRequestDTO;
 import org.scit4bits.tonarinetserver.dto.FileAttachmentResponseDTO;
 import org.scit4bits.tonarinetserver.dto.PagedResponse;
@@ -31,7 +22,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import lombok.RequiredArgsConstructor;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -50,16 +48,16 @@ public class FileAttachmentService {
             List<FileAttachmentResponseDTO> dtos = new ArrayList<>();
             Article article = null;
             Submission submission = null;
-            
-            if(requestDTO.getArticleId() != null){
+
+            if (requestDTO.getArticleId() != null) {
                 article = articleRepository.findById(requestDTO.getArticleId()).get();
             }
-            
-            if(requestDTO.getSubmissionId() != null){
+
+            if (requestDTO.getSubmissionId() != null) {
                 submission = submissionRepository.findById(requestDTO.getSubmissionId()).get();
             }
-            for(MultipartFile file: files){
-    // Validate file
+            for (MultipartFile file : files) {
+                // Validate file
                 if (file.isEmpty()) {
                     throw new RuntimeException("File is empty");
                 }
@@ -80,8 +78,8 @@ public class FileAttachmentService {
                 if (originalFilename != null && originalFilename.contains(".")) {
                     fileExtension = originalFilename.substring(originalFilename.lastIndexOf("."));
                 }
-                String uniqueFilename = UUID.randomUUID().toString() + fileExtension;
-                
+                String uniqueFilename = UUID.randomUUID() + fileExtension;
+
                 // Determine file type if not specified
                 FileType fileType = requestDTO.getType();
                 if (fileType == null) {
@@ -94,21 +92,21 @@ public class FileAttachmentService {
 
                 // Create FileAttachment entity
                 FileAttachment fileAttachment = FileAttachment.builder()
-                    .filepath(filePath.toString())
-                    .originalFilename(originalFilename)
-                    .isPrivate(requestDTO.getIsPrivate() != null ? requestDTO.getIsPrivate() : false)
-                    .uploadedBy(currentUser.getId())
-                    .type(fileType)
-                    .articleId(requestDTO.getArticleId() != null ? requestDTO.getArticleId() : null)
-                    .submissionId(requestDTO.getSubmissionId() != null ? requestDTO.getSubmissionId() : null)
-                    .filesize((int) file.getSize())
-                    .build();
+                        .filepath(filePath.toString())
+                        .originalFilename(originalFilename)
+                        .isPrivate(requestDTO.getIsPrivate() != null ? requestDTO.getIsPrivate() : false)
+                        .uploadedBy(currentUser.getId())
+                        .type(fileType)
+                        .articleId(requestDTO.getArticleId() != null ? requestDTO.getArticleId() : null)
+                        .submissionId(requestDTO.getSubmissionId() != null ? requestDTO.getSubmissionId() : null)
+                        .filesize((int) file.getSize())
+                        .build();
 
                 FileAttachment savedFile = fileAttachmentRepository.save(fileAttachment);
-                
+
                 // Fetch complete entity with relationships
                 FileAttachment completeFile = fileAttachmentRepository.findById(savedFile.getId())
-                    .orElseThrow(() -> new RuntimeException("File not found after upload"));
+                        .orElseThrow(() -> new RuntimeException("File not found after upload"));
 
                 dtos.add(FileAttachmentResponseDTO.fromEntity(completeFile));
             }
@@ -124,47 +122,47 @@ public class FileAttachmentService {
     public List<FileAttachmentResponseDTO> getAllFileAttachments() {
         List<FileAttachment> files = fileAttachmentRepository.findAll();
         return files.stream()
-            .map(FileAttachmentResponseDTO::fromEntity)
-            .collect(Collectors.toList());
+                .map(FileAttachmentResponseDTO::fromEntity)
+                .collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)
     public FileAttachmentResponseDTO getFileAttachmentById(Integer id, User currentUser) {
         FileAttachment fileAttachment = fileAttachmentRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("File not found with ID: " + id));
-        
+                .orElseThrow(() -> new RuntimeException("File not found with ID: " + id));
+
         // Check privacy permissions
         if (fileAttachment.getIsPrivate() && !currentUser.getIsAdmin()) {
             throw new RuntimeException("You are not authorized to access this private file");
         }
-        
+
         return FileAttachmentResponseDTO.fromEntity(fileAttachment);
     }
 
     @Transactional(readOnly = true)
     public List<FileAttachmentResponseDTO> getFileAttachmentsByArticleId(Integer articleId, User currentUser) {
         List<FileAttachment> files = fileAttachmentRepository.findByArticleId(articleId);
-        
+
         // Filter out private files that user cannot access
         return files.stream()
-            .filter(file -> !file.getIsPrivate() || 
-                          file.getUploadedBy().equals(currentUser.getId()) || 
-                          currentUser.getIsAdmin())
-            .map(FileAttachmentResponseDTO::fromEntity)
-            .collect(Collectors.toList());
+                .filter(file -> !file.getIsPrivate() ||
+                        file.getUploadedBy().equals(currentUser.getId()) ||
+                        currentUser.getIsAdmin())
+                .map(FileAttachmentResponseDTO::fromEntity)
+                .collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)
     public List<FileAttachmentResponseDTO> getFileAttachmentsBySubmissionId(Integer submissionId, User currentUser) {
         List<FileAttachment> files = fileAttachmentRepository.findBySubmissionId(submissionId);
-        
+
         // Filter out private files that user cannot access
         return files.stream()
-            .filter(file -> !file.getIsPrivate() || 
-                          file.getUploadedBy().equals(currentUser.getId()) || 
-                          currentUser.getIsAdmin())
-            .map(FileAttachmentResponseDTO::fromEntity)
-            .collect(Collectors.toList());
+                .filter(file -> !file.getIsPrivate() ||
+                        file.getUploadedBy().equals(currentUser.getId()) ||
+                        currentUser.getIsAdmin())
+                .map(FileAttachmentResponseDTO::fromEntity)
+                .collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)
@@ -173,24 +171,24 @@ public class FileAttachmentService {
         if (!userId.equals(currentUser.getId()) && !currentUser.getIsAdmin()) {
             throw new RuntimeException("You are not authorized to view files uploaded by other users");
         }
-        
+
         List<FileAttachment> files = fileAttachmentRepository.findByUploadedBy(userId);
         return files.stream()
-            .map(FileAttachmentResponseDTO::fromEntity)
-            .collect(Collectors.toList());
+                .map(FileAttachmentResponseDTO::fromEntity)
+                .collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)
     public List<FileAttachmentResponseDTO> getFileAttachmentsByType(FileType type) {
         List<FileAttachment> files = fileAttachmentRepository.findByType(type);
         return files.stream()
-            .map(FileAttachmentResponseDTO::fromEntity)
-            .collect(Collectors.toList());
+                .map(FileAttachmentResponseDTO::fromEntity)
+                .collect(Collectors.toList());
     }
 
     public FileAttachmentResponseDTO updateFileAttachment(Integer id, FileAttachmentRequestDTO requestDTO, User currentUser) {
         FileAttachment existingFile = fileAttachmentRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("File not found with ID: " + id));
+                .orElseThrow(() -> new RuntimeException("File not found with ID: " + id));
 
         // Check if user is the uploader or admin
         if (!existingFile.getUploadedBy().equals(currentUser.getId()) && !currentUser.getIsAdmin()) {
@@ -200,8 +198,8 @@ public class FileAttachmentService {
         // Validate article if being changed
         if (requestDTO.getArticleId() != null && !requestDTO.getArticleId().equals(existingFile.getArticleId())) {
             Article article = articleRepository.findById(requestDTO.getArticleId())
-                .orElseThrow(() -> new RuntimeException("Article not found with ID: " + requestDTO.getArticleId()));
-            
+                    .orElseThrow(() -> new RuntimeException("Article not found with ID: " + requestDTO.getArticleId()));
+
             // Check if user can attach to the new article
             if (!article.getCreatedById().equals(currentUser.getId()) && !currentUser.getIsAdmin()) {
                 throw new RuntimeException("You are not authorized to attach files to this article");
@@ -211,8 +209,8 @@ public class FileAttachmentService {
         // Validate submission if being changed
         if (requestDTO.getSubmissionId() != null && !requestDTO.getSubmissionId().equals(existingFile.getSubmissionId())) {
             Submission submission = submissionRepository.findById(requestDTO.getSubmissionId())
-                .orElseThrow(() -> new RuntimeException("Submission not found with ID: " + requestDTO.getSubmissionId()));
-            
+                    .orElseThrow(() -> new RuntimeException("Submission not found with ID: " + requestDTO.getSubmissionId()));
+
             // Check if user can attach to the new submission
             if (!submission.getCreatedById().equals(currentUser.getId()) && !currentUser.getIsAdmin()) {
                 throw new RuntimeException("You are not authorized to attach files to this submission");
@@ -234,17 +232,17 @@ public class FileAttachmentService {
         }
 
         FileAttachment updatedFile = fileAttachmentRepository.save(existingFile);
-        
+
         // Fetch complete entity with relationships
         FileAttachment completeFile = fileAttachmentRepository.findById(updatedFile.getId())
-            .orElseThrow(() -> new RuntimeException("File not found after update"));
-        
+                .orElseThrow(() -> new RuntimeException("File not found after update"));
+
         return FileAttachmentResponseDTO.fromEntity(completeFile);
     }
 
     public void deleteFileAttachment(Integer id, User currentUser) {
         FileAttachment existingFile = fileAttachmentRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("File not found with ID: " + id));
+                .orElseThrow(() -> new RuntimeException("File not found with ID: " + id));
 
         // Check if user is the uploader or admin
         if (!existingFile.getUploadedBy().equals(currentUser.getId()) && !currentUser.getIsAdmin()) {
@@ -265,14 +263,14 @@ public class FileAttachmentService {
     }
 
     @Transactional(readOnly = true)
-    public PagedResponse<FileAttachmentResponseDTO> searchFileAttachments(String searchBy, String search, 
-            Integer page, Integer pageSize, String sortBy, String sortDirection, User currentUser) {
-        
+    public PagedResponse<FileAttachmentResponseDTO> searchFileAttachments(String searchBy, String search,
+                                                                          Integer page, Integer pageSize, String sortBy, String sortDirection, User currentUser) {
+
         Sort.Direction direction = sortDirection.equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC;
         Pageable pageable = PageRequest.of(page, pageSize, Sort.by(direction, sortBy));
-        
+
         Page<FileAttachment> filePage;
-        
+
         switch (searchBy.toLowerCase()) {
             case "filename":
                 filePage = fileAttachmentRepository.findByOriginalFilenameContainingIgnoreCase(search, pageable);
@@ -322,49 +320,49 @@ public class FileAttachmentService {
                 filePage = fileAttachmentRepository.findByAllFieldsContaining(search, pageable);
                 break;
         }
-        
+
         // Filter out private files that current user cannot access
         List<FileAttachmentResponseDTO> files = filePage.getContent().stream()
-            .filter(file -> !file.getIsPrivate() || 
-                          file.getUploadedBy().equals(currentUser.getId()) || 
-                          currentUser.getIsAdmin())
-            .map(FileAttachmentResponseDTO::fromEntity)
-            .collect(Collectors.toList());
-        
+                .filter(file -> !file.getIsPrivate() ||
+                        file.getUploadedBy().equals(currentUser.getId()) ||
+                        currentUser.getIsAdmin())
+                .map(FileAttachmentResponseDTO::fromEntity)
+                .collect(Collectors.toList());
+
         return PagedResponse.<FileAttachmentResponseDTO>builder()
-            .data(files)
-            .page(filePage.getNumber())
-            .size(filePage.getSize())
-            .totalElements((long) files.size()) // Adjusted for filtered results
-            .totalPages(filePage.getTotalPages())
-            .build();
+                .data(files)
+                .page(filePage.getNumber())
+                .size(filePage.getSize())
+                .totalElements(files.size()) // Adjusted for filtered results
+                .totalPages(filePage.getTotalPages())
+                .build();
     }
 
     private FileType determineFileType(String contentType, String fileExtension) {
         if (contentType != null && contentType.startsWith("image/")) {
             return FileType.IMAGE;
         }
-        
+
         String extension = fileExtension.toLowerCase();
         if (extension.matches("\\.(jpg|jpeg|png|gif|bmp|svg|webp)")) {
             return FileType.IMAGE;
         }
-        
+
         return FileType.ATTACHMENT;
     }
 
     @Transactional(readOnly = true)
     public byte[] downloadFile(Integer id, User currentUser) {
         FileAttachment fileAttachment = fileAttachmentRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("File not found with ID: " + id));
-        
+                .orElseThrow(() -> new RuntimeException("File not found with ID: " + id));
+
         // Check privacy permissions
-        if (fileAttachment.getIsPrivate() && 
-            !fileAttachment.getUploadedBy().equals(currentUser.getId()) && 
-            !currentUser.getIsAdmin()) {
+        if (fileAttachment.getIsPrivate() &&
+                !fileAttachment.getUploadedBy().equals(currentUser.getId()) &&
+                !currentUser.getIsAdmin()) {
             throw new RuntimeException("You are not authorized to download this private file");
         }
-        
+
         try {
             Path filePath = Paths.get(fileAttachment.getFilepath());
             return Files.readAllBytes(filePath);

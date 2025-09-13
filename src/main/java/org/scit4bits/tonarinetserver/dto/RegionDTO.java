@@ -1,11 +1,10 @@
 package org.scit4bits.tonarinetserver.dto;
 
-import org.scit4bits.tonarinetserver.entity.Region;
-
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.scit4bits.tonarinetserver.entity.Region;
 
 @Data
 @Builder
@@ -42,7 +41,7 @@ public class RegionDTO {
                 .reviewsCount(0) // Will be set later by service
                 .build();
     }
-    
+
     public static RegionDTO fromEntityWithDistance(Region region, Double distance) {
         RegionDTO dto = fromEntity(region);
         dto.setDistanceFromCenter(distance);

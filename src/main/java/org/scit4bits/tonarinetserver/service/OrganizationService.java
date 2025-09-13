@@ -1,20 +1,11 @@
 package org.scit4bits.tonarinetserver.service;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.scit4bits.tonarinetserver.dto.OrganizationDTO;
 import org.scit4bits.tonarinetserver.dto.PagedResponse;
-import org.scit4bits.tonarinetserver.entity.Board;
-import org.scit4bits.tonarinetserver.entity.Country;
-import org.scit4bits.tonarinetserver.entity.Organization;
-import org.scit4bits.tonarinetserver.entity.User;
-import org.scit4bits.tonarinetserver.entity.UserRole;
-import org.scit4bits.tonarinetserver.repository.BoardRepository;
-import org.scit4bits.tonarinetserver.repository.CountryRepository;
-import org.scit4bits.tonarinetserver.repository.OrganizationRepository;
-import org.scit4bits.tonarinetserver.repository.UserRepository;
-import org.scit4bits.tonarinetserver.repository.UserRoleRepository;
+import org.scit4bits.tonarinetserver.entity.*;
+import org.scit4bits.tonarinetserver.repository.*;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -23,8 +14,8 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -68,7 +59,7 @@ public class OrganizationService {
     }
 
     public PagedResponse<OrganizationDTO> searchOrganization(String searchBy, String search, Integer page,
-            Integer pageSize, String sortBy, String sortDirection) {
+                                                             Integer pageSize, String sortBy, String sortDirection) {
         log.info(
                 "Searching organizations with searchBy: {}, search: {}, page: {}, pageSize: {}, sortBy: {}, sortDirection: {}",
                 searchBy, search, page, pageSize, sortBy, sortDirection);
@@ -264,18 +255,18 @@ public class OrganizationService {
 
         for (Organization org : organizations) {
             String role = userRoleRepository.findById(UserRole.UserRoleId.builder()
-                    .userId(user.getId())
-                    .orgId(org.getId())
-                    .build())
+                            .userId(user.getId())
+                            .orgId(org.getId())
+                            .build())
                     .get().getRole();
         }
 
         return organizations.stream()
                 .map(org -> {
                     String role = userRoleRepository.findById(UserRole.UserRoleId.builder()
-                            .userId(user.getId())
-                            .orgId(org.getId())
-                            .build())
+                                    .userId(user.getId())
+                                    .orgId(org.getId())
+                                    .build())
                             .get().getRole();
                     OrganizationDTO dto = OrganizationDTO.fromEntity(org);
                     dto.setRole(role);

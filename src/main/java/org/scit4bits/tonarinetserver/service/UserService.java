@@ -1,8 +1,9 @@
 package org.scit4bits.tonarinetserver.service;
 
-import java.util.ArrayList;
-import java.util.List;
-
+import com.auth0.jwt.JWT;
+import com.auth0.jwt.interfaces.DecodedJWT;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.scit4bits.tonarinetserver.dto.ArticleDTO;
 import org.scit4bits.tonarinetserver.dto.PagedResponse;
 import org.scit4bits.tonarinetserver.dto.UserDTO;
@@ -18,11 +19,8 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.auth0.jwt.JWT;
-import com.auth0.jwt.interfaces.DecodedJWT;
-
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 @Slf4j
@@ -68,7 +66,7 @@ public class UserService {
     }
 
     public PagedResponse<UserDTO> searchUser(String searchBy, String search, Integer page, Integer pageSize,
-            String sortBy, String sortDirection) {
+                                             String sortBy, String sortDirection) {
         log.info("Searching users with searchBy: {}, search: {}, page: {}, pageSize: {}, sortBy: {}, sortDirection: {}",
                 searchBy, search, page, pageSize, sortBy, sortDirection);
 
@@ -183,7 +181,7 @@ public class UserService {
 
     /**
      * 조직의 멤버들을 검색하는 메서드 (isGranted 필터 포함)
-     * 
+     *
      * @param organizationId 조직 ID
      * @param searchBy       검색 기준 (all, id, email, name, nickname, phone,
      *                       nationality, isadmin, isgranted)
@@ -197,7 +195,7 @@ public class UserService {
      * @return PagedResponse<UserDTO>
      */
     public PagedResponse<UserDTO> searchOrganizationMembers(Integer organizationId, String searchBy, String search,
-            Integer page, Integer pageSize, String sortBy, String sortDirection) {
+                                                            Integer page, Integer pageSize, String sortBy, String sortDirection) {
         log.info(
                 "Searching organization members with organizationId: {}, searchBy: {}, search: {}, page: {}, pageSize: {}, sortBy: {}, sortDirection: {}, isGranted: {}",
                 organizationId, searchBy, search, page, pageSize, sortBy, sortDirection);
