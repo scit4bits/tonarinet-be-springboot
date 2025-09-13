@@ -4,11 +4,13 @@ import java.util.List;
 
 import org.scit4bits.tonarinetserver.dto.PagedResponse;
 import org.scit4bits.tonarinetserver.dto.SimpleResponse;
+import org.scit4bits.tonarinetserver.dto.TaskAIRecommendRequestDTO;
 import org.scit4bits.tonarinetserver.dto.TaskGroupResponseDTO;
 import org.scit4bits.tonarinetserver.dto.TaskRequestDTO;
 import org.scit4bits.tonarinetserver.dto.TaskResponseDTO;
 import org.scit4bits.tonarinetserver.dto.TaskScoreUpdateRequestDTO;
 import org.scit4bits.tonarinetserver.entity.User;
+import org.scit4bits.tonarinetserver.service.AIService;
 import org.scit4bits.tonarinetserver.service.TaskGroupService;
 import org.scit4bits.tonarinetserver.service.TaskService;
 import org.springframework.http.HttpStatus;
@@ -40,6 +42,7 @@ public class TaskController {
 
     private final TaskService taskService;
     private final TaskGroupService taskGroupService;
+    private final AIService aiService;
 
     @PostMapping
     @Operation(summary = "Create a new task", security = @SecurityRequirement(name = "bearerAuth"))
@@ -49,7 +52,7 @@ public class TaskController {
         if (user == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-        
+
         try {
             taskService.createTask(request, user);
             return ResponseEntity.status(HttpStatus.CREATED).body(new SimpleResponse("Task created successfully"));
@@ -65,12 +68,12 @@ public class TaskController {
         if (user == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-        
+
         // Only admin can see all tasks
         if (!user.getIsAdmin()) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
-        
+
         try {
             List<TaskResponseDTO> tasks = taskService.getAllTasks();
             return ResponseEntity.ok(tasks);
@@ -80,8 +83,6 @@ public class TaskController {
         }
     }
 
-
-
     @GetMapping("/{id}")
     @Operation(summary = "Get task by ID", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<TaskResponseDTO> getTaskById(
@@ -90,7 +91,7 @@ public class TaskController {
         if (user == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-        
+
         try {
             TaskResponseDTO task = taskService.getTaskById(id);
             // Check if user can access this task (creator, assignee, team member, or admin)
@@ -111,7 +112,7 @@ public class TaskController {
         if (user == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-        
+
         try {
             List<TaskResponseDTO> tasks = taskService.getTasksByUserId(user.getId());
             return ResponseEntity.ok(tasks);
@@ -129,12 +130,12 @@ public class TaskController {
         if (user == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-        
+
         // Only allow viewing own tasks or admin access
         if (!user.getId().equals(userId) && !user.getIsAdmin()) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
-        
+
         try {
             List<TaskResponseDTO> tasks = taskService.getTasksByUserId(userId);
             return ResponseEntity.ok(tasks);
@@ -152,7 +153,7 @@ public class TaskController {
         if (user == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-        
+
         // Should check if user is member of the team
         try {
             List<TaskResponseDTO> tasks = taskService.getTasksByTeamId(teamId);
@@ -171,15 +172,15 @@ public class TaskController {
         if (user == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-        
+
         try {
             taskService.deleteTask(id, user);
             return ResponseEntity.ok(new SimpleResponse("Task deleted successfully"));
         } catch (RuntimeException e) {
             if (e.getMessage().contains("not found")) {
                 return ResponseEntity.notFound().build();
-            } else if (e.getMessage().contains("Only the task creator") || 
-                      e.getMessage().contains("admin")) {
+            } else if (e.getMessage().contains("Only the task creator") ||
+                    e.getMessage().contains("admin")) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
             }
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
@@ -198,16 +199,16 @@ public class TaskController {
         if (user == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-        
+
         try {
             TaskResponseDTO task = taskService.updateTaskScore(id, request.getScore(), request.getFeedback(), user);
             return ResponseEntity.ok(task);
         } catch (RuntimeException e) {
             if (e.getMessage().contains("not found")) {
                 return ResponseEntity.notFound().build();
-            } else if (e.getMessage().contains("Only the task creator") || 
-                      e.getMessage().contains("admin") ||
-                      e.getMessage().contains("Score must be")) {
+            } else if (e.getMessage().contains("Only the task creator") ||
+                    e.getMessage().contains("admin") ||
+                    e.getMessage().contains("Score must be")) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
             }
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
@@ -225,7 +226,7 @@ public class TaskController {
         if (user == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-        
+
         try {
             TaskGroupResponseDTO taskGroup = taskGroupService.getTaskGroupById(id);
             return ResponseEntity.ok(taskGroup);
@@ -239,9 +240,7 @@ public class TaskController {
     }
 
     @GetMapping("/search")
-    @Operation(summary = "Search task groups within a specific organization", 
-               description = "Search for task groups within the specified organization. All search operations are scoped to the provided organization.",
-               security = @SecurityRequirement(name = "bearerAuth"))
+    @Operation(summary = "Search task groups within a specific organization", description = "Search for task groups within the specified organization. All search operations are scoped to the provided organization.", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<PagedResponse<TaskGroupResponseDTO>> searchTasks(
             @RequestParam(name = "searchBy", defaultValue = "all") String searchBy,
             @RequestParam(name = "search", defaultValue = "") String search,
@@ -254,15 +253,15 @@ public class TaskController {
         if (user == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-        
+
         if (orgId == null) {
             log.error("Organization ID is required for task group searches");
             return ResponseEntity.badRequest().build();
         }
-        
+
         try {
             PagedResponse<TaskGroupResponseDTO> taskGroups = taskGroupService.searchTaskGroups(
-                searchBy, search, orgId, page, pageSize, sortBy, sortDirection);
+                    searchBy, search, orgId, page, pageSize, sortBy, sortDirection);
             return ResponseEntity.ok(taskGroups);
         } catch (IllegalArgumentException e) {
             log.error("Invalid parameters for task group search: {}", e.getMessage());
@@ -274,12 +273,24 @@ public class TaskController {
     }
 
     @GetMapping("/{id}/canmgmt")
-    public ResponseEntity<Boolean> getPrivilegeOfTask(@PathVariable("id") String id, @AuthenticationPrincipal User user) {
+    public ResponseEntity<Boolean> getPrivilegeOfTask(@PathVariable("id") String id,
+            @AuthenticationPrincipal User user) {
         if (user == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
         boolean hasPrivilege = taskService.checkTaskPrivilege(user, id);
         return ResponseEntity.ok(hasPrivilege);
     }
-    
+
+    @PostMapping("/ai-recommend")
+    public ResponseEntity<String> postTaskAIRecommend(@RequestBody TaskAIRecommendRequestDTO entity) {
+        if (entity.getPrompt() == null || entity.getPrompt().isEmpty()) {
+            return ResponseEntity.badRequest().body("Prompt cannot be empty");
+        }
+
+        String htmlResponse = aiService.generateHTMLResponse(entity.getPrompt());
+
+        return ResponseEntity.ok(htmlResponse);
+    }
+
 }
