@@ -19,17 +19,26 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+/**
+ * 동네 리뷰 관련 API를 처리하는 컨트롤러입니다.
+ */
 @RestController
 @Slf4j
 @RequiredArgsConstructor
 @RequestMapping("/api/townreview")
-@Tag(name = "Town Review", description = "Town review management API")
+@Tag(name = "Town Review", description = "동네 리뷰 관리 API")
 public class TownReviewController {
 
     private final TownReviewService townReviewService;
 
+    /**
+     * 새로운 동네 리뷰를 생성합니다.
+     * @param request 리뷰 생성 요청 정보
+     * @param user 현재 로그인한 사용자 정보
+     * @return 생성된 리뷰 정보
+     */
     @PostMapping
-    @Operation(summary = "Create a new town review", security = @SecurityRequirement(name = "bearerAuth"))
+    @Operation(summary = "새로운 동네 리뷰 생성", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<TownReviewResponseDTO> createTownReview(
             @Valid @RequestBody TownReviewRequestDTO request,
             @AuthenticationPrincipal User user) {
@@ -46,8 +55,12 @@ public class TownReviewController {
         }
     }
 
+    /**
+     * 모든 동네 리뷰 목록을 조회합니다.
+     * @return TownReviewResponseDTO 리스트
+     */
     @GetMapping
-    @Operation(summary = "Get all town reviews")
+    @Operation(summary = "모든 동네 리뷰 조회")
     public ResponseEntity<List<TownReviewResponseDTO>> getAllTownReviews() {
         try {
             List<TownReviewResponseDTO> reviews = townReviewService.getAllTownReviews();
@@ -58,8 +71,13 @@ public class TownReviewController {
         }
     }
 
+    /**
+     * ID로 특정 동네 리뷰를 조회합니다.
+     * @param id 조회할 리뷰 ID
+     * @return TownReviewResponseDTO 형태의 리뷰 정보
+     */
     @GetMapping("/{id}")
-    @Operation(summary = "Get town review by ID")
+    @Operation(summary = "ID로 동네 리뷰 조회")
     public ResponseEntity<TownReviewResponseDTO> getTownReviewById(@PathVariable("id") Integer id) {
         try {
             TownReviewResponseDTO review = townReviewService.getTownReviewById(id);
@@ -73,8 +91,13 @@ public class TownReviewController {
         }
     }
 
+    /**
+     * 특정 지역의 모든 동네 리뷰를 조회합니다.
+     * @param regionId 지역 ID
+     * @return TownReviewResponseDTO 리스트
+     */
     @GetMapping("/region/{regionId}")
-    @Operation(summary = "Get town reviews by region ID")
+    @Operation(summary = "지역 ID로 동네 리뷰 조회")
     public ResponseEntity<List<TownReviewResponseDTO>> getTownReviewsByRegionId(@PathVariable("regionId") Integer regionId) {
         try {
             List<TownReviewResponseDTO> reviews = townReviewService.getTownReviewsByRegionId(regionId);
@@ -85,8 +108,13 @@ public class TownReviewController {
         }
     }
 
+    /**
+     * 특정 국가의 모든 동네 리뷰를 조회합니다.
+     * @param countryCode 국가 코드
+     * @return TownReviewResponseDTO 리스트
+     */
     @GetMapping("/country/{countryCode}")
-    @Operation(summary = "Get town reviews by country code")
+    @Operation(summary = "국가 코드로 동네 리뷰 조회")
     public ResponseEntity<List<TownReviewResponseDTO>> getTownReviewsByCountryCode(@PathVariable("countryCode") String countryCode) {
         try {
             List<TownReviewResponseDTO> reviews = townReviewService.getTownReviewsByCountryCode(countryCode);
@@ -97,8 +125,15 @@ public class TownReviewController {
         }
     }
 
+    /**
+     * 특정 동네 리뷰를 수정합니다.
+     * @param id 수정할 리뷰 ID
+     * @param request 리뷰 수정 요청 정보
+     * @param user 현재 로그인한 사용자 정보
+     * @return 수정된 리뷰 정보
+     */
     @PutMapping("/{id}")
-    @Operation(summary = "Update a town review", security = @SecurityRequirement(name = "bearerAuth"))
+    @Operation(summary = "동네 리뷰 수정", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<TownReviewResponseDTO> updateTownReview(
             @PathVariable("id") Integer id,
             @Valid @RequestBody TownReviewRequestDTO request,
@@ -124,8 +159,14 @@ public class TownReviewController {
         }
     }
 
+    /**
+     * 특정 동네 리뷰를 삭제합니다.
+     * @param id 삭제할 리뷰 ID
+     * @param user 현재 로그인한 사용자 정보
+     * @return 성공 응답
+     */
     @DeleteMapping("/{id}")
-    @Operation(summary = "Delete a town review", security = @SecurityRequirement(name = "bearerAuth"))
+    @Operation(summary = "동네 리뷰 삭제", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<SimpleResponse> deleteTownReview(
             @PathVariable("id") Integer id,
             @AuthenticationPrincipal User user) {
@@ -150,8 +191,14 @@ public class TownReviewController {
         }
     }
 
+    /**
+     * 특정 동네 리뷰에 '좋아요'를 표시합니다.
+     * @param id '좋아요'할 리뷰 ID
+     * @param user 현재 로그인한 사용자 정보
+     * @return 업데이트된 리뷰 정보
+     */
     @PostMapping("/{id}/like")
-    @Operation(summary = "Like a town review", security = @SecurityRequirement(name = "bearerAuth"))
+    @Operation(summary = "동네 리뷰 '좋아요'", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<TownReviewResponseDTO> likeTownReview(
             @PathVariable("id") Integer id,
             @AuthenticationPrincipal User user) {
@@ -173,8 +220,18 @@ public class TownReviewController {
         }
     }
 
+    /**
+     * 동네 리뷰를 검색합니다.
+     * @param searchBy 검색 기준 (all, title, content, author)
+     * @param search 검색어
+     * @param page 페이지 번호
+     * @param pageSize 페이지 크기
+     * @param sortBy 정렬 기준
+     * @param sortDirection 정렬 방향
+     * @return 페이징 처리된 TownReviewResponseDTO 리스트
+     */
     @GetMapping("/search")
-    @Operation(summary = "Search town reviews")
+    @Operation(summary = "동네 리뷰 검색")
     public ResponseEntity<PagedResponse<TownReviewResponseDTO>> searchTownReviews(
             @RequestParam(name = "searchBy", defaultValue = "all") String searchBy,
             @RequestParam(name = "search", defaultValue = "") String search,

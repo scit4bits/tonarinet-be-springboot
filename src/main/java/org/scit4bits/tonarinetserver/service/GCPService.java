@@ -10,6 +10,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
+/**
+ * Google Cloud Platform 서비스 관련 비즈니스 로직을 처리하는 서비스입니다.
+ */
 @Service
 @Slf4j
 @RequiredArgsConstructor
@@ -18,12 +21,17 @@ public class GCPService {
     @Value("${google.translation.api.key}")
     private String googleTransApiKey;
 
+    /**
+     * 텍스트를 지정된 언어로 번역합니다.
+     * @param text 번역할 텍스트
+     * @param targetLanguage 대상 언어 코드 (e.g., "en", "ko")
+     * @return 번역 결과를 담은 DTO
+     */
     public TranslationResponseDTO translateText(String text, String targetLanguage) {
-        // Use googleTransApiKey to call Google Translation API
+        // 대상 언어가 지정되지 않은 경우 영어로 기본 설정
         String target = targetLanguage == null ? "en" : targetLanguage;
 
-        // call Google Translation API and return the translated text with WebClient
-
+        // WebClient를 사용하여 Google Translation API 호출
         WebClient webClient = WebClient.builder()
                 .baseUrl("https://translation.googleapis.com/language/translate/v2")
                 .build();
@@ -39,30 +47,28 @@ public class GCPService {
                 .bodyToMono(String.class)
                 .block();
 
-        // JSON Parsing with json-simple
-        String translatedText = text; // default fallback
-        String detectedSourceLanguage = "unknown"; // default fallback
+        // json-simple을 사용한 JSON 파싱
+        String translatedText = text; // 기본 fallback 값
+        String detectedSourceLanguage = "unknown"; // 기본 fallback 값
 
         try {
-            // Using json-simple to parse the JSON response
             JSONParser parser = new JSONParser();
             JSONObject jsonObject = (JSONObject) parser.parse(response);
 
-            // Navigate through the JSON structure: data -> translations -> [0] ->
-            // translatedText
+            // JSON 구조 탐색: data -> translations -> [0] -> translatedText
             JSONObject data = (JSONObject) jsonObject.get("data");
             if (data != null) {
                 JSONArray translations = (JSONArray) data.get("translations");
                 if (translations != null && !translations.isEmpty()) {
                     JSONObject firstTranslation = (JSONObject) translations.get(0);
 
-                    // Extract translated text
+                    // 번역된 텍스트 추출
                     Object translatedTextObj = firstTranslation.get("translatedText");
                     if (translatedTextObj != null) {
                         translatedText = translatedTextObj.toString();
                     }
 
-                    // Extract detected source language (optional field)
+                    // 감지된 소스 언어 추출 (선택적 필드)
                     Object detectedLanguageObj = firstTranslation.get("detectedSourceLanguage");
                     if (detectedLanguageObj != null) {
                         detectedSourceLanguage = detectedLanguageObj.toString();
@@ -70,13 +76,13 @@ public class GCPService {
                 }
             }
 
-            log.debug("Translation successful: '{}' -> '{}' (detected: {})", text, translatedText,
+            log.debug("번역 성공: '{}' -> '{}' (감지된 언어: {})", text, translatedText,
                     detectedSourceLanguage);
 
         } catch (Exception e) {
-            log.error("Failed to parse Google Translation API response: {}", e.getMessage());
-            log.debug("Raw response: {}", response);
-            // Return original text as fallback
+            log.error("Google Translation API 응답 파싱 실패: {}", e.getMessage());
+            log.debug("원본 응답: {}", response);
+            // 실패 시 원본 텍스트를 반환
             translatedText = text;
         }
 

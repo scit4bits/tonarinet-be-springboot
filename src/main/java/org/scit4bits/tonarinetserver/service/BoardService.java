@@ -17,6 +17,9 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * 게시판 관련 비즈니스 로직을 처리하는 서비스입니다.
+ */
 @Service
 @Slf4j
 @RequiredArgsConstructor
@@ -33,12 +36,18 @@ public class BoardService {
     private final UserCountryService userCountryService;
     private final NotificationService notificationService;
 
+    /**
+     * 사용자가 접근할 수 있는 모든 게시판 목록을 조회합니다.
+     * @param user 현재 로그인한 사용자 정보
+     * @return 접근 가능한 BoardDTO 리스트
+     */
     @Transactional(readOnly = true)
     public List<BoardDTO> getAccessibleBoards(User user) {
         User dbUser = userRepository.findById(user.getId()).get();
         List<BoardDTO> boards = new ArrayList<>();
         List<Organization> orgs = dbUser.getOrganizations();
 
+        // 사용자가 속한 조직의 게시판 추가
         for (Organization org : orgs) {
             List<Board> orgBoards = boardRepository.findByOrgId(org.getId());
             for (Board board : orgBoards) {
@@ -48,6 +57,7 @@ public class BoardService {
 
         List<Country> countries = dbUser.getCountries();
 
+        // 사용자가 속한 국가의 게시판 추가
         for (Country country : countries) {
             List<Board> countryBoards = boardRepository.findByCountryCode(country.getCountryCode());
             for (Board board : countryBoards) {
@@ -58,6 +68,12 @@ public class BoardService {
         return boards;
     }
 
+    /**
+     * 특정 게시판의 게시글 목록을 조회합니다.
+     * @param user 현재 로그인한 사용자 정보
+     * @param boardId 게시판 ID
+     * @return ArticleDTO 리스트
+     */
     @Transactional(readOnly = true)
     public List<ArticleDTO> getArticlesByBoardId(User user, Integer boardId) {
         Board board = boardRepository.findById(boardId).orElse(null);
@@ -65,43 +81,49 @@ public class BoardService {
             return null;
         }
 
-        // Check if user has access to the board
+        // 게시판 접근 권한 확인
         if (board.getCountryCode() != null) {
             if (!userCountryService.checkUserCountryAccess(user.getId(), board.getCountryCode())) {
-                log.debug("User {} does not have access to country board {}", user.getId(), board.getCountryCode());
+                log.debug("사용자 {}가 국가 게시판 {}에 접근할 수 없습니다.", user.getId(), board.getCountryCode());
                 return null;
             }
         } else if (board.getOrgId() != null) {
             Organization organization = organizationRepository.findById(board.getOrgId()).orElse(null);
             if (organization == null || !userRoleService.checkUsersRoleInOrg(user, organization, null)) {
-                log.debug("User {} does not have access to organization board {}", user.getId(), organization != null ? organization.getName() : "unknown");
+                log.debug("사용자 {}가 조직 게시판 {}에 접근할 수 없습니다.", user.getId(), organization != null ? organization.getName() : "unknown");
                 return null;
             }
         }
 
-        // Get articles for this board (excluding counsel articles)
+        // 상담 게시글을 제외한 게시글 목록 조회
         List<Article> articles = articleRepository.findByBoardIdAndCategoryNotOrderByCreatedAtDesc(boardId, "counsel");
         return articles.stream()
                 .map(ArticleDTO::fromEntity)
                 .toList();
     }
 
-
+    /**
+     * 새로운 게시글을 생성합니다.
+     * @param user 작성자 정보
+     * @param boardId 게시판 ID
+     * @param request 게시글 작성 요청 정보
+     * @param files 첨부 파일 리스트
+     * @return 생성된 ArticleDTO
+     */
     public ArticleDTO createArticle(User user, Integer boardId, BoardWriteRequestDTO request, List<MultipartFile> files) {
         Board board = boardRepository.findById(boardId).get();
 
+        // 게시판 접근 권한 확인
         if (board.getCountryCode() != null) {
             if (!userCountryService.checkUserCountryAccess(user.getId(), board.getCountryCode())) {
-                // Handle insufficient permissions
-                log.debug("User {} does not have access to country board {}", user.getId(), board.getCountryCode());
-                throw new AccessDeniedException("User does not have permission to create articles in this board.");
+                log.debug("사용자 {}가 국가 게시판 {}에 접근할 수 없습니다.", user.getId(), board.getCountryCode());
+                throw new AccessDeniedException("이 게시판에 게시글을 작성할 권한이 없습니다.");
             }
         } else if (board.getOrgId() != null) {
             Organization organization = organizationRepository.findById(board.getOrgId()).get();
             if (!userRoleService.checkUsersRoleInOrg(user, organization, null)) {
-                // Handle insufficient permissions
-                log.debug("User {} does not have access to organization board {}", user.getId(), organization.getName());
-                throw new AccessDeniedException("User does not have permission to create articles in this board.");
+                log.debug("사용자 {}가 조직 게시판 {}에 접근할 수 없습니다.", user.getId(), organization.getName());
+                throw new AccessDeniedException("이 게시판에 게시글을 작성할 권한이 없습니다.");
             }
         }
         Article article = Article.builder()
@@ -114,24 +136,23 @@ public class BoardService {
 
         Article savedArticle = articleRepository.save(article);
 
-        log.debug("Article created with ID: {}", savedArticle.getId());
+        log.debug("게시글 생성 완료, ID: {}", savedArticle.getId());
 
-        // Handle file attachments if necessary
+        // 첨부 파일 처리
         if (files != null && !files.isEmpty()) {
-            log.debug("Handling file attachments for article: {}", savedArticle.getTitle());
+            log.debug("게시글에 대한 첨부 파일 처리: {}", savedArticle.getTitle());
 
             FileAttachmentRequestDTO requestDTO = new FileAttachmentRequestDTO();
             requestDTO.setArticleId(savedArticle.getId());
-            requestDTO.setIsPrivate(false); // Default to public
+            requestDTO.setIsPrivate(false); // 기본값은 공개
             requestDTO.setType(FileType.ATTACHMENT);
 
             fileAttachmentService.uploadFiles(files, requestDTO, user);
         }
 
+        // 태그 처리
         if (request.getTags() != null && !request.getTags().isEmpty()) {
-            // Handle tags if your Article entity supports it
-            // This is a placeholder; implement tag handling as needed
-            log.debug("Tags provided: {}", request.getTags());
+            log.debug("제공된 태그: {}", request.getTags());
             for (String tag : request.getTags()) {
                 Tag.TagId tagId = Tag.TagId.builder()
                         .tagName(tag)
@@ -139,22 +160,24 @@ public class BoardService {
                 Tag tagEntity = new Tag();
                 tagEntity.setId(tagId);
                 tagEntity.setArticle(savedArticle);
-                log.debug("Saving tag: {}", tagEntity);
+                log.debug("태그 저장: {}", tagEntity);
                 tagRepository.save(tagEntity);
             }
         }
 
+        // 공지사항인 경우 알림 발송
         if (savedArticle.getCategory().equals("notice")) {
-            log.debug("Sending notifications for notice article: {}", savedArticle.getTitle());
+            log.debug("공지사항 게시글에 대한 알림 발송: {}", savedArticle.getTitle());
             if (board.getId() == 0) {
-                // site-wide notice
-                log.debug("Site-wide notice, notifying all users");
+                // 전체 공지
+                log.debug("전체 공지, 모든 사용자에게 알림");
                 List<User> allUsers = userRepository.findAll();
                 for (User u : allUsers) {
                     notificationService.addNotification(u.getId(), "{\"messageType\": \"newNotice\", \"title\": \"" + article.getTitle() + "\"}", "/board/view/" + savedArticle.getId());
                 }
             } else if (board.getOrgId() != null) {
-                log.debug("Organization notice, notifying all users in organization {}", board.getOrgId());
+                // 조직 공지
+                log.debug("조직 공지, 조직 {}의 모든 사용자에게 알림", board.getOrgId());
                 Organization organization = organizationRepository.findById(board.getOrgId()).get();
                 List<User> orgUsers = organization.getUsers();
                 for (User u : orgUsers) {
@@ -168,21 +191,26 @@ public class BoardService {
         );
     }
 
+    /**
+     * 특정 게시판의 정보를 조회합니다.
+     * @param user 현재 로그인한 사용자 정보
+     * @param boardId 게시판 ID
+     * @return BoardDTO
+     */
     public BoardDTO getBoardInformation(User user, Integer boardId) {
         Board board = boardRepository.findById(boardId).get();
 
+        // 게시판 접근 권한 확인
         if (board.getCountryCode() != null) {
             if (!userCountryService.checkUserCountryAccess(user.getId(), board.getCountryCode())) {
-                // Handle insufficient permissions
-                log.debug("User {} does not have access to country board {}", user.getId(), board.getCountryCode());
-                throw new AccessDeniedException("User does not have permission to create articles in this board.");
+                log.debug("사용자 {}가 국가 게시판 {}에 접근할 수 없습니다.", user.getId(), board.getCountryCode());
+                throw new AccessDeniedException("이 게시판에 접근할 권한이 없습니다.");
             }
         } else if (board.getOrgId() != null) {
             Organization organization = organizationRepository.findById(board.getOrgId()).get();
             if (!userRoleService.checkUsersRoleInOrg(user, organization, null)) {
-                // Handle insufficient permissions
-                log.debug("User {} does not have access to organization board {}", user.getId(), organization.getName());
-                throw new AccessDeniedException("User does not have permission to create articles in this board.");
+                log.debug("사용자 {}가 조직 게시판 {}에 접근할 수 없습니다.", user.getId(), organization.getName());
+                throw new AccessDeniedException("이 게시판에 접근할 권한이 없습니다.");
             }
         }
 

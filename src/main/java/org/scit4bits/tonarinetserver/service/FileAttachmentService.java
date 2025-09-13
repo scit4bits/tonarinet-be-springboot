@@ -31,6 +31,9 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+/**
+ * 파일 첨부 관련 비즈니스 로직을 처리하는 서비스입니다.
+ */
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -43,6 +46,13 @@ public class FileAttachmentService {
     @Value("${upload.path:c:/upload}")
     private String uploadPath;
 
+    /**
+     * 여러 파일을 업로드합니다.
+     * @param files 업로드할 파일 리스트
+     * @param requestDTO 파일 메타데이터 요청 정보
+     * @param currentUser 현재 로그인한 사용자 정보
+     * @return 업로드된 파일 정보 DTO 리스트
+     */
     public List<FileAttachmentResponseDTO> uploadFiles(List<MultipartFile> files, FileAttachmentRequestDTO requestDTO, User currentUser) {
         try {
             List<FileAttachmentResponseDTO> dtos = new ArrayList<>();
@@ -57,22 +67,22 @@ public class FileAttachmentService {
                 submission = submissionRepository.findById(requestDTO.getSubmissionId()).get();
             }
             for (MultipartFile file : files) {
-                // Validate file
+                // 파일 유효성 검사
                 if (file.isEmpty()) {
-                    throw new RuntimeException("File is empty");
+                    throw new RuntimeException("파일이 비어있습니다.");
                 }
 
-                // Check if user can attach to this article (article creator or admin)
+                // 게시글에 파일을 첨부할 수 있는지 확인 (게시글 작성자 또는 관리자)
                 if (article != null && !article.getCreatedById().equals(currentUser.getId()) && !currentUser.getIsAdmin()) {
-                    throw new AccessDeniedException("You are not authorized to attach files to this article");
+                    throw new AccessDeniedException("이 게시글에 파일을 첨부할 권한이 없습니다.");
                 }
 
-                // Check if user can attach to this submission (submission creator or admin)
+                // 제출물에 파일을 첨부할 수 있는지 확인 (제출물 작성자 또는 관리자)
                 if (submission != null && !submission.getCreatedById().equals(currentUser.getId()) && !currentUser.getIsAdmin()) {
-                    throw new AccessDeniedException("You are not authorized to attach files to this submission");
+                    throw new AccessDeniedException("이 제출물에 파일을 첨부할 권한이 없습니다.");
                 }
 
-                // Generate unique filename
+                // 고유한 파일 이름 생성
                 String originalFilename = file.getOriginalFilename();
                 String fileExtension = "";
                 if (originalFilename != null && originalFilename.contains(".")) {
@@ -80,17 +90,17 @@ public class FileAttachmentService {
                 }
                 String uniqueFilename = UUID.randomUUID() + fileExtension;
 
-                // Determine file type if not specified
+                // 파일 유형 결정 (지정되지 않은 경우)
                 FileType fileType = requestDTO.getType();
                 if (fileType == null) {
                     fileType = determineFileType(file.getContentType(), fileExtension);
                 }
 
-                // Save file to disk
+                // 파일을 디스크에 저장
                 Path filePath = Paths.get(uploadPath, uniqueFilename);
                 Files.copy(file.getInputStream(), filePath);
 
-                // Create FileAttachment entity
+                // FileAttachment 엔티티 생성
                 FileAttachment fileAttachment = FileAttachment.builder()
                         .filepath(filePath.toString())
                         .originalFilename(originalFilename)
@@ -104,9 +114,9 @@ public class FileAttachmentService {
 
                 FileAttachment savedFile = fileAttachmentRepository.save(fileAttachment);
 
-                // Fetch complete entity with relationships
+                // 관계가 설정된 완전한 엔티티를 다시 조회
                 FileAttachment completeFile = fileAttachmentRepository.findById(savedFile.getId())
-                        .orElseThrow(() -> new RuntimeException("File not found after upload"));
+                        .orElseThrow(() -> new RuntimeException("업로드 후 파일을 찾을 수 없습니다."));
 
                 dtos.add(FileAttachmentResponseDTO.fromEntity(completeFile));
             }
@@ -114,10 +124,14 @@ public class FileAttachmentService {
             return dtos;
 
         } catch (IOException e) {
-            throw new RuntimeException("Failed to upload file: " + e.getMessage(), e);
+            throw new RuntimeException("파일 업로드 실패: " + e.getMessage(), e);
         }
     }
 
+    /**
+     * 모든 파일 첨부 목록을 조회합니다.
+     * @return FileAttachmentResponseDTO 리스트
+     */
     @Transactional(readOnly = true)
     public List<FileAttachmentResponseDTO> getAllFileAttachments() {
         List<FileAttachment> files = fileAttachmentRepository.findAll();
@@ -126,24 +140,36 @@ public class FileAttachmentService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * ID로 특정 파일 첨부를 조회합니다.
+     * @param id 조회할 파일 ID
+     * @param currentUser 현재 로그인한 사용자 정보
+     * @return FileAttachmentResponseDTO
+     */
     @Transactional(readOnly = true)
     public FileAttachmentResponseDTO getFileAttachmentById(Integer id, User currentUser) {
         FileAttachment fileAttachment = fileAttachmentRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("File not found with ID: " + id));
+                .orElseThrow(() -> new RuntimeException("파일을 찾을 수 없습니다. ID: " + id));
 
-        // Check privacy permissions
+        // 비공개 파일 접근 권한 확인
         if (fileAttachment.getIsPrivate() && !currentUser.getIsAdmin()) {
-            throw new RuntimeException("You are not authorized to access this private file");
+            throw new RuntimeException("이 비공개 파일에 접근할 권한이 없습니다.");
         }
 
         return FileAttachmentResponseDTO.fromEntity(fileAttachment);
     }
 
+    /**
+     * 특정 게시글에 첨부된 모든 파일을 조회합니다.
+     * @param articleId 게시글 ID
+     * @param currentUser 현재 로그인한 사용자 정보
+     * @return FileAttachmentResponseDTO 리스트
+     */
     @Transactional(readOnly = true)
     public List<FileAttachmentResponseDTO> getFileAttachmentsByArticleId(Integer articleId, User currentUser) {
         List<FileAttachment> files = fileAttachmentRepository.findByArticleId(articleId);
 
-        // Filter out private files that user cannot access
+        // 사용자가 접근할 수 없는 비공개 파일 필터링
         return files.stream()
                 .filter(file -> !file.getIsPrivate() ||
                         file.getUploadedBy().equals(currentUser.getId()) ||
@@ -152,11 +178,17 @@ public class FileAttachmentService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * 특정 제출물에 첨부된 모든 파일을 조회합니다.
+     * @param submissionId 제출물 ID
+     * @param currentUser 현재 로그인한 사용자 정보
+     * @return FileAttachmentResponseDTO 리스트
+     */
     @Transactional(readOnly = true)
     public List<FileAttachmentResponseDTO> getFileAttachmentsBySubmissionId(Integer submissionId, User currentUser) {
         List<FileAttachment> files = fileAttachmentRepository.findBySubmissionId(submissionId);
 
-        // Filter out private files that user cannot access
+        // 사용자가 접근할 수 없는 비공개 파일 필터링
         return files.stream()
                 .filter(file -> !file.getIsPrivate() ||
                         file.getUploadedBy().equals(currentUser.getId()) ||
@@ -165,11 +197,17 @@ public class FileAttachmentService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * 특정 사용자가 업로드한 모든 파일을 조회합니다.
+     * @param userId 사용자 ID
+     * @param currentUser 현재 로그인한 사용자 정보
+     * @return FileAttachmentResponseDTO 리스트
+     */
     @Transactional(readOnly = true)
     public List<FileAttachmentResponseDTO> getFileAttachmentsByUserId(Integer userId, User currentUser) {
-        // Only allow users to see their own files or admin to see all
+        // 자신의 파일 또는 관리자만 조회 가능
         if (!userId.equals(currentUser.getId()) && !currentUser.getIsAdmin()) {
-            throw new RuntimeException("You are not authorized to view files uploaded by other users");
+            throw new RuntimeException("다른 사용자가 업로드한 파일을 볼 권한이 없습니다.");
         }
 
         List<FileAttachment> files = fileAttachmentRepository.findByUploadedBy(userId);
@@ -178,6 +216,11 @@ public class FileAttachmentService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * 특정 유형의 모든 파일을 조회합니다.
+     * @param type 파일 유형
+     * @return FileAttachmentResponseDTO 리스트
+     */
     @Transactional(readOnly = true)
     public List<FileAttachmentResponseDTO> getFileAttachmentsByType(FileType type) {
         List<FileAttachment> files = fileAttachmentRepository.findByType(type);
@@ -186,38 +229,45 @@ public class FileAttachmentService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * 파일 첨부 정보를 수정합니다.
+     * @param id 수정할 파일 ID
+     * @param requestDTO 파일 수정 요청 정보
+     * @param currentUser 현재 로그인한 사용자 정보
+     * @return 수정된 파일 정보 DTO
+     */
     public FileAttachmentResponseDTO updateFileAttachment(Integer id, FileAttachmentRequestDTO requestDTO, User currentUser) {
         FileAttachment existingFile = fileAttachmentRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("File not found with ID: " + id));
+                .orElseThrow(() -> new RuntimeException("파일을 찾을 수 없습니다. ID: " + id));
 
-        // Check if user is the uploader or admin
+        // 업로더 또는 관리자인지 확인
         if (!existingFile.getUploadedBy().equals(currentUser.getId()) && !currentUser.getIsAdmin()) {
-            throw new RuntimeException("Only the file uploader or admin can update this file");
+            throw new RuntimeException("파일 업로더 또는 관리자만 이 파일을 수정할 수 있습니다.");
         }
 
-        // Validate article if being changed
+        // 게시글 변경 시 유효성 검사
         if (requestDTO.getArticleId() != null && !requestDTO.getArticleId().equals(existingFile.getArticleId())) {
             Article article = articleRepository.findById(requestDTO.getArticleId())
-                    .orElseThrow(() -> new RuntimeException("Article not found with ID: " + requestDTO.getArticleId()));
+                    .orElseThrow(() -> new RuntimeException("게시글을 찾을 수 없습니다. ID: " + requestDTO.getArticleId()));
 
-            // Check if user can attach to the new article
+            // 새로운 게시글에 첨부할 권한이 있는지 확인
             if (!article.getCreatedById().equals(currentUser.getId()) && !currentUser.getIsAdmin()) {
-                throw new RuntimeException("You are not authorized to attach files to this article");
+                throw new RuntimeException("이 게시글에 파일을 첨부할 권한이 없습니다.");
             }
         }
 
-        // Validate submission if being changed
+        // 제출물 변경 시 유효성 검사
         if (requestDTO.getSubmissionId() != null && !requestDTO.getSubmissionId().equals(existingFile.getSubmissionId())) {
             Submission submission = submissionRepository.findById(requestDTO.getSubmissionId())
-                    .orElseThrow(() -> new RuntimeException("Submission not found with ID: " + requestDTO.getSubmissionId()));
+                    .orElseThrow(() -> new RuntimeException("제출물을 찾을 수 없습니다. ID: " + requestDTO.getSubmissionId()));
 
-            // Check if user can attach to the new submission
+            // 새로운 제출물에 첨부할 권한이 있는지 확인
             if (!submission.getCreatedById().equals(currentUser.getId()) && !currentUser.getIsAdmin()) {
-                throw new RuntimeException("You are not authorized to attach files to this submission");
+                throw new RuntimeException("이 제출물에 파일을 첨부할 권한이 없습니다.");
             }
         }
 
-        // Update fields
+        // 필드 업데이트
         if (requestDTO.getIsPrivate() != null) {
             existingFile.setIsPrivate(requestDTO.getIsPrivate());
         }
@@ -233,37 +283,53 @@ public class FileAttachmentService {
 
         FileAttachment updatedFile = fileAttachmentRepository.save(existingFile);
 
-        // Fetch complete entity with relationships
+        // 관계가 설정된 완전한 엔티티를 다시 조회
         FileAttachment completeFile = fileAttachmentRepository.findById(updatedFile.getId())
-                .orElseThrow(() -> new RuntimeException("File not found after update"));
+                .orElseThrow(() -> new RuntimeException("수정 후 파일을 찾을 수 없습니다."));
 
         return FileAttachmentResponseDTO.fromEntity(completeFile);
     }
 
+    /**
+     * 파일 첨부를 삭제합니다.
+     * @param id 삭제할 파일 ID
+     * @param currentUser 현재 로그인한 사용자 정보
+     */
     public void deleteFileAttachment(Integer id, User currentUser) {
         FileAttachment existingFile = fileAttachmentRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("File not found with ID: " + id));
+                .orElseThrow(() -> new RuntimeException("파일을 찾을 수 없습니다. ID: " + id));
 
-        // Check if user is the uploader or admin
+        // 업로더 또는 관리자인지 확인
         if (!existingFile.getUploadedBy().equals(currentUser.getId()) && !currentUser.getIsAdmin()) {
-            throw new RuntimeException("Only the file uploader or admin can delete this file");
+            throw new RuntimeException("파일 업로더 또는 관리자만 이 파일을 삭제할 수 있습니다.");
         }
 
         try {
-            // Delete physical file
+            // 물리적 파일 삭제
             Path filePath = Paths.get(existingFile.getFilepath());
             Files.deleteIfExists(filePath);
         } catch (IOException e) {
-            // Log error but continue with database deletion
-            System.err.println("Failed to delete physical file: " + e.getMessage());
+            // 오류를 기록하지만 데이터베이스 삭제는 계속 진행
+            System.err.println("물리적 파일 삭제 실패: " + e.getMessage());
         }
 
-        // Delete from database
+        // 데이터베이스에서 삭제
         fileAttachmentRepository.deleteById(id);
     }
 
+    /**
+     * 파일 첨부를 검색합니다.
+     * @param searchBy 검색 기준
+     * @param search 검색어
+     * @param page 페이지 번호
+     * @param pageSize 페이지 크기
+     * @param sortBy 정렬 기준
+     * @param sortDirection 정렬 방향
+     * @param currentUser 현재 로그인한 사용자 정보
+     * @return 페이징 처리된 FileAttachmentResponseDTO
+     */
     @Transactional(readOnly = true)
-    public PagedResponse<FileAttachmentResponseDTO> searchFileAttachments(String searchBy, String search,
+    public PagedResponse<FileAttachmentResponseDTO> searchFileAttachments(String searchBy, String search, 
                                                                           Integer page, Integer pageSize, String sortBy, String sortDirection, User currentUser) {
 
         Sort.Direction direction = sortDirection.equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC;
@@ -321,7 +387,7 @@ public class FileAttachmentService {
                 break;
         }
 
-        // Filter out private files that current user cannot access
+        // 현재 사용자가 접근할 수 없는 비공개 파일 필터링
         List<FileAttachmentResponseDTO> files = filePage.getContent().stream()
                 .filter(file -> !file.getIsPrivate() ||
                         file.getUploadedBy().equals(currentUser.getId()) ||
@@ -333,11 +399,17 @@ public class FileAttachmentService {
                 .data(files)
                 .page(filePage.getNumber())
                 .size(filePage.getSize())
-                .totalElements(files.size()) // Adjusted for filtered results
+                .totalElements(files.size()) // 필터링된 결과에 맞게 조정
                 .totalPages(filePage.getTotalPages())
                 .build();
     }
 
+    /**
+     * 파일 유형을 결정합니다.
+     * @param contentType MIME 타입
+     * @param fileExtension 파일 확장자
+     * @return 파일 유형 (IMAGE 또는 ATTACHMENT)
+     */
     private FileType determineFileType(String contentType, String fileExtension) {
         if (contentType != null && contentType.startsWith("image/")) {
             return FileType.IMAGE;
@@ -351,23 +423,29 @@ public class FileAttachmentService {
         return FileType.ATTACHMENT;
     }
 
+    /**
+     * 파일을 다운로드합니다.
+     * @param id 다운로드할 파일 ID
+     * @param currentUser 현재 로그인한 사용자 정보
+     * @return 파일의 바이트 배열
+     */
     @Transactional(readOnly = true)
     public byte[] downloadFile(Integer id, User currentUser) {
         FileAttachment fileAttachment = fileAttachmentRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("File not found with ID: " + id));
+                .orElseThrow(() -> new RuntimeException("파일을 찾을 수 없습니다. ID: " + id));
 
-        // Check privacy permissions
+        // 비공개 파일 접근 권한 확인
         if (fileAttachment.getIsPrivate() &&
                 !fileAttachment.getUploadedBy().equals(currentUser.getId()) &&
                 !currentUser.getIsAdmin()) {
-            throw new RuntimeException("You are not authorized to download this private file");
+            throw new RuntimeException("이 비공개 파일을 다운로드할 권한이 없습니다.");
         }
 
         try {
             Path filePath = Paths.get(fileAttachment.getFilepath());
             return Files.readAllBytes(filePath);
         } catch (IOException e) {
-            throw new RuntimeException("Failed to read file: " + e.getMessage(), e);
+            throw new RuntimeException("파일 읽기 실패: " + e.getMessage(), e);
         }
     }
 }

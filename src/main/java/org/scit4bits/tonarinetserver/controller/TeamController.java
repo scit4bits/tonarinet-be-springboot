@@ -19,17 +19,26 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+/**
+ * 팀 관련 API를 처리하는 컨트롤러입니다.
+ */
 @RestController
 @Slf4j
 @RequiredArgsConstructor
 @RequestMapping("/api/team")
-@Tag(name = "Team", description = "Team management API")
+@Tag(name = "Team", description = "팀 관리 API")
 public class TeamController {
 
     private final TeamService teamService;
 
+    /**
+     * 새로운 팀을 생성합니다.
+     * @param request 팀 생성 요청 정보
+     * @param user 현재 로그인한 사용자 정보
+     * @return 생성된 팀 정보
+     */
     @PostMapping
-    @Operation(summary = "Create a new team", security = @SecurityRequirement(name = "bearerAuth"))
+    @Operation(summary = "새로운 팀 생성", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<TeamResponseDTO> createTeam(
             @Valid @RequestBody TeamRequestDTO request,
             @AuthenticationPrincipal User user) {
@@ -46,8 +55,12 @@ public class TeamController {
         }
     }
 
+    /**
+     * 모든 팀 목록을 조회합니다.
+     * @return TeamResponseDTO 리스트
+     */
     @GetMapping
-    @Operation(summary = "Get all teams")
+    @Operation(summary = "모든 팀 조회")
     public ResponseEntity<List<TeamResponseDTO>> getAllTeams() {
         try {
             List<TeamResponseDTO> teams = teamService.getAllTeams();
@@ -58,8 +71,13 @@ public class TeamController {
         }
     }
 
+    /**
+     * ID로 특정 팀 정보를 조회합니다.
+     * @param id 조회할 팀 ID
+     * @return TeamResponseDTO 형태의 팀 정보
+     */
     @GetMapping("/{id}")
-    @Operation(summary = "Get team by ID")
+    @Operation(summary = "ID로 팀 조회")
     public ResponseEntity<TeamResponseDTO> getTeamById(@PathVariable("id") Integer id) {
         try {
             TeamResponseDTO team = teamService.getTeamById(id);
@@ -73,6 +91,11 @@ public class TeamController {
         }
     }
 
+    /**
+     * 현재 로그인한 사용자가 속한 팀 목록을 조회합니다.
+     * @param user 현재 로그인한 사용자 정보
+     * @return TeamResponseDTO 리스트
+     */
     @GetMapping("/my")
     public ResponseEntity<List<TeamResponseDTO>> getMyTeams(@AuthenticationPrincipal User user) {
         if (user == null) {
@@ -88,8 +111,13 @@ public class TeamController {
         }
     }
 
+    /**
+     * 특정 조직에 속한 팀 목록을 조회합니다.
+     * @param orgId 조직 ID
+     * @return TeamResponseDTO 리스트
+     */
     @GetMapping("/organization/{orgId}")
-    @Operation(summary = "Get teams by organization ID")
+    @Operation(summary = "조직 ID로 팀 조회")
     public ResponseEntity<List<TeamResponseDTO>> getTeamsByOrgId(@PathVariable("orgId") Integer orgId) {
         try {
             List<TeamResponseDTO> teams = teamService.getTeamsByOrgId(orgId);
@@ -100,8 +128,15 @@ public class TeamController {
         }
     }
 
+    /**
+     * 특정 팀 정보를 수정합니다.
+     * @param id 수정할 팀 ID
+     * @param request 팀 수정 요청 정보
+     * @param user 현재 로그인한 사용자 정보
+     * @return 수정된 팀 정보
+     */
     @PutMapping("/{id}")
-    @Operation(summary = "Update a team", security = @SecurityRequirement(name = "bearerAuth"))
+    @Operation(summary = "팀 정보 수정", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<TeamResponseDTO> updateTeam(
             @PathVariable("id") Integer id,
             @Valid @RequestBody TeamRequestDTO request,
@@ -127,8 +162,14 @@ public class TeamController {
         }
     }
 
+    /**
+     * 특정 팀을 삭제합니다.
+     * @param id 삭제할 팀 ID
+     * @param user 현재 로그인한 사용자 정보
+     * @return 성공 응답
+     */
     @DeleteMapping("/{id}")
-    @Operation(summary = "Delete a team", security = @SecurityRequirement(name = "bearerAuth"))
+    @Operation(summary = "팀 삭제", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<SimpleResponse> deleteTeam(
             @PathVariable("id") Integer id,
             @AuthenticationPrincipal User user) {
@@ -153,8 +194,18 @@ public class TeamController {
         }
     }
 
+    /**
+     * 팀을 검색합니다.
+     * @param searchBy 검색 기준 (all, name, description)
+     * @param search 검색어
+     * @param page 페이지 번호
+     * @param pageSize 페이지 크기
+     * @param sortBy 정렬 기준
+     * @param sortDirection 정렬 방향
+     * @return 페이징 처리된 TeamResponseDTO 리스트
+     */
     @GetMapping("/search")
-    @Operation(summary = "Search teams")
+    @Operation(summary = "팀 검색")
     public ResponseEntity<PagedResponse<TeamResponseDTO>> searchTeams(
             @RequestParam(name = "searchBy", defaultValue = "all") String searchBy,
             @RequestParam(name = "search", defaultValue = "") String search,
@@ -172,8 +223,14 @@ public class TeamController {
         }
     }
 
+    /**
+     * 특정 팀에 참여합니다.
+     * @param id 참여할 팀 ID
+     * @param user 현재 로그인한 사용자 정보
+     * @return 성공 응답
+     */
     @PostMapping("/{id}/join")
-    @Operation(summary = "Join a team", security = @SecurityRequirement(name = "bearerAuth"))
+    @Operation(summary = "팀 참여", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<SimpleResponse> joinTeam(
             @PathVariable("id") Integer id,
             @AuthenticationPrincipal User user) {
@@ -195,8 +252,14 @@ public class TeamController {
         }
     }
 
+    /**
+     * 특정 팀에서 나갑니다.
+     * @param id 나갈 팀 ID
+     * @param user 현재 로그인한 사용자 정보
+     * @return 성공 응답
+     */
     @PostMapping("/{id}/leave")
-    @Operation(summary = "Leave a team", security = @SecurityRequirement(name = "bearerAuth"))
+    @Operation(summary = "팀 나가기", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<SimpleResponse> leaveTeam(
             @PathVariable("id") Integer id,
             @AuthenticationPrincipal User user) {

@@ -21,6 +21,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * 채팅방 관련 비즈니스 로직을 처리하는 서비스입니다.
+ */
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -31,8 +34,14 @@ public class ChatRoomService {
     private final UserChatRoomRepository userChatRoomRepository;
     private final ChatMessageRepository chatMessageRepository;
 
+    /**
+     * 새로운 채팅방을 생성합니다.
+     * @param requestDTO 채팅방 생성 요청 정보
+     * @param currentUser 현재 로그인한 사용자 정보 (방장)
+     * @return 생성된 채팅방 정보
+     */
     public ChatRoomResponseDTO createChatRoom(ChatRoomRequestDTO requestDTO, User currentUser) {
-        // Create the chat room
+        // 채팅방 생성
         ChatRoom chatRoom = ChatRoom.builder()
                 .title(requestDTO.getTitle())
                 .description(requestDTO.getDescription())
@@ -42,7 +51,7 @@ public class ChatRoomService {
 
         chatRoom = chatRoomRepository.save(chatRoom);
 
-        // Add the creator to the chat room
+        // 방장을 채팅방에 추가
         UserChatRoom creatorRelation = UserChatRoom.builder()
                 .id(UserChatRoom.UserChatRoomId.builder()
                         .userId(currentUser.getId())
@@ -53,12 +62,12 @@ public class ChatRoomService {
                 .build();
         userChatRoomRepository.save(creatorRelation);
 
-        // Add other users to the chat room if specified
+        // 다른 사용자를 채팅방에 추가
         if (requestDTO.getUserIds() != null && !requestDTO.getUserIds().isEmpty()) {
             for (Integer userId : requestDTO.getUserIds()) {
-                if (!userId.equals(currentUser.getId())) { // Don't add creator twice
+                if (!userId.equals(currentUser.getId())) { // 방장을 다시 추가하지 않도록 함
                     User user = userRepository.findById(userId)
-                            .orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
+                            .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다. ID: " + userId));
 
                     UserChatRoom userRelation = UserChatRoom.builder()
                             .id(UserChatRoom.UserChatRoomId.builder()
@@ -73,19 +82,29 @@ public class ChatRoomService {
             }
         }
 
-        // Fetch the complete chat room with relationships
+        // 관계가 설정된 완전한 채팅방 정보를 다시 조회
         ChatRoom savedChatRoom = chatRoomRepository.findById(chatRoom.getId())
-                .orElseThrow(() -> new RuntimeException("Chat room not found after creation"));
+                .orElseThrow(() -> new RuntimeException("생성 후 채팅방을 찾을 수 없습니다."));
 
         return ChatRoomResponseDTO.fromEntity(savedChatRoom);
     }
 
+    /**
+     * 해당 채팅방이 AI 채팅방인지 확인합니다.
+     * @param roomId 채팅방 ID
+     * @return AI 채팅방 여부
+     */
     public boolean checkIfAIChatroom(Integer roomId) {
         ChatRoom chatroom = chatRoomRepository.findById(roomId)
-                .orElseThrow(() -> new RuntimeException("Chat room not found with ID: " + roomId));
+                .orElseThrow(() -> new RuntimeException("채팅방을 찾을 수 없습니다. ID: " + roomId));
+        // 방장 ID가 0이면 시스템(AI) 채팅방으로 간주
         return chatroom.getLeaderUserId().equals(0);
     }
 
+    /**
+     * 모든 채팅방 목록을 조회합니다.
+     * @return ChatRoomResponseDTO 리스트
+     */
     @Transactional(readOnly = true)
     public List<ChatRoomResponseDTO> getAllChatRooms() {
         List<ChatRoom> chatRooms = chatRoomRepository.findAll();
@@ -94,13 +113,23 @@ public class ChatRoomService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * ID로 특정 채팅방 정보를 조회합니다.
+     * @param id 조회할 채팅방 ID
+     * @return ChatRoomResponseDTO
+     */
     @Transactional(readOnly = true)
     public ChatRoomResponseDTO getChatRoomById(Integer id) {
         ChatRoom chatRoom = chatRoomRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Chat room not found with ID: " + id));
+                .orElseThrow(() -> new RuntimeException("채팅방을 찾을 수 없습니다. ID: " + id));
         return ChatRoomResponseDTO.fromEntity(chatRoom);
     }
 
+    /**
+     * 특정 사용자가 속한 모든 채팅방 목록을 조회합니다.
+     * @param userId 사용자 ID
+     * @return ChatRoomResponseDTO 리스트
+     */
     @Transactional(readOnly = true)
     public List<ChatRoomResponseDTO> getChatRoomsByUserId(Integer userId) {
         List<ChatRoom> chatRooms = chatRoomRepository.findByUserId(userId);
@@ -109,6 +138,11 @@ public class ChatRoomService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * 특정 사용자가 방장인 모든 채팅방 목록을 조회합니다.
+     * @param leaderId 방장 ID
+     * @return ChatRoomResponseDTO 리스트
+     */
     @Transactional(readOnly = true)
     public List<ChatRoomResponseDTO> getChatRoomsByLeaderId(Integer leaderId) {
         List<ChatRoom> chatRooms = chatRoomRepository.findByLeaderUserId(leaderId);
@@ -117,16 +151,23 @@ public class ChatRoomService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * 채팅방 정보를 수정합니다.
+     * @param id 수정할 채팅방 ID
+     * @param requestDTO 채팅방 수정 요청 정보
+     * @param currentUser 현재 로그인한 사용자 정보
+     * @return 수정된 채팅방 정보
+     */
     public ChatRoomResponseDTO updateChatRoom(Integer id, ChatRoomRequestDTO requestDTO, User currentUser) {
         ChatRoom existingChatRoom = chatRoomRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Chat room not found with ID: " + id));
+                .orElseThrow(() -> new RuntimeException("채팅방을 찾을 수 없습니다. ID: " + id));
 
-        // Check if user is the leader or admin
+        // 사용자가 방장이거나 관리자인지 확인
         if (!existingChatRoom.getLeaderUserId().equals(currentUser.getId()) && !currentUser.getIsAdmin()) {
-            throw new RuntimeException("Only the chat room leader or admin can update this chat room");
+            throw new RuntimeException("방장 또는 관리자만 이 채팅방을 수정할 수 있습니다.");
         }
 
-        // Update chat room fields
+        // 채팅방 정보 수정
         existingChatRoom.setTitle(requestDTO.getTitle());
         existingChatRoom.setDescription(requestDTO.getDescription());
         if (requestDTO.getForceRemain() != null) {
@@ -135,16 +176,16 @@ public class ChatRoomService {
 
         ChatRoom updatedChatRoom = chatRoomRepository.save(existingChatRoom);
 
-        // Update user memberships if specified
+        // 사용자 멤버십 수정
         if (requestDTO.getUserIds() != null) {
-            // Remove existing user relationships (except leader)
+            // 기존 사용자 관계 삭제 (방장 제외)
             userChatRoomRepository.deleteByChatroomIdAndUserIdNot(id, existingChatRoom.getLeaderUserId());
 
-            // Add new user relationships
+            // 새로운 사용자 관계 추가
             for (Integer userId : requestDTO.getUserIds()) {
-                if (!userId.equals(existingChatRoom.getLeaderUserId())) { // Don't add leader twice
+                if (!userId.equals(existingChatRoom.getLeaderUserId())) { // 방장을 다시 추가하지 않도록 함
                     User user = userRepository.findById(userId)
-                            .orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
+                            .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다. ID: " + userId));
 
                     UserChatRoom userRelation = UserChatRoom.builder()
                             .id(UserChatRoom.UserChatRoomId.builder()
@@ -159,36 +200,46 @@ public class ChatRoomService {
             }
         }
 
-        // Fetch the updated chat room with relationships
+        // 수정된 완전한 채팅방 정보를 다시 조회
         ChatRoom finalChatRoom = chatRoomRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Chat room not found after update"));
+                .orElseThrow(() -> new RuntimeException("수정 후 채팅방을 찾을 수 없습니다."));
 
         return ChatRoomResponseDTO.fromEntity(finalChatRoom);
     }
 
+    /**
+     * 채팅방을 삭제합니다.
+     * @param id 삭제할 채팅방 ID
+     * @param currentUser 현재 로그인한 사용자 정보
+     */
     public void deleteChatRoom(Integer id, User currentUser) {
         ChatRoom existingChatRoom = chatRoomRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Chat room not found with ID: " + id));
+                .orElseThrow(() -> new RuntimeException("채팅방을 찾을 수 없습니다. ID: " + id));
 
-        // Check if user is the leader or admin
+        // 사용자가 방장이거나 관리자인지 확인
         if (!existingChatRoom.getLeaderUserId().equals(currentUser.getId()) && !currentUser.getIsAdmin()) {
-            throw new RuntimeException("Only the chat room leader or admin can delete this chat room");
+            throw new RuntimeException("방장 또는 관리자만 이 채팅방을 삭제할 수 있습니다.");
         }
 
-        // Delete related UserChatRoom entries first
+        // 관련된 UserChatRoom 항목 먼저 삭제
         userChatRoomRepository.deleteByChatroomId(id);
 
-        // Delete the chat room (messages will be cascade deleted)
+        // 채팅방 삭제 (메시지는 cascade 삭제됨)
         chatRoomRepository.deleteById(id);
     }
 
+    /**
+     * 채팅방에 참여합니다.
+     * @param chatRoomId 참여할 채팅방 ID
+     * @param currentUser 현재 로그인한 사용자 정보
+     */
     public void joinChatRoom(Integer chatRoomId, User currentUser) {
         ChatRoom chatRoom = chatRoomRepository.findById(chatRoomId)
-                .orElseThrow(() -> new RuntimeException("Chat room not found with ID: " + chatRoomId));
+                .orElseThrow(() -> new RuntimeException("채팅방을 찾을 수 없습니다. ID: " + chatRoomId));
 
-        // Check if user is already in the chat room
+        // 사용자가 이미 채팅방에 있는지 확인
         if (userChatRoomRepository.existsByIdUserIdAndIdChatroomId(currentUser.getId(), chatRoomId)) {
-            throw new RuntimeException("User is already in this chat room");
+            throw new RuntimeException("사용자가 이미 이 채팅방에 있습니다.");
         }
 
         UserChatRoom userRelation = UserChatRoom.builder()
@@ -202,23 +253,38 @@ public class ChatRoomService {
         userChatRoomRepository.save(userRelation);
     }
 
+    /**
+     * 채팅방에서 나갑니다.
+     * @param chatRoomId 나갈 채팅방 ID
+     * @param currentUser 현재 로그인한 사용자 정보
+     */
     public void leaveChatRoom(Integer chatRoomId, User currentUser) {
         ChatRoom chatRoom = chatRoomRepository.findById(chatRoomId)
-                .orElseThrow(() -> new RuntimeException("Chat room not found with ID: " + chatRoomId));
+                .orElseThrow(() -> new RuntimeException("채팅방을 찾을 수 없습니다. ID: " + chatRoomId));
 
-        // Check if user is the leader
+        // 사용자가 방장인지 확인
         if (chatRoom.getLeaderUserId().equals(currentUser.getId())) {
-            throw new RuntimeException("Chat room leader cannot leave the room. Transfer leadership or delete the room instead.");
+            throw new RuntimeException("방장은 채팅방을 나갈 수 없습니다. 방장을 위임하거나 채팅방을 삭제하세요.");
         }
 
-        // Check if user is in the chat room
+        // 사용자가 채팅방에 있는지 확인
         if (!userChatRoomRepository.existsByIdUserIdAndIdChatroomId(currentUser.getId(), chatRoomId)) {
-            throw new RuntimeException("User is not in this chat room");
+            throw new RuntimeException("사용자가 이 채팅방에 없습니다.");
         }
 
         userChatRoomRepository.deleteByUserIdAndChatroomId(currentUser.getId(), chatRoomId);
     }
 
+    /**
+     * 채팅방을 검색합니다.
+     * @param searchBy 검색 기준
+     * @param search 검색어
+     * @param page 페이지 번호
+     * @param pageSize 페이지 크기
+     * @param sortBy 정렬 기준
+     * @param sortDirection 정렬 방향
+     * @return 페이징 처리된 ChatRoomResponseDTO
+     */
     @Transactional(readOnly = true)
     public PagedResponse<ChatRoomResponseDTO> searchChatRooms(String searchBy, String search,
                                                               Integer page, Integer pageSize, String sortBy, String sortDirection) {
@@ -260,16 +326,20 @@ public class ChatRoomService {
                 .build();
     }
 
+    /**
+     * 읽지 않은 메시지 총 개수를 조회합니다.
+     * @param userId 사용자 ID
+     * @return 읽지 않은 메시지 개수
+     */
     @Transactional(readOnly = true)
     public int getUnreadMessagesCount(Integer userId) {
-        // Get all chat rooms the user is a member of
+        // 사용자가 멤버인 모든 채팅방을 가져옵니다.
         List<ChatRoom> userChatRooms = chatRoomRepository.findByUserId(userId);
 
         int totalUnreadCount = 0;
 
-        // For each chat room, count unread messages not sent by the user
+        // 각 채팅방에 대해 사용자가 보내지 않은 읽지 않은 메시지를 계산합니다.
         for (ChatRoom chatRoom : userChatRooms) {
-            // Count unread messages in this chat room that were not sent by the user
             long unreadInRoom = chatMessageRepository.countByChatroomIdAndIsReadFalseAndSenderIdNot(
                     chatRoom.getId(), userId);
             totalUnreadCount += unreadInRoom;

@@ -27,11 +27,14 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
+/**
+ * 실시간 채팅 메시지 관련 API를 처리하는 컨트롤러입니다.
+ */
 @RestController
 @Slf4j
 @RequiredArgsConstructor
 @RequestMapping("/api/chat")
-@Tag(name = "Chat Message", description = "Real-time chat messaging API")
+@Tag(name = "Chat Message", description = "실시간 채팅 메시지 API")
 public class ChatMessageController {
 
     private final ChatMessageService chatMessageService;
@@ -41,8 +44,11 @@ public class ChatMessageController {
     private final AIService aiService;
 
     /**
-     * WebSocket endpoint for sending messages
-     * Clients should send messages to /app/chat/send/{roomId}
+     * WebSocket을 통해 메시지를 전송하는 엔드포인트입니다.
+     * 클라이언트는 /app/chat/send/{roomId}로 메시지를 보내야 합니다.
+     * @param roomId 채팅방 ID
+     * @param messageRequest 메시지 요청 정보
+     * @param principal 현재 로그인한 사용자 정보
      */
     @MessageMapping("/chat/send/{roomId}")
     public void sendMessage(@DestinationVariable("roomId") Integer roomId,
@@ -55,26 +61,27 @@ public class ChatMessageController {
             log.debug("roomId {}, messageRequest {}, Principal {}", roomId, messageRequest,
                     principal.getName());
 
-            // Send the message
+            // 메시지를 저장하고 저장된 메시지를 반환받습니다.
             ChatMessageResponseDTO savedMessage = chatMessageService.sendMessage(messageRequest, principal.getId());
 
-            // Broadcast the message to all subscribers of the chat room
+            // 해당 채팅방을 구독하는 모든 클라이언트에게 메시지를 브로드캐스트합니다.
             messagingTemplate.convertAndSend("/topic/chat/room/" + roomId, savedMessage);
 
             log.info("Message sent to room {} by user {}", roomId, principal.getId());
 
-            // background task create : AI response and send back to the room
+            // AI 채팅방인 경우, AI 응답을 생성하여 전송합니다.
             if (chatRoomService.checkIfAIChatroom(roomId)) {
-                // send message to chatroom that notices AI response is being generated
+                // AI가 응답을 생성 중이라는 알림 메시지를 보냅니다.
                 ChatMessageResponseDTO aiNoticeMessage = chatMessageService.sendMessage(
                         ChatMessageRequestDTO.builder()
                                 .chatroomId(roomId)
-                                .message("AI is generating a response...")
+                                .message("AI가 응답을 생성 중입니다...")
                                 .build(),
-                        0);
+                        0); // AI 응답은 user 0 (system)으로 처리합니다.
 
                 messagingTemplate.convertAndSend("/topic/chat/room/" + roomId, aiNoticeMessage);
 
+                // 비동기적으로 AI 응답을 생성하고 전송합니다.
                 CompletableFuture.runAsync(() -> {
                     String aiResponse = aiService.generateResponseWithMemory(messageRequest.getMessage(), roomId);
                     ChatMessageResponseDTO aiMessage = chatMessageService.sendMessage(
@@ -82,23 +89,28 @@ public class ChatMessageController {
                                     .chatroomId(roomId)
                                     .message(aiResponse)
                                     .build(),
-                            0);
+                            0); // AI 응답은 user 0 (system)으로 처리합니다.
                     messagingTemplate.convertAndSend("/topic/chat/room/" + roomId, aiMessage);
                 });
             }
         } catch (Exception e) {
             log.error("Error sending message to room {}: {}", roomId, e.getMessage());
-            // Send error message back to the senderd
+            // 메시지 전송 실패 시, 해당 사용자에게 에러 메시지를 전송합니다.
             messagingTemplate.convertAndSendToUser(principal.getName(), "/queue/errors",
                     "Failed to send message: " + e.getMessage());
         }
     }
 
     /**
-     * REST endpoint to get chat history
+     * REST API를 통해 채팅 내역을 조회합니다.
+     * @param roomId 채팅방 ID
+     * @param page 페이지 번호
+     * @param size 페이지 크기
+     * @param user 현재 로그인한 사용자 정보
+     * @return 페이징 처리된 ChatMessageResponseDTO 리스트
      */
     @GetMapping("/room/{roomId}/messages")
-    @Operation(summary = "Get chat messages for a room", security = @SecurityRequirement(name = "bearerAuth"))
+    @Operation(summary = "채팅방 메시지 목록 조회", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<List<ChatMessageResponseDTO>> getMessages(
             @PathVariable("roomId") Integer roomId,
             @RequestParam(name = "page", defaultValue = "0") Integer page,
@@ -125,10 +137,13 @@ public class ChatMessageController {
     }
 
     /**
-     * REST endpoint to get all messages in a chat room
+     * REST API를 통해 채팅방의 모든 메시지를 조회합니다.
+     * @param roomId 채팅방 ID
+     * @param user 현재 로그인한 사용자 정보
+     * @return ChatMessageResponseDTO 리스트
      */
     @GetMapping("/room/{roomId}/messages/all")
-    @Operation(summary = "Get all chat messages for a room", security = @SecurityRequirement(name = "bearerAuth"))
+    @Operation(summary = "채팅방의 모든 메시지 조회", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<List<ChatMessageResponseDTO>> getAllMessages(
             @PathVariable("roomId") Integer roomId,
             @AuthenticationPrincipal User user) {
@@ -153,10 +168,14 @@ public class ChatMessageController {
     }
 
     /**
-     * REST endpoint to send a message (alternative to WebSocket)
+     * REST API를 통해 메시지를 전송합니다. (WebSocket 대안)
+     * @param roomId 채팅방 ID
+     * @param messageRequest 메시지 요청 정보
+     * @param user 현재 로그인한 사용자 정보
+     * @return 전송된 ChatMessageResponseDTO 정보
      */
     @PostMapping("/room/{roomId}/send")
-    @Operation(summary = "Send a message to a chat room", security = @SecurityRequirement(name = "bearerAuth"))
+    @Operation(summary = "채팅방에 메시지 전송", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<ChatMessageResponseDTO> sendMessageRest(
             @PathVariable("roomId") Integer roomId,
             @Valid @RequestBody ChatMessageRequestDTO messageRequest,
@@ -170,7 +189,7 @@ public class ChatMessageController {
             messageRequest.setChatroomId(roomId);
             ChatMessageResponseDTO savedMessage = chatMessageService.sendMessage(messageRequest, user.getId());
 
-            // Also broadcast via WebSocket if available
+            // WebSocket을 통해서도 메시지를 브로드캐스트합니다.
             try {
                 messagingTemplate.convertAndSend("/topic/chat/room/" + roomId, savedMessage);
             } catch (Exception e) {
@@ -193,10 +212,13 @@ public class ChatMessageController {
     }
 
     /**
-     * REST endpoint to mark messages as read
+     * 메시지를 읽음으로 표시합니다.
+     * @param roomId 채팅방 ID
+     * @param user 현재 로그인한 사용자 정보
+     * @return 성공 응답
      */
     @PostMapping("/room/{roomId}/read")
-    @Operation(summary = "Mark messages as read", security = @SecurityRequirement(name = "bearerAuth"))
+    @Operation(summary = "메시지 읽음 처리", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<SimpleResponse> markAsRead(
             @PathVariable("roomId") Integer roomId,
             @AuthenticationPrincipal User user) {
@@ -221,10 +243,13 @@ public class ChatMessageController {
     }
 
     /**
-     * REST endpoint to delete a message
+     * 메시지를 삭제합니다.
+     * @param messageId 삭제할 메시지 ID
+     * @param user 현재 로그인한 사용자 정보
+     * @return 성공 응답
      */
     @DeleteMapping("/message/{messageId}")
-    @Operation(summary = "Delete a chat message", security = @SecurityRequirement(name = "bearerAuth"))
+    @Operation(summary = "채팅 메시지 삭제", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<SimpleResponse> deleteMessage(
             @PathVariable("messageId") Integer messageId,
             @AuthenticationPrincipal User user) {

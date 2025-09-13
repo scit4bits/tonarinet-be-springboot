@@ -17,6 +17,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * 조직 관련 비즈니스 로직을 처리하는 서비스입니다.
+ */
 @Service
 @Slf4j
 @RequiredArgsConstructor
@@ -29,6 +32,11 @@ public class OrganizationService {
     private final UserRoleService userRoleService;
     private final BoardRepository boardRepository;
 
+    /**
+     * 새로운 조직을 생성하고, 해당 조직의 기본 게시판을 함께 생성합니다.
+     * @param request 조직 생성 요청 정보
+     * @return 생성된 조직 엔티티
+     */
     public Organization createOrganization(OrganizationDTO request) {
         Country country = countryRepository.findById(request.getCountryCode()).get();
         Organization organization = Organization.builder()
@@ -40,8 +48,9 @@ public class OrganizationService {
 
         Organization savedOrganization = organizationRepository.save(organization);
 
+        // 조직 생성 시 기본 게시판 생성
         Board newBoard = Board.builder()
-                .title(request.getName().concat(" Board"))
+                .title(request.getName().concat(" 게시판"))
                 .organization(savedOrganization)
                 .build();
 
@@ -50,58 +59,55 @@ public class OrganizationService {
         return savedOrganization;
     }
 
+    /**
+     * 모든 조직 목록을 조회합니다.
+     * @return OrganizationDTO 리스트
+     */
     public List<OrganizationDTO> getAllOrganizations() {
-        log.info("Fetching all organizations");
+        log.info("모든 조직 정보 조회");
         List<Organization> entities = organizationRepository.findAll();
         return entities.stream()
                 .map(OrganizationDTO::fromEntity)
                 .toList();
     }
 
+    /**
+     * 조직을 검색합니다.
+     * @param searchBy 검색 기준
+     * @param search 검색어
+     * @param page 페이지 번호
+     * @param pageSize 페이지 크기
+     * @param sortBy 정렬 기준
+     * @param sortDirection 정렬 방향
+     * @return 페이징 처리된 OrganizationDTO
+     */
     public PagedResponse<OrganizationDTO> searchOrganization(String searchBy, String search, Integer page,
                                                              Integer pageSize, String sortBy, String sortDirection) {
         log.info(
-                "Searching organizations with searchBy: {}, search: {}, page: {}, pageSize: {}, sortBy: {}, sortDirection: {}",
+                "조직 검색 - 기준: {}, 검색어: {}, 페이지: {}, 크기: {}, 정렬: {}:{}",
                 searchBy, search, page, pageSize, sortBy, sortDirection);
 
-        // 기본값 설정
         int pageNum = (page != null) ? page : 0;
         int pageSizeNum = (pageSize != null) ? pageSize : 10;
-        String sortByField = (sortBy != null && !sortBy.isEmpty()) ? sortBy : "all";
+        String sortByField = (sortBy != null && !sortBy.isEmpty()) ? sortBy : "id";
         String direction = (sortDirection != null && !sortDirection.isEmpty()) ? sortDirection : "asc";
 
-        // 정렬 방향 설정
         Sort.Direction sortDir = "desc".equalsIgnoreCase(direction) ? Sort.Direction.DESC : Sort.Direction.ASC;
 
-        // sortBy 필드명 매핑 (엔티티 필드명과 일치하도록)
-        String entityFieldName;
-        switch (sortByField.toLowerCase()) {
-            case "id":
-                entityFieldName = "id";
-                break;
-            case "name":
-                entityFieldName = "name";
-                break;
-            case "country":
-                entityFieldName = "countryCode";
-                break;
-            case "type":
-                entityFieldName = "type";
-                break;
-            default:
-                entityFieldName = "id"; // 기본값
-                break;
-        }
+        String entityFieldName = switch (sortByField.toLowerCase()) {
+            case "id" -> "id";
+            case "name" -> "name";
+            case "country" -> "countryCode";
+            case "type" -> "type";
+            default -> "id"; // 기본값
+        };
 
-        // 정렬 및 페이징 설정
         Sort sort = Sort.by(sortDir, entityFieldName);
         Pageable pageable = PageRequest.of(pageNum, pageSizeNum, sort);
 
         Page<Organization> organizationPage;
 
-        // searchBy에 따른 검색 로직
         if (search == null || search.trim().isEmpty()) {
-            // 검색어가 없으면 모든 조직 조회
             organizationPage = organizationRepository.findAll(pageable);
         } else {
             switch (searchBy.toLowerCase()) {
@@ -113,7 +119,7 @@ public class OrganizationService {
                         Integer searchId = Integer.parseInt(search.trim());
                         organizationPage = organizationRepository.findById(searchId, pageable);
                     } catch (NumberFormatException e) {
-                        log.warn("Invalid ID format for search: {}", search);
+                        log.warn("잘못된 ID 형식으로 검색: {}", search);
                         organizationPage = Page.empty(pageable);
                     }
                     break;
@@ -128,65 +134,67 @@ public class OrganizationService {
                     organizationPage = organizationRepository.findByTypeContainingIgnoreCase(search.trim(), pageable);
                     break;
                 default:
-                    log.warn("Unknown searchBy parameter: {}. Using 'all' as default.", searchBy);
+                    log.warn("알 수 없는 검색 기준: {}. 'all'을 기본값으로 사용합니다.", searchBy);
                     organizationPage = organizationRepository.findByAllFieldsContaining(search.trim(), pageable);
                     break;
             }
         }
 
-        // Entity를 DTO로 변환하여 반환
-        int totalPages = organizationPage.getTotalPages();
-        // Integer totalEntities = organizationPage.
-        long totalCount = organizationPage.getTotalElements();
-
         List<OrganizationDTO> result = organizationPage.getContent().stream()
                 .map(OrganizationDTO::fromEntity)
                 .toList();
 
-        log.info("Found {} organizations out of {} total", result.size(), organizationPage.getTotalElements());
-        return new PagedResponse<OrganizationDTO>(result, pageNum, pageSizeNum, totalCount, totalPages);
+        log.info("총 {}개의 조직 중 {}개를 찾았습니다.", organizationPage.getTotalElements(), result.size());
+        return new PagedResponse<>(result, pageNum, pageSizeNum, organizationPage.getTotalElements(), organizationPage.getTotalPages());
     }
 
+    /**
+     * 조직에 가입을 신청합니다.
+     * @param user 가입을 신청하는 사용자
+     * @param organizationId 가입할 조직 ID
+     * @param entryMessage 가입 메시지
+     */
     public void applyToOrganization(User user, Integer organizationId, String entryMessage) {
 
         Organization organization = organizationRepository.findById(organizationId).get();
-        log.info("User {} is applying to organization with id: {}", user.getEmail(), organization.getName());
+        log.info("사용자 {}가 조직 {}에 가입을 신청합니다.", user.getEmail(), organization.getName());
 
-        // 중간자 엔티티를 사용한 올바른 방법
         UserRole.UserRoleId userRoleId = UserRole.UserRoleId.builder()
                 .userId(user.getId())
                 .orgId(organizationId)
                 .build();
 
-        // 이미 존재하는지 확인
+        // 이미 멤버인지 확인
         if (userRoleRepository.existsById(userRoleId)) {
-            log.warn("User {} is already a member of organization {}", user.getEmail(), organization.getName());
-            throw new IllegalStateException("User is already a member of organization");
+            log.warn("사용자 {}는 이미 조직 {}의 멤버입니다.", user.getEmail(), organization.getName());
+            throw new IllegalStateException("이미 조직의 멤버입니다.");
         }
 
         // UserRole 엔티티 생성 및 저장
         UserRole userRole = UserRole.builder()
                 .id(userRoleId)
                 .user(user)
-                .role("member") // 기본 역할 설정
+                .role("member") // 기본 역할은 'member'
                 .organization(organization)
                 .isGranted(false) // 초기에는 승인되지 않은 상태
-                .entryMessage(entryMessage) // 기본 메시지
+                .entryMessage(entryMessage)
                 .build();
 
-        // 중간자 테이블에 직접 저장 - 이것만으로 충분!
         userRoleRepository.save(userRole);
-        log.info("User {} successfully applied to organization {}", user.getEmail(), organization.getName());
+        log.info("사용자 {}가 조직 {}에 성공적으로 가입 신청했습니다.", user.getEmail(), organization.getName());
     }
 
     /**
-     * 조직 가입 신청을 승인하는 메서드
+     * 조직 가입 신청을 승인합니다. (관리자 권한 필요)
+     * @param adminUser 관리자 사용자 정보
+     * @param targetUserId 대상 사용자 ID
+     * @param organizationId 조직 ID
      */
     public void approveOrganizationMembership(User adminUser, Integer targetUserId, Integer organizationId) {
         Organization organization = organizationRepository.findById(organizationId).get();
-        User user = userRepository.findById(targetUserId).get();
-        if (!userRoleService.checkUsersRoleInOrg(user, organization, "admin")) {
-            throw new AccessDeniedException("Admin privileges required");
+        // 관리자 권한 확인
+        if (!userRoleService.checkUsersRoleInOrg(adminUser, organization, "admin")) {
+            throw new AccessDeniedException("관리자 권한이 필요합니다.");
         }
 
         User targetUser = userRepository.findById(targetUserId).get();
@@ -201,16 +209,20 @@ public class OrganizationService {
         userRole.setIsGranted(true);
         userRoleRepository.save(userRole);
 
-        log.info("Approved user {} membership to organization {}", targetUser.getId(), organization.getId());
+        log.info("사용자 {}의 조직 {} 멤버십을 승인했습니다.", targetUser.getId(), organization.getId());
     }
 
     /**
-     * 조직에서 사용자를 제거하는 메서드
+     * 조직에서 사용자를 제거합니다. (관리자 권한 필요)
+     * @param adminUser 관리자 사용자 정보
+     * @param targetUserId 대상 사용자 ID
+     * @param organizationId 조직 ID
      */
     public void removeUserFromOrganization(User adminUser, Integer targetUserId, Integer organizationId) {
         Organization organization = organizationRepository.findById(organizationId).get();
+        // 관리자 권한 확인
         if (!userRoleService.checkUsersRoleInOrg(adminUser, organization, "admin")) {
-            throw new AccessDeniedException("Admin privileges required");
+            throw new AccessDeniedException("관리자 권한이 필요합니다.");
         }
 
         User targetUser = userRepository.findById(targetUserId).get();
@@ -221,9 +233,13 @@ public class OrganizationService {
                 .build();
 
         userRoleRepository.deleteById(userRoleId);
-        log.info("Removed user {} from organization {}", targetUser.getId(), organization.getId());
+        log.info("조직 {}에서 사용자 {}를 제거했습니다.", organization.getId(), targetUser.getId());
     }
 
+    /**
+     * 조직 정보를 수정합니다.
+     * @param organizationDTO 수정할 조직 정보
+     */
     public void updateOrganization(OrganizationDTO organizationDTO) {
         Organization organization = organizationRepository.findById(organizationDTO.getId()).get();
 
@@ -244,22 +260,23 @@ public class OrganizationService {
         organizationRepository.save(organization);
     }
 
+    /**
+     * 조직을 삭제합니다.
+     * @param id 삭제할 조직 ID
+     */
     public void deleteOrganization(Integer id) {
-        log.info("Deleting organization with id: {}", id);
+        log.info("ID {}의 조직을 삭제합니다.", id);
         organizationRepository.deleteById(id);
     }
 
+    /**
+     * 특정 사용자가 속한 조직 목록과 해당 조직에서의 역할을 조회합니다.
+     * @param user 사용자 정보
+     * @return 역할 정보가 포함된 OrganizationDTO 리스트
+     */
     public List<OrganizationDTO> getMyOrganizations(User user) {
         User dbUser = userRepository.findById(user.getId()).get();
         List<Organization> organizations = dbUser.getOrganizations();
-
-        for (Organization org : organizations) {
-            String role = userRoleRepository.findById(UserRole.UserRoleId.builder()
-                            .userId(user.getId())
-                            .orgId(org.getId())
-                            .build())
-                    .get().getRole();
-        }
 
         return organizations.stream()
                 .map(org -> {
