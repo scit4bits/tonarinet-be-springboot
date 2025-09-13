@@ -307,4 +307,48 @@ public class AuthService {
         }
     }
 
+    public void sendForgotPasswordEmail(String email) {
+        User user = userRepository.findByEmail(email).get();
+        String token = jwtService.generateFindPasswordToken(email);
+        user.setResetToken(token);
+        userRepository.save(user);
+
+        String resetLink = "https://tn.thxx.xyz/reset-password?token=" + token;
+        emailService.sendPasswordResetEmail(user.getNationality().getCountryCode(), user.getEmail(), user.getName(),
+                resetLink);
+        log.info("Sent password reset email to: {}", email);
+    }
+
+    public boolean resetPassword(String token, String newPassword) {
+        DecodedJWT decodedJWT = jwtService.decodeToken(token);
+        if (decodedJWT == null) {
+            log.warn("Invalid or expired password reset token");
+            return false;
+        }
+
+        String email = decodedJWT.getClaim("email").asString();
+        User user = userRepository.findByEmail(email).get();
+        if (user == null || !token.equals(user.getResetToken())) {
+            log.warn("Password reset token does not match for email: {}", email);
+            return false;
+        }
+
+        user.setPassword(passwordEncoder.encode(newPassword));
+        user.setResetToken(null); // Invalidate the token after use
+        userRepository.save(user);
+        log.info("Password reset successfully for user: {}", email);
+        return true;
+    }
+
+    public boolean validateResetToken(String token) {
+        DecodedJWT decodedJWT = jwtService.decodeToken(token);
+        if (decodedJWT == null) {
+            log.warn("Invalid or expired password reset token");
+            return false;
+        }
+
+        log.debug("Password reset token is valid");
+        return true;
+    }
+
 }
