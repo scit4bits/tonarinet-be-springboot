@@ -27,6 +27,7 @@ public class ArticleDTO {
     private Integer views;
     private Integer boardId;
     private Integer likedByUsers;
+    private Integer replyCount;
     private List<FileAttachmentResponseDTO> files;
     private List<String> tags;
 
@@ -42,9 +43,13 @@ public class ArticleDTO {
                 .updatedAt(article.getUpdatedAt())
                 .boardId(article.getBoardId())
                 .views(article.getViews())
-                .files(article.getAttachments() != null ? article.getAttachments().stream().map(FileAttachmentResponseDTO::fromEntity).toList() : null)
+                .files(article.getAttachments() != null
+                        ? article.getAttachments().stream().map(FileAttachmentResponseDTO::fromEntity).toList()
+                        : null)
                 .likedByUsers(article.getLikedByUsers() != null ? article.getLikedByUsers().size() : 0)
-                .tags(article.getTags() != null ? article.getTags().stream().map(t -> t.getId().getTagName()).toList() : null)
+                .replyCount(article.getReplies() != null ? article.getReplies().size() : 0)
+                .tags(article.getTags() != null ? article.getTags().stream().map(t -> t.getId().getTagName()).toList()
+                        : null)
                 .build();
     }
 }
