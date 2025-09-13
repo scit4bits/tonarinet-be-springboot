@@ -1,59 +1,62 @@
-{
-  "properties": [
-    {
-      "name": "line.api.redirect_uri",
-      "type": "java.lang.String",
-      "description": "LINE API redirect URI for OAuth authentication"
-    },
-    {
-      "name": "line.api.client_secret",
-      "type": "java.lang.String",
-      "description": "LINE API client secret for OAuth authentication"
-    },
-    {
-      "name": "line.api.client_id",
-      "type": "java.lang.String",
-      "description": "LINE API client ID for OAuth authentication"
-    },
-    {
-      "name": "google.api.client_id",
-      "type": "java.lang.String",
-      "description": "Google API client ID for OAuth authentication"
-    },
-    {
-      "name": "google.api.client_secret",
-      "type": "java.lang.String",
-      "description": "Google API client secret for OAuth authentication"
-    },
-    {
-      "name": "google.api.redirect_uri",
-      "type": "java.lang.String",
-      "description": "Google API redirect URI for OAuth authentication"
-    },
-    {
-      "name": "kakao.client_id",
-      "type": "java.lang.String",
-      "description": "Kakao API client ID for OAuth authentication"
-    },
-    {
-      "name": "kakao.redirect_uri",
-      "type": "java.lang.String",
-      "description": "Kakao API redirect URI for OAuth authentication"
-    },
-    {
-      "name": "kakao.client_secret",
-      "type": "java.lang.String",
-      "description": "Kakao API client secret for OAuth authentication"
-    },
-    {
-      "name": "jwt.secret_key",
-      "type": "java.lang.String",
-      "description": "JWT secret key for token signing and verification"
-    },
-    {
-      "name": "spring.mail.sender",
-      "type": "java.lang.String",
-      "description": "Approved Sender in Oracle Cloud Infrastructure Email Delivery Service"
-    }
-  ]
-}
+{"properties": [
+  {
+    "name": "line.api.redirect_uri",
+    "type": "java.lang.String",
+    "description": "LINE API redirect URI for OAuth authentication"
+  },
+  {
+    "name": "line.api.client_secret",
+    "type": "java.lang.String",
+    "description": "LINE API client secret for OAuth authentication"
+  },
+  {
+    "name": "line.api.client_id",
+    "type": "java.lang.String",
+    "description": "LINE API client ID for OAuth authentication"
+  },
+  {
+    "name": "google.api.client_id",
+    "type": "java.lang.String",
+    "description": "Google API client ID for OAuth authentication"
+  },
+  {
+    "name": "google.api.client_secret",
+    "type": "java.lang.String",
+    "description": "Google API client secret for OAuth authentication"
+  },
+  {
+    "name": "google.api.redirect_uri",
+    "type": "java.lang.String",
+    "description": "Google API redirect URI for OAuth authentication"
+  },
+  {
+    "name": "kakao.client_id",
+    "type": "java.lang.String",
+    "description": "Kakao API client ID for OAuth authentication"
+  },
+  {
+    "name": "kakao.redirect_uri",
+    "type": "java.lang.String",
+    "description": "Kakao API redirect URI for OAuth authentication"
+  },
+  {
+    "name": "kakao.client_secret",
+    "type": "java.lang.String",
+    "description": "Kakao API client secret for OAuth authentication"
+  },
+  {
+    "name": "jwt.secret_key",
+    "type": "java.lang.String",
+    "description": "JWT secret key for token signing and verification"
+  },
+  {
+    "name": "spring.mail.sender",
+    "type": "java.lang.String",
+    "description": "Approved Sender in Oracle Cloud Infrastructure Email Delivery Service"
+  },
+  {
+    "name": "google.translation.api.key",
+    "type": "java.lang.String",
+    "description": "A description for 'google.translation.api.key'"
+  }
+]}
