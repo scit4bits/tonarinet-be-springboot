@@ -9,6 +9,9 @@ import org.scit4bits.tonarinetserver.repository.UserRoleRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+/**
+ * 사용자의 조직 내 역할 관련 비즈니스 로직을 처리하는 서비스입니다.
+ */
 @Service
 @Slf4j
 @RequiredArgsConstructor
@@ -16,6 +19,13 @@ import org.springframework.transaction.annotation.Transactional;
 public class UserRoleService {
     private final UserRoleRepository userRoleRepository;
 
+    /**
+     * 특정 조직 내에서 사용자의 역할을 확인합니다.
+     * @param user 확인할 사용자
+     * @param organization 확인할 조직
+     * @param role 확인할 역할 (null인 경우, 멤버 여부만 확인)
+     * @return 역할이 일치하면 true, 그렇지 않으면 false
+     */
     public boolean checkUsersRoleInOrg(User user, Organization organization, String role) {
 
         UserRole userRole = userRoleRepository.findById(
@@ -23,12 +33,19 @@ public class UserRoleService {
                         .userId(user.getId())
                         .orgId(organization.getId())
                         .build()
-        ).get();
+        ).orElse(null);
 
+        if (userRole == null) {
+            return false;
+        }
+
+        // 멤버십이 승인되었는지 확인
         if (!userRole.getIsGranted()) {
             return false;
         }
 
+        // 특정 역할이 주어지지 않은 경우, 멤버 여부만 확인 (승인됨)
+        // 역할이 주어진 경우, 해당 역할을 가지고 있는지 확인
         return role == null || userRole.getRole().equals(role);
     }
 }

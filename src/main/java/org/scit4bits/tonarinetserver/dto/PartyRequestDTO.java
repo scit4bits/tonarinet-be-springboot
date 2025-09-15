@@ -6,6 +6,9 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/**
+ * 파티 생성 및 수정을 위한 요청 DTO
+ */
 @Data
 @Builder
 @AllArgsConstructor

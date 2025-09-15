@@ -8,6 +8,9 @@ import org.scit4bits.tonarinetserver.entity.LiveReport;
 
 import java.time.LocalDateTime;
 
+/**
+ * 실시간 제보 응답을 위한 DTO
+ */
 @Data
 @Builder
 @AllArgsConstructor
@@ -22,6 +25,11 @@ public class LiveReportResponseDTO {
     private Double longitude;
     private Double latitude;
 
+    /**
+     * LiveReport 엔티티를 LiveReportResponseDTO로 변환합니다.
+     * @param liveReport 변환할 LiveReport 엔티티
+     * @return 변환된 LiveReportResponseDTO 객체
+     */
     public static LiveReportResponseDTO fromEntity(LiveReport liveReport) {
         return LiveReportResponseDTO.builder()
                 .id(liveReport.getId())

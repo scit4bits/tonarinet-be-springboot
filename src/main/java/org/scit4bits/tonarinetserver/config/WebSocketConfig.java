@@ -21,6 +21,9 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 
 import java.security.Principal;
 
+/**
+ * WebSocket 및 STOMP 메시징을 설정하는 클래스
+ */
 @Configuration
 @EnableWebSocketMessageBroker
 @RequiredArgsConstructor
@@ -30,34 +33,42 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     private final JwtService jwtService;
     private final UserRepository userRepository;
 
+    /**
+     * 메시지 브로커를 설정합니다.
+     * @param config MessageBrokerRegistry
+     */
     @Override
     public void configureMessageBroker(@NonNull MessageBrokerRegistry config) {
-        // Enable a simple memory-based message broker to carry the greeting messages
-        // back to the client
-        // on destinations prefixed with "/topic" and "/queue"
+        // "/topic", "/queue" 접두사를 사용하는 간단한 메모리 기반 메시지 브로커를 활성화합니다.
         config.enableSimpleBroker("/topic", "/queue");
 
-        // Designate the "/app" prefix for messages that are bound for @MessageMapping
-        // methods
+        // "/app" 접두사는 @MessageMapping 메서드로 바인딩되는 메시지를 위해 지정합니다.
         config.setApplicationDestinationPrefixes("/app");
 
-        // Set user destination prefix for private messages
+        // 개인 메시지를 위한 사용자 목적지 접두사를 설정합니다.
         config.setUserDestinationPrefix("/user");
     }
 
+    /**
+     * STOMP 엔드포인트를 등록합니다.
+     * @param registry StompEndpointRegistry
+     */
     @Override
     public void registerStompEndpoints(@NonNull StompEndpointRegistry registry) {
-        // Register the "/ws" endpoint, enabling SockJS fallback options so that
-        // alternate transports may be used if WebSocket is not available
+        // "/ws" 엔드포인트를 등록하고, WebSocket을 사용할 수 없는 경우를 대비해 SockJS 대체 옵션을 활성화합니다.
         registry.addEndpoint("/ws")
-                .setAllowedOriginPatterns("*") // Allow all origins for development
-                .withSockJS(); // Enable SockJS fallback
+                .setAllowedOriginPatterns("*") // 개발을 위해 모든 오리진 허용
+                .withSockJS(); // SockJS 대체 활성화
 
-        // Also register without SockJS for native WebSocket clients
+        // 네이티브 WebSocket 클라이언트를 위해 SockJS 없이도 등록합니다.
         registry.addEndpoint("/ws")
                 .setAllowedOriginPatterns("*");
     }
 
+    /**
+     * 클라이언트 인바운드 채널을 설정하고 JWT 인증을 위한 인터셉터를 추가합니다.
+     * @param registration ChannelRegistration
+     */
     @Override
     public void configureClientInboundChannel(@NonNull ChannelRegistration registration) {
         registration.interceptors(new ChannelInterceptor() {
@@ -65,13 +76,14 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
             public Message<?> preSend(@NonNull Message<?> message, @NonNull MessageChannel channel) {
                 StompHeaderAccessor accessor = MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
 
+                // CONNECT 명령어일 때만 인증 처리
                 if (accessor != null && StompCommand.CONNECT.equals(accessor.getCommand())) {
-                    // Get Authorization header from STOMP headers
+                    // STOMP 헤더에서 Authorization 헤더 가져오기
                     String authHeader = accessor.getFirstNativeHeader("Authorization");
 
                     if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-                        log.warn("Missing or invalid Authorization header in WebSocket connection");
-                        throw new RuntimeException("Missing or invalid authorization header");
+                        log.warn("웹소켓 연결에 Authorization 헤더가 없거나 형식이 올바르지 않습니다.");
+                        throw new RuntimeException("Authorization 헤더가 없거나 형식이 올바르지 않습니다.");
                     }
 
                     try {
@@ -84,21 +96,21 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
                             if (user != null) {
                                 UserPrincipal userPrincipal = new UserPrincipal(user.getId());
                                 accessor.setUser(userPrincipal);
-                                log.debug("WebSocket user authenticated: {} {}", user.getId(), user.getEmail());
+                                log.debug("웹소켓 사용자 인증 성공: {} {}", user.getId(), user.getEmail());
                             } else {
-                                log.warn("User not found for ID: {}", userId);
-                                throw new RuntimeException("User not found");
+                                log.warn("사용자를 찾을 수 없습니다: {}", userId);
+                                throw new RuntimeException("사용자를 찾을 수 없습니다.");
                             }
                         } else {
-                            log.warn("Invalid JWT token in WebSocket connection");
-                            throw new RuntimeException("Invalid authorization token");
+                            log.warn("웹소켓 연결에 사용된 JWT 토큰이 유효하지 않습니다.");
+                            throw new RuntimeException("유효하지 않은 인증 토큰입니다.");
                         }
                     } catch (NumberFormatException e) {
-                        log.error("Invalid user ID in JWT: {}", e.getMessage());
-                        throw new RuntimeException("Invalid user ID in token");
+                        log.error("JWT의 사용자 ID가 잘못되었습니다: {}", e.getMessage());
+                        throw new RuntimeException("토큰의 사용자 ID가 잘못되었습니다.");
                     } catch (Exception e) {
-                        log.error("WebSocket authentication error: {}", e.getMessage());
-                        throw new RuntimeException("Authentication failed");
+                        log.error("웹소켓 인증 오류: {}", e.getMessage());
+                        throw new RuntimeException("인증에 실패했습니다.");
                     }
                 }
 
@@ -107,10 +119,16 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
         });
     }
 
-    // UserPrincipal class implementing Principal for WebSocket authentication
+    /**
+     * WebSocket 인증을 위한 Principal 구현 클래스
+     */
     public static class UserPrincipal implements Principal {
         private final Integer id;
 
+        /**
+         * UserPrincipal 생성자
+         * @param id 사용자 ID
+         */
         public UserPrincipal(Integer id) {
             this.id = id;
         }
@@ -120,6 +138,10 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
             return String.valueOf(id);
         }
 
+        /**
+         * 사용자 ID를 반환합니다.
+         * @return 사용자 ID
+         */
         public Integer getId() {
             return id;
         }

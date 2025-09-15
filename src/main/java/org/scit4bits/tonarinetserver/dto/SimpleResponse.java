@@ -4,6 +4,9 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 
+/**
+ * 간단한 응답 메시지를 위한 DTO
+ */
 @Data
 @AllArgsConstructor
 @RequiredArgsConstructor

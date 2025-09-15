@@ -6,17 +6,26 @@ import org.springframework.stereotype.Component;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * 다국어 이메일 메시지를 제공하는 클래스입니다.
+ */
 @Component
 public class EmailMessageProvider {
 
     private final Map<EmailLanguage, Map<String, String>> messages = new HashMap<>();
 
+    /**
+     * EmailMessageProvider의 생성자입니다. 모든 지원 언어에 대한 이메일 메시지를 초기화합니다.
+     */
     public EmailMessageProvider() {
         initializeMessages();
     }
 
+    /**
+     * 지원하는 모든 언어에 대한 이메일 메시지를 초기화합니다.
+     */
     private void initializeMessages() {
-        // Korean messages
+        // 한국어 메시지
         Map<String, String> koMessages = new HashMap<>();
         koMessages.put("welcome.subject", "토나리넷에 오신 것을 환영합니다! 🎉");
         koMessages.put("welcome.greeting", "안녕하세요, %s님!");
@@ -53,7 +62,7 @@ public class EmailMessageProvider {
 
         messages.put(EmailLanguage.KOR, koMessages);
 
-        // English messages
+        // 영어 메시지
         Map<String, String> enMessages = new HashMap<>();
         enMessages.put("welcome.subject", "Welcome to Tonarinet! 🎉");
         enMessages.put("welcome.greeting", "Hello, %s!");
@@ -91,7 +100,7 @@ public class EmailMessageProvider {
 
         messages.put(EmailLanguage.ENG, enMessages);
 
-        // Japanese messages
+        // 일본어 메시지
         Map<String, String> jaMessages = new HashMap<>();
         jaMessages.put("welcome.subject", "となりネットへようこそ！🎉");
         jaMessages.put("welcome.greeting", "こんにちは、%sさん！");
@@ -129,15 +138,22 @@ public class EmailMessageProvider {
         messages.put(EmailLanguage.JPN, jaMessages);
     }
 
+    /**
+     * 지정된 언어와 키에 해당하는 메시지를 반환합니다.
+     * @param language 언어
+     * @param key 메시지 키
+     * @param args 메시지 포맷에 사용될 인자
+     * @return 포맷팅된 메시지 문자열
+     */
     public String getMessage(EmailLanguage language, String key, Object... args) {
         Map<String, String> langMessages = messages.get(language);
         if (langMessages == null) {
-            langMessages = messages.get(EmailLanguage.ENG); // Fallback to Korean
+            langMessages = messages.get(EmailLanguage.ENG); // 기본값으로 영어 사용
         }
 
         String message = langMessages.get(key);
         if (message == null) {
-            return "[Message not found: " + key + "]";
+            return "[메시지를 찾을 수 없음: " + key + "]";
         }
 
         if (args.length > 0) {

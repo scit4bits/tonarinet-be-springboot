@@ -18,17 +18,26 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+/**
+ * 실시간 제보 관련 API를 처리하는 컨트롤러입니다.
+ */
 @RestController
 @Slf4j
 @RequiredArgsConstructor
 @RequestMapping("/api/livereport")
-@Tag(name = "Live Report", description = "Live report management API")
+@Tag(name = "Live Report", description = "실시간 제보 관리 API")
 public class LiveReportController {
 
     private final LiveReportService liveReportService;
 
+    /**
+     * 새로운 실시간 제보를 생성합니다.
+     * @param request 제보 생성 요청 정보
+     * @param user 현재 로그인한 사용자 정보
+     * @return 생성된 제보 정보
+     */
     @PostMapping
-    @Operation(summary = "Create a new live report", security = @SecurityRequirement(name = "bearerAuth"))
+    @Operation(summary = "새로운 실시간 제보 생성", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<LiveReportResponseDTO> createLiveReport(
             @Valid @RequestBody LiveReportRequestDTO request,
             @AuthenticationPrincipal User user) {
@@ -45,8 +54,12 @@ public class LiveReportController {
         }
     }
 
+    /**
+     * 모든 실시간 제보 목록을 조회합니다.
+     * @return LiveReportResponseDTO 리스트
+     */
     @GetMapping
-    @Operation(summary = "Get all live reports")
+    @Operation(summary = "모든 실시간 제보 조회")
     public ResponseEntity<List<LiveReportResponseDTO>> getAllLiveReports() {
         try {
             List<LiveReportResponseDTO> reports = liveReportService.getAllLiveReports();
@@ -57,8 +70,12 @@ public class LiveReportController {
         }
     }
 
+    /**
+     * 최신 실시간 제보 목록을 조회합니다.
+     * @return LiveReportResponseDTO 리스트
+     */
     @GetMapping("/recent")
-    @Operation(summary = "Get recent live reports")
+    @Operation(summary = "최신 실시간 제보 조회")
     public ResponseEntity<List<LiveReportResponseDTO>> getRecentLiveReports() {
         try {
             List<LiveReportResponseDTO> reports = liveReportService.getRecentLiveReports();
@@ -69,8 +86,13 @@ public class LiveReportController {
         }
     }
 
+    /**
+     * ID로 특정 실시간 제보를 조회합니다.
+     * @param id 조회할 제보 ID
+     * @return LiveReportResponseDTO 형태의 제보 정보
+     */
     @GetMapping("/{id}")
-    @Operation(summary = "Get live report by ID")
+    @Operation(summary = "ID로 실시간 제보 조회")
     public ResponseEntity<LiveReportResponseDTO> getLiveReportById(@PathVariable("id") Integer id) {
         try {
             LiveReportResponseDTO report = liveReportService.getLiveReportById(id);
@@ -84,8 +106,15 @@ public class LiveReportController {
         }
     }
 
+    /**
+     * 특정 위치 근처의 실시간 제보 목록을 조회합니다.
+     * @param longitude 경도
+     * @param latitude 위도
+     * @param range 검색 반경
+     * @return LiveReportResponseDTO 리스트
+     */
     @GetMapping("/near")
-    @Operation(summary = "Get live reports near location")
+    @Operation(summary = "위치 기반 실시간 제보 조회")
     public ResponseEntity<List<LiveReportResponseDTO>> getLiveReportsNearLocation(
             @RequestParam("longitude") Double longitude,
             @RequestParam("latitude") Double latitude,
@@ -99,8 +128,14 @@ public class LiveReportController {
         }
     }
 
+    /**
+     * 특정 실시간 제보를 삭제합니다.
+     * @param id 삭제할 제보 ID
+     * @param user 현재 로그인한 사용자 정보
+     * @return 성공 응답
+     */
     @DeleteMapping("/{id}")
-    @Operation(summary = "Delete a live report", security = @SecurityRequirement(name = "bearerAuth"))
+    @Operation(summary = "실시간 제보 삭제", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<SimpleResponse> deleteLiveReport(
             @PathVariable("id") Integer id,
             @AuthenticationPrincipal User user) {
@@ -125,8 +160,14 @@ public class LiveReportController {
         }
     }
 
+    /**
+     * 특정 실시간 제보에 '좋아요'를 표시합니다.
+     * @param id '좋아요'할 제보 ID
+     * @param user 현재 로그인한 사용자 정보
+     * @return 업데이트된 제보 정보
+     */
     @PostMapping("/{id}/like")
-    @Operation(summary = "Like a live report", security = @SecurityRequirement(name = "bearerAuth"))
+    @Operation(summary = "실시간 제보 '좋아요'", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<LiveReportResponseDTO> likeLiveReport(
             @PathVariable("id") Integer id,
             @AuthenticationPrincipal User user) {

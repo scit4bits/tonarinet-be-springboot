@@ -10,6 +10,9 @@ import org.scit4bits.tonarinetserver.entity.ChatMessage;
 
 import java.time.LocalDateTime;
 
+/**
+ * 채팅 메시지 응답을 위한 DTO
+ */
 @Data
 @Builder
 @NoArgsConstructor
@@ -42,6 +45,11 @@ public class ChatMessageResponseDTO {
     @Schema(description = "Message type", example = "CHAT")
     private ChatMessageRequestDTO.MessageType type;
 
+    /**
+     * ChatMessage 엔티티를 ChatMessageResponseDTO로 변환합니다.
+     * @param chatMessage 변환할 ChatMessage 엔티티
+     * @return 변환된 ChatMessageResponseDTO 객체
+     */
     public static ChatMessageResponseDTO fromEntity(ChatMessage chatMessage) {
         ChatMessageResponseDTOBuilder builder = ChatMessageResponseDTO.builder()
                 .id(chatMessage.getId())
@@ -52,7 +60,7 @@ public class ChatMessageResponseDTO {
                 .isRead(chatMessage.getIsRead())
                 .type(ChatMessageRequestDTO.MessageType.CHAT); // Default to CHAT type
 
-        // Add sender user info if available
+        // 발신자 사용자 정보가 있는 경우 추가
         if (chatMessage.getSender() != null) {
             builder.sender(UserDTO.fromEntity(chatMessage.getSender()));
         }

@@ -8,6 +8,9 @@ import org.scit4bits.tonarinetserver.entity.Party;
 
 import java.util.List;
 
+/**
+ * 파티 응답을 위한 DTO
+ */
 @Data
 @Builder
 @AllArgsConstructor
@@ -20,6 +23,11 @@ public class PartyResponseDTO {
     private List<UserDTO> users;
     private Integer userCount;
 
+    /**
+     * Party 엔티티를 PartyResponseDTO로 변환합니다.
+     * @param party 변환할 Party 엔티티
+     * @return 변환된 PartyResponseDTO 객체
+     */
     public static PartyResponseDTO fromEntity(Party party) {
         return PartyResponseDTO.builder()
                 .id(party.getId())

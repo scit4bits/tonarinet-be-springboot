@@ -13,6 +13,9 @@ import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.openai.OpenAiChatModel;
 import org.springframework.stereotype.Service;
 
+/**
+ * AI 관련 서비스를 처리하는 클래스
+ */
 @Service
 @Slf4j
 public class AIService {
@@ -21,7 +24,7 @@ public class AIService {
     private final ChatClient chatClient;
     private final MessageWindowChatMemory chatMemory;
 
-    // Base system prompt to define AI behavior
+    // AI의 행동을 정의하는 기본 시스템 프롬프트
     private static final String SYSTEM_PROMPT = """
             You are a helpful assistant for Tonarinet application.
             In Korean it's "토나리넷". In Japanese it's "トナリネット".
@@ -35,6 +38,12 @@ public class AIService {
 
     private final OpenAiChatModel chatModel;
 
+    /**
+     * AIService 생성자
+     * @param chatClientBuilder ChatClient 빌더
+     * @param chatMessageRepository 채팅 메시지 레포지토리
+     * @param chatModel OpenAI 채팅 모델
+     */
     public AIService(ChatClient.Builder chatClientBuilder, ChatMessageRepository chatMessageRepository,
                      OpenAiChatModel chatModel) {
         this.chatMemory = MessageWindowChatMemory.builder().maxMessages(20).build();
@@ -46,12 +55,19 @@ public class AIService {
         this.chatModel = chatModel;
     }
 
+    /**
+     * 사용자 입력에 대한 AI 응답을 생성합니다.
+     * @param userInput 사용자 입력 문자열
+     * @return 생성된 AI 응답 문자열
+     */
     public String generateResponse(String userInput) {
         try {
             log.debug("Generating AI response for input: {}", userInput);
+            // 시스템 프롬프트와 사용자 입력을 포함하는 프롬프트 생성
             Prompt prompt = new Prompt(
                     new SystemMessage(SYSTEM_PROMPT),
                     new UserMessage(userInput));
+            // AI 모델 호출
             ChatResponse response = chatModel.call(prompt);
             String result = response.getResult().getOutput().getText();
             log.debug("AI response generated successfully");
@@ -62,8 +78,15 @@ public class AIService {
         }
     }
 
+    /**
+     * 대화 기록을 포함하여 AI 응답을 생성합니다.
+     * @param userInput 사용자 입력 문자열
+     * @param roomId 채팅방 ID
+     * @return 생성된 AI 응답 문자열
+     */
     public String generateResponseWithMemory(String userInput, Integer roomId) {
         try {
+            // 대화 기록을 사용하여 AI 응답 생성
             String aiResponse = chatClient.prompt()
                     .user(userInput)
                     .system(SYSTEM_PROMPT)
@@ -78,12 +101,18 @@ public class AIService {
         }
     }
 
+    /**
+     * HTML 형식으로 AI 응답을 생성합니다.
+     * @param userInput 사용자 입력 문자열
+     * @return HTML 형식의 AI 응답 문자열
+     */
     public String generateHTMLResponse(String userInput) {
         String prompt = """
                 Please provide your answer in HTML format. Use appropriate HTML tags such as <p>, <ul>, <li>, <strong>, <em>, and <br> to structure your response. Avoid using complex HTML structures like <div> or <span>. Ensure that the HTML is well-formed and easy to read.
                 """;
 
         try {
+            // HTML 형식으로 응답을 요청하는 프롬프트를 추가하여 AI 호출
             String aiResponse = chatClient.prompt()
                     .user(userInput)
                     .system(SYSTEM_PROMPT + "\n" + prompt)

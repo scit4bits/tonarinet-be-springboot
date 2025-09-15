@@ -19,17 +19,26 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+/**
+ * 댓글 관련 API를 처리하는 컨트롤러입니다.
+ */
 @RestController
 @Slf4j
 @RequiredArgsConstructor
 @RequestMapping("/api/reply")
-@Tag(name = "Reply", description = "Reply management API")
+@Tag(name = "Reply", description = "댓글 관리 API")
 public class ReplyController {
 
     private final ReplyService replyService;
 
+    /**
+     * 새로운 댓글을 생성합니다.
+     * @param request 댓글 생성 요청 정보
+     * @param user 현재 로그인한 사용자 정보
+     * @return 생성된 댓글 정보
+     */
     @PostMapping
-    @Operation(summary = "Create a new reply", security = @SecurityRequirement(name = "bearerAuth"))
+    @Operation(summary = "새로운 댓글 생성", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<ReplyResponseDTO> createReply(
             @Valid @RequestBody ReplyRequestDTO request,
             @AuthenticationPrincipal User user) {
@@ -46,14 +55,19 @@ public class ReplyController {
         }
     }
 
+    /**
+     * 모든 댓글 목록을 조회합니다. (관리자 전용)
+     * @param user 현재 로그인한 사용자 정보
+     * @return ReplyResponseDTO 리스트
+     */
     @GetMapping
-    @Operation(summary = "Get all replies", security = @SecurityRequirement(name = "bearerAuth"))
+    @Operation(summary = "모든 댓글 조회 (관리자 전용)", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<List<ReplyResponseDTO>> getAllReplies(@AuthenticationPrincipal User user) {
         if (user == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
-        // Only admin can see all replies
+        // 관리자만 모든 댓글을 조회할 수 있습니다.
         if (!user.getIsAdmin()) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
@@ -67,8 +81,13 @@ public class ReplyController {
         }
     }
 
+    /**
+     * ID로 특정 댓글을 조회합니다.
+     * @param id 조회할 댓글 ID
+     * @return ReplyResponseDTO 형태의 댓글 정보
+     */
     @GetMapping("/{id}")
-    @Operation(summary = "Get reply by ID")
+    @Operation(summary = "ID로 댓글 조회")
     public ResponseEntity<ReplyResponseDTO> getReplyById(@PathVariable("id") Integer id) {
         try {
             ReplyResponseDTO reply = replyService.getReplyById(id);
@@ -82,8 +101,13 @@ public class ReplyController {
         }
     }
 
+    /**
+     * 특정 게시글의 모든 댓글을 조회합니다.
+     * @param articleId 게시글 ID
+     * @return ReplyResponseDTO 리스트
+     */
     @GetMapping("/article/{articleId}")
-    @Operation(summary = "Get replies by article ID")
+    @Operation(summary = "게시글 ID로 댓글 조회")
     public ResponseEntity<List<ReplyResponseDTO>> getRepliesByArticleId(@PathVariable("articleId") Integer articleId) {
         try {
             List<ReplyResponseDTO> replies = replyService.getRepliesByArticleId(articleId);
@@ -94,8 +118,15 @@ public class ReplyController {
         }
     }
 
+    /**
+     * 특정 댓글을 수정합니다.
+     * @param id 수정할 댓글 ID
+     * @param request 댓글 수정 요청 정보
+     * @param user 현재 로그인한 사용자 정보
+     * @return 수정된 댓글 정보
+     */
     @PutMapping("/{id}")
-    @Operation(summary = "Update a reply", security = @SecurityRequirement(name = "bearerAuth"))
+    @Operation(summary = "댓글 수정", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<ReplyResponseDTO> updateReply(
             @PathVariable("id") Integer id,
             @Valid @RequestBody ReplyRequestDTO request,
@@ -121,8 +152,14 @@ public class ReplyController {
         }
     }
 
+    /**
+     * 특정 댓글을 삭제합니다.
+     * @param id 삭제할 댓글 ID
+     * @param user 현재 로그인한 사용자 정보
+     * @return 성공 응답
+     */
     @DeleteMapping("/{id}")
-    @Operation(summary = "Delete a reply", security = @SecurityRequirement(name = "bearerAuth"))
+    @Operation(summary = "댓글 삭제", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<SimpleResponse> deleteReply(
             @PathVariable("id") Integer id,
             @AuthenticationPrincipal User user) {
@@ -147,8 +184,18 @@ public class ReplyController {
         }
     }
 
+    /**
+     * 댓글을 검색합니다.
+     * @param searchBy 검색 기준 (all, content, author)
+     * @param search 검색어
+     * @param page 페이지 번호
+     * @param pageSize 페이지 크기
+     * @param sortBy 정렬 기준
+     * @param sortDirection 정렬 방향
+     * @return 페이징 처리된 ReplyResponseDTO 리스트
+     */
     @GetMapping("/search")
-    @Operation(summary = "Search replies")
+    @Operation(summary = "댓글 검색")
     public ResponseEntity<PagedResponse<ReplyResponseDTO>> searchReplies(
             @RequestParam(name = "searchBy", defaultValue = "all") String searchBy,
             @RequestParam(name = "search", defaultValue = "") String search,

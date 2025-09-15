@@ -11,6 +11,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
+/**
+ * 국가 정보 관련 API를 처리하는 컨트롤러입니다.
+ */
 @RestController
 @Slf4j
 @RequiredArgsConstructor
@@ -19,9 +22,13 @@ public class CountryController {
 
     private final CountryService countryService;
 
+    /**
+     * 모든 국가 정보를 조회합니다.
+     * @return CountryResponseDTO 리스트
+     */
     @GetMapping
     public ResponseEntity<List<CountryResponseDTO>> getAllCountries() {
-        log.info("GET /api/country - Retrieving all countries");
+        log.info("GET /api/country - 모든 국가 정보를 조회합니다.");
         List<CountryResponseDTO> countries = countryService.getAllCountries();
         return ResponseEntity.ok(countries);
     }

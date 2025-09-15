@@ -16,17 +16,26 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+/**
+ * 채팅방 관리 관련 API를 처리하는 컨트롤러입니다.
+ */
 @RestController
 @Slf4j
 @RequiredArgsConstructor
 @RequestMapping("/api/chatroom")
-@Tag(name = "Chat Room", description = "Chat room management API")
+@Tag(name = "Chat Room", description = "채팅방 관리 API")
 public class ChatRoomController {
 
     private final ChatRoomService chatRoomService;
 
+    /**
+     * ID로 특정 채팅방 정보를 조회합니다.
+     * @param id 조회할 채팅방 ID
+     * @param user 현재 로그인한 사용자 정보
+     * @return ChatRoomResponseDTO 형태의 채팅방 정보
+     */
     @GetMapping("/{id}")
-    @Operation(summary = "Get chat room by ID", security = @SecurityRequirement(name = "bearerAuth"))
+    @Operation(summary = "ID로 채팅방 조회", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<ChatRoomResponseDTO> getChatRoomById(@PathVariable("id") Integer id,
                                                                @AuthenticationPrincipal User user) {
         if (user == null) {
@@ -45,8 +54,13 @@ public class ChatRoomController {
         }
     }
 
+    /**
+     * 현재 사용자가 속한 모든 채팅방 목록을 조회합니다.
+     * @param user 현재 로그인한 사용자 정보
+     * @return ChatRoomResponseDTO 리스트
+     */
     @GetMapping("/my")
-    @Operation(summary = "Get current user's chat rooms", security = @SecurityRequirement(name = "bearerAuth"))
+    @Operation(summary = "현재 사용자의 채팅방 목록 조회", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<List<ChatRoomResponseDTO>> getMyChatRooms(@AuthenticationPrincipal User user) {
         if (user == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
@@ -61,8 +75,14 @@ public class ChatRoomController {
         }
     }
 
+    /**
+     * 특정 채팅방을 삭제합니다.
+     * @param id 삭제할 채팅방 ID
+     * @param user 현재 로그인한 사용자 정보
+     * @return 성공 응답
+     */
     @DeleteMapping("/{id}")
-    @Operation(summary = "Delete a chat room", security = @SecurityRequirement(name = "bearerAuth"))
+    @Operation(summary = "채팅방 삭제", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<SimpleResponse> deleteChatRoom(
             @PathVariable("id") Integer id,
             @AuthenticationPrincipal User user) {
@@ -87,8 +107,14 @@ public class ChatRoomController {
         }
     }
 
+    /**
+     * 특정 채팅방에 참여합니다.
+     * @param id 참여할 채팅방 ID
+     * @param user 현재 로그인한 사용자 정보
+     * @return 성공 응답
+     */
     @PostMapping("/{id}/join")
-    @Operation(summary = "Join a chat room", security = @SecurityRequirement(name = "bearerAuth"))
+    @Operation(summary = "채팅방 참여", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<SimpleResponse> joinChatRoom(
             @PathVariable("id") Integer id,
             @AuthenticationPrincipal User user) {
@@ -112,8 +138,14 @@ public class ChatRoomController {
         }
     }
 
+    /**
+     * 특정 채팅방에서 나갑니다.
+     * @param id 나갈 채팅방 ID
+     * @param user 현재 로그인한 사용자 정보
+     * @return 성공 응답
+     */
     @PostMapping("/{id}/leave")
-    @Operation(summary = "Leave a chat room", security = @SecurityRequirement(name = "bearerAuth"))
+    @Operation(summary = "채팅방 나가기", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<SimpleResponse> leaveChatRoom(
             @PathVariable("id") Integer id,
             @AuthenticationPrincipal User user) {
@@ -138,6 +170,11 @@ public class ChatRoomController {
         }
     }
 
+    /**
+     * 읽지 않은 메시지 총 개수를 조회합니다.
+     * @param user 현재 로그인한 사용자 정보
+     * @return 읽지 않은 메시지 개수
+     */
     @GetMapping("/unreadCount")
     public ResponseEntity<Integer> getUnreadMessagesCount(@AuthenticationPrincipal User user) {
         if (user == null) {

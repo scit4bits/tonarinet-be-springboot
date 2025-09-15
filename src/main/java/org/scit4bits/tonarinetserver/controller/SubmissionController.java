@@ -18,18 +18,27 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
+/**
+ * 과제 제출 관련 API를 처리하는 컨트롤러입니다.
+ */
 @RestController
 @Slf4j
 @RequiredArgsConstructor
 @RequestMapping("/api/submission")
-@Tag(name = "Submission", description = "Submission management API")
+@Tag(name = "Submission", description = "과제 제출 관리 API")
 public class SubmissionController {
 
     private final SubmissionService submissionService;
     private final FileAttachmentService fileAttachmentService;
 
+    /**
+     * 새로운 과제 제출을 생성합니다.
+     * @param request 과제 제출 요청 정보
+     * @param user 현재 로그인한 사용자 정보
+     * @return 생성된 과제 제출 정보
+     */
     @PostMapping
-    @Operation(summary = "Create a new submission", security = @SecurityRequirement(name = "bearerAuth"))
+    @Operation(summary = "새로운 과제 제출 생성", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<SubmissionResponseDTO> createSubmission(
             @Valid @RequestBody SubmissionRequestDTO request,
             @AuthenticationPrincipal User user) {
@@ -53,8 +62,15 @@ public class SubmissionController {
         }
     }
 
+    /**
+     * 파일 첨부를 포함한 새로운 과제 제출을 생성합니다.
+     * @param request 과제 제출 요청 정보
+     * @param files 첨부 파일 리스트
+     * @param user 현재 로그인한 사용자 정보
+     * @return 생성된 과제 제출 정보
+     */
     @PostMapping("/with-attachments")
-    @Operation(summary = "Create a new submission with file attachments", security = @SecurityRequirement(name = "bearerAuth"))
+    @Operation(summary = "파일 첨부를 포함한 새로운 과제 제출 생성", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<SubmissionResponseDTO> createSubmissionWithAttachments(
             @RequestPart("request") @Valid SubmissionRequestDTO request,
             @RequestPart(value = "files", required = false) List<MultipartFile> files,
@@ -64,20 +80,20 @@ public class SubmissionController {
         }
 
         try {
-            // First create the submission
+            // 먼저 과제 제출을 생성합니다.
             SubmissionResponseDTO submission = submissionService.createSubmission(request, user);
 
-            // If files are provided, upload them and associate with the submission
+            // 파일이 제공된 경우, 업로드하고 과제 제출과 연결합니다.
             if (files != null && !files.isEmpty()) {
                 FileAttachmentRequestDTO fileRequest = FileAttachmentRequestDTO.builder()
                         .submissionId(submission.getId())
-                        .isPrivate(false) // Default to not private for submission attachments
-                        .type(null) // Auto-determine file type based on content
+                        .isPrivate(false) // 제출 첨부 파일은 기본적으로 비공개가 아닙니다.
+                        .type(null) // 내용에 따라 파일 유형 자동 결정
                         .build();
 
                 fileAttachmentService.uploadFiles(files, fileRequest, user);
 
-                // Re-fetch the submission to include the attachments
+                // 첨부 파일을 포함하기 위해 과제 제출 정보를 다시 가져옵니다.
                 submission = submissionService.getSubmissionById(submission.getId());
             }
 
@@ -95,14 +111,19 @@ public class SubmissionController {
         }
     }
 
+    /**
+     * 모든 과제 제출 목록을 조회합니다. (관리자 전용)
+     * @param user 현재 로그인한 사용자 정보
+     * @return SubmissionResponseDTO 리스트
+     */
     @GetMapping
-    @Operation(summary = "Get all submissions", security = @SecurityRequirement(name = "bearerAuth"))
+    @Operation(summary = "모든 과제 제출 조회 (관리자 전용)", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<List<SubmissionResponseDTO>> getAllSubmissions(@AuthenticationPrincipal User user) {
         if (user == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
-        // Only admin can see all submissions
+        // 관리자만 모든 과제 제출을 볼 수 있습니다.
         if (!user.getIsAdmin()) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
@@ -116,8 +137,14 @@ public class SubmissionController {
         }
     }
 
+    /**
+     * ID로 특정 과제 제출을 조회합니다.
+     * @param id 조회할 과제 제출 ID
+     * @param user 현재 로그인한 사용자 정보
+     * @return SubmissionResponseDTO 형태의 과제 제출 정보
+     */
     @GetMapping("/{id}")
-    @Operation(summary = "Get submission by ID", security = @SecurityRequirement(name = "bearerAuth"))
+    @Operation(summary = "ID로 과제 제출 조회", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<SubmissionResponseDTO> getSubmissionById(@PathVariable("id") Integer id, @AuthenticationPrincipal User user) {
         if (user == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
@@ -126,7 +153,7 @@ public class SubmissionController {
         try {
             SubmissionResponseDTO submission = submissionService.getSubmissionById(id);
 
-            // Users can only see their own submissions unless they're admin
+            // 사용자는 자신의 제출물만 볼 수 있습니다 (관리자 제외).
             if (!submission.getCreatedById().equals(user.getId()) && !user.getIsAdmin()) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
             }
@@ -141,8 +168,14 @@ public class SubmissionController {
         }
     }
 
+    /**
+     * 특정 사용자의 모든 과제 제출을 조회합니다.
+     * @param userId 사용자 ID
+     * @param user 현재 로그인한 사용자 정보
+     * @return SubmissionResponseDTO 리스트
+     */
     @GetMapping("/user/{userId}")
-    @Operation(summary = "Get submissions by user ID", security = @SecurityRequirement(name = "bearerAuth"))
+    @Operation(summary = "사용자 ID로 과제 제출 조회", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<List<SubmissionResponseDTO>> getSubmissionsByUserId(
             @PathVariable("userId") Integer userId,
             @AuthenticationPrincipal User user) {
@@ -150,7 +183,7 @@ public class SubmissionController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
-        // Users can only see their own submissions unless they're admin
+        // 사용자는 자신의 제출물만 볼 수 있습니다 (관리자 제외).
         if (!user.getId().equals(userId) && !user.getIsAdmin()) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
@@ -164,8 +197,13 @@ public class SubmissionController {
         }
     }
 
+    /**
+     * 현재 로그인한 사용자의 모든 과제 제출을 조회합니다.
+     * @param user 현재 로그인한 사용자 정보
+     * @return SubmissionResponseDTO 리스트
+     */
     @GetMapping("/my")
-    @Operation(summary = "Get current user's submissions", security = @SecurityRequirement(name = "bearerAuth"))
+    @Operation(summary = "현재 사용자의 과제 제출 조회", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<List<SubmissionResponseDTO>> getMySubmissions(@AuthenticationPrincipal User user) {
         if (user == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
@@ -180,8 +218,14 @@ public class SubmissionController {
         }
     }
 
+    /**
+     * 특정 과제에 대한 모든 제출물을 조회합니다.
+     * @param taskId 과제 ID
+     * @param user 현재 로그인한 사용자 정보
+     * @return SubmissionResponseDTO 리스트
+     */
     @GetMapping("/task/{taskId}")
-    @Operation(summary = "Get submissions by task ID", security = @SecurityRequirement(name = "bearerAuth"))
+    @Operation(summary = "과제 ID로 제출물 조회", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<List<SubmissionResponseDTO>> getSubmissionsByTaskId(
             @PathVariable("taskId") Integer taskId,
             @AuthenticationPrincipal User user) {
@@ -189,13 +233,10 @@ public class SubmissionController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
-        // Only admin or task creator can see all submissions for a task
-        // Regular users can only see their own submissions (handled in service)
-
         try {
             List<SubmissionResponseDTO> submissions = submissionService.getSubmissionsByTaskId(taskId);
 
-            // Filter submissions to only show user's own unless admin
+            // 관리자가 아닌 경우 자신의 제출물만 필터링합니다.
             if (!user.getIsAdmin()) {
                 submissions = submissions.stream()
                         .filter(s -> s.getCreatedById().equals(user.getId()))
@@ -209,8 +250,15 @@ public class SubmissionController {
         }
     }
 
+    /**
+     * 특정 과제 제출을 수정합니다.
+     * @param id 수정할 과제 제출 ID
+     * @param request 과제 제출 수정 요청 정보
+     * @param user 현재 로그인한 사용자 정보
+     * @return 수정된 과제 제출 정보
+     */
     @PutMapping("/{id}")
-    @Operation(summary = "Update a submission", security = @SecurityRequirement(name = "bearerAuth"))
+    @Operation(summary = "과제 제출 수정", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<SubmissionResponseDTO> updateSubmission(
             @PathVariable("id") Integer id,
             @Valid @RequestBody SubmissionRequestDTO request,
@@ -236,8 +284,14 @@ public class SubmissionController {
         }
     }
 
+    /**
+     * 특정 과제 제출을 삭제합니다.
+     * @param id 삭제할 과제 제출 ID
+     * @param user 현재 로그인한 사용자 정보
+     * @return 성공 응답
+     */
     @DeleteMapping("/{id}")
-    @Operation(summary = "Delete a submission", security = @SecurityRequirement(name = "bearerAuth"))
+    @Operation(summary = "과제 제출 삭제", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<SimpleResponse> deleteSubmission(
             @PathVariable("id") Integer id,
             @AuthenticationPrincipal User user) {
@@ -262,8 +316,19 @@ public class SubmissionController {
         }
     }
 
+    /**
+     * 과제 제출을 검색합니다.
+     * @param searchBy 검색 기준 (all, content)
+     * @param search 검색어
+     * @param page 페이지 번호
+     * @param pageSize 페이지 크기
+     * @param sortBy 정렬 기준
+     * @param sortDirection 정렬 방향
+     * @param user 현재 로그인한 사용자 정보
+     * @return 페이징 처리된 SubmissionResponseDTO 리스트
+     */
     @GetMapping("/search")
-    @Operation(summary = "Search submissions")
+    @Operation(summary = "과제 제출 검색")
     public ResponseEntity<PagedResponse<SubmissionResponseDTO>> searchSubmissions(
             @RequestParam(name = "searchBy", defaultValue = "all") String searchBy,
             @RequestParam(name = "search", defaultValue = "") String search,
@@ -277,7 +342,7 @@ public class SubmissionController {
             PagedResponse<SubmissionResponseDTO> submissions = submissionService.searchSubmissions(
                     searchBy, search, page, pageSize, sortBy, sortDirection);
 
-            // Filter results for non-admin users to only show their own submissions
+            // 관리자가 아닌 경우 자신의 제출물만 필터링합니다.
             if (user != null && !user.getIsAdmin()) {
                 List<SubmissionResponseDTO> filteredData = submissions.getData().stream()
                         .filter(s -> s.getCreatedById().equals(user.getId()))
@@ -292,8 +357,14 @@ public class SubmissionController {
         }
     }
 
+    /**
+     * 특정 과제 제출의 첨부 파일을 조회합니다.
+     * @param id 과제 제출 ID
+     * @param user 현재 로그인한 사용자 정보
+     * @return FileAttachmentResponseDTO 리스트
+     */
     @GetMapping("/{id}/attachments")
-    @Operation(summary = "Get file attachments for a submission", security = @SecurityRequirement(name = "bearerAuth"))
+    @Operation(summary = "과제 제출의 첨부 파일 조회", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<List<FileAttachmentResponseDTO>> getSubmissionAttachments(
             @PathVariable("id") Integer id,
             @AuthenticationPrincipal User user) {
@@ -302,10 +373,10 @@ public class SubmissionController {
         }
 
         try {
-            // First check if user can access this submission
+            // 먼저 사용자가 이 제출물에 접근할 수 있는지 확인합니다.
             SubmissionResponseDTO submission = submissionService.getSubmissionById(id);
 
-            // Users can only see attachments for their own submissions unless they're admin
+            // 사용자는 자신의 제출물에 대한 첨부 파일만 볼 수 있습니다 (관리자 제외).
             if (!submission.getCreatedById().equals(user.getId()) && !user.getIsAdmin()) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
             }

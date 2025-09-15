@@ -23,6 +23,10 @@ repositories {
 	mavenCentral()
 }
 
+javadoc {
+    options.encoding = 'UTF-8'
+}
+
 ext {
 	set('springAiVersion', "1.0.1")
 }

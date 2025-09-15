@@ -10,6 +10,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * 국가 정보 관련 비즈니스 로직을 처리하는 서비스입니다.
+ */
 @Service
 @Slf4j
 @RequiredArgsConstructor
@@ -18,8 +21,12 @@ public class CountryService {
 
     private final CountryRepository countryRepository;
 
+    /**
+     * 모든 국가 정보를 조회합니다.
+     * @return CountryResponseDTO 리스트
+     */
     public List<CountryResponseDTO> getAllCountries() {
-        log.debug("Retrieving all countries");
+        log.debug("모든 국가 정보를 조회합니다.");
         return countryRepository.findAll().stream()
                 .map(CountryResponseDTO::fromEntity)
                 .collect(Collectors.toList());

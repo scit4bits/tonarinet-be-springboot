@@ -15,7 +15,9 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-
+/**
+ * 조직 관련 API를 처리하는 컨트롤러입니다.
+ */
 @RestController
 @Slf4j
 @RequiredArgsConstructor
@@ -23,12 +25,22 @@ import java.util.List;
 public class OrganizationController {
     private final OrganizationService organizationService;
 
+    /**
+     * 새로운 조직을 생성합니다.
+     * @param organizationDTO 생성할 조직 정보
+     * @return 생성된 조직 정보
+     */
     @PostMapping("/create")
     public ResponseEntity<OrganizationDTO> createOrganization(@RequestBody OrganizationDTO organizationDTO) {
         Organization createdOrganization = organizationService.createOrganization(organizationDTO);
         return ResponseEntity.ok(OrganizationDTO.fromEntity(createdOrganization));
     }
 
+    /**
+     * 현재 로그인한 사용자가 속한 조직 목록을 조회합니다.
+     * @param user 현재 로그인한 사용자 정보
+     * @return OrganizationDTO 리스트
+     */
     @GetMapping("/my")
     public ResponseEntity<List<OrganizationDTO>> getMyOrganizations(@AuthenticationPrincipal User user) {
         if (user == null) {
@@ -38,6 +50,16 @@ public class OrganizationController {
         return ResponseEntity.ok(organizations);
     }
 
+    /**
+     * 조직을 검색합니다.
+     * @param searchBy 검색 기준 (all, name, description)
+     * @param search 검색어
+     * @param page 페이지 번호
+     * @param pageSize 페이지 크기
+     * @param sortBy 정렬 기준
+     * @param sortDirection 정렬 방향
+     * @return 페이징 처리된 OrganizationDTO 리스트
+     */
     @GetMapping("/search")
     public ResponseEntity<PagedResponse<OrganizationDTO>> getOrganizationSearch(
             @RequestParam(name = "searchBy", defaultValue = "all") String searchBy,
@@ -51,6 +73,13 @@ public class OrganizationController {
         return ResponseEntity.ok(organizations);
     }
 
+    /**
+     * 조직에 가입을 신청합니다.
+     * @param organizationId 가입할 조직 ID
+     * @param entryMessage 가입 메시지
+     * @param user 현재 로그인한 사용자 정보
+     * @return 성공 응답
+     */
     @PostMapping("/apply")
     public ResponseEntity<SimpleResponse> postOrganizationApply(
             @RequestParam("organizationId") Integer organizationId,
@@ -65,6 +94,11 @@ public class OrganizationController {
         }
     }
 
+    /**
+     * 조직 정보를 업데이트합니다.
+     * @param organizationDTO 업데이트할 조직 정보
+     * @return 성공 응답
+     */
     @PostMapping("/update")
     public ResponseEntity<SimpleResponse> postOrganizationUpdate(@RequestBody OrganizationDTO organizationDTO) {
         try {

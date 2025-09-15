@@ -6,6 +6,9 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.scit4bits.tonarinetserver.entity.Organization;
 
+/**
+ * 조직 정보를 전달하기 위한 DTO
+ */
 @Data
 @Builder
 @AllArgsConstructor
@@ -19,10 +22,10 @@ public class OrganizationDTO {
     private String role;
 
     /**
-     * Organization 엔티티를 OrganizationDTO로 변환하는 static 메서드
+     * Organization 엔티티를 OrganizationDTO로 변환합니다.
      *
-     * @param organization Organization 엔티티
-     * @return OrganizationDTO
+     * @param organization 변환할 Organization 엔티티
+     * @return 변환된 OrganizationDTO 객체
      */
     public static OrganizationDTO fromEntity(Organization organization) {
         if (organization == null) {

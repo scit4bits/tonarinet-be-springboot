@@ -19,6 +19,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * 과제 제출 관련 비즈니스 로직을 처리하는 서비스입니다.
+ */
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -27,17 +30,21 @@ public class SubmissionService {
     private final SubmissionRepository submissionRepository;
     private final TaskRepository taskRepository;
 
+    /**
+     * 새로운 과제 제출을 생성합니다.
+     * @param requestDTO 제출 요청 정보
+     * @param currentUser 현재 로그인한 사용자 정보
+     * @return 생성된 제출 정보
+     */
     public SubmissionResponseDTO createSubmission(SubmissionRequestDTO requestDTO, User currentUser) {
-        // Check if task exists
+        // 과제가 존재하는지 확인
         Task task = taskRepository.findById(requestDTO.getTaskId())
-                .orElseThrow(() -> new RuntimeException("Task not found with ID: " + requestDTO.getTaskId()));
+                .orElseThrow(() -> new RuntimeException("과제를 찾을 수 없습니다. ID: " + requestDTO.getTaskId()));
 
-        // Check if user can submit to this task (could be assigned user or team member)
+        // 사용자가 이 과제에 제출할 수 있는지 확인 (담당자 또는 팀 멤버)
         boolean canSubmit = task.getUserId() != null && task.getUserId().equals(currentUser.getId());
 
-        // If user is directly assigned to the task
-
-        // If user is part of assigned team
+        // 사용자가 할당된 팀의 멤버인 경우
         if (task.getTeamId() != null && task.getTeam() != null) {
             boolean isTeamMember = task.getTeam().getUsers().stream()
                     .anyMatch(user -> user.getId().equals(currentUser.getId()));
@@ -46,13 +53,13 @@ public class SubmissionService {
             }
         }
 
-        // Admin can always submit
+        // 관리자는 항상 제출 가능
         if (currentUser.getIsAdmin()) {
             canSubmit = true;
         }
 
         if (!canSubmit) {
-            throw new RuntimeException("You are not authorized to submit to this task");
+            throw new RuntimeException("이 과제에 제출할 권한이 없습니다.");
         }
 
         Submission submission = Submission.builder()
@@ -63,13 +70,17 @@ public class SubmissionService {
 
         Submission savedSubmission = submissionRepository.save(submission);
 
-        // Fetch the complete submission with relationships
+        // 관계가 설정된 완전한 제출 정보를 다시 조회
         Submission completeSubmission = submissionRepository.findById(savedSubmission.getId())
-                .orElseThrow(() -> new RuntimeException("Submission not found after creation"));
+                .orElseThrow(() -> new RuntimeException("생성 후 제출물을 찾을 수 없습니다."));
 
         return SubmissionResponseDTO.fromEntity(completeSubmission);
     }
 
+    /**
+     * 모든 제출 목록을 조회합니다.
+     * @return SubmissionResponseDTO 리스트
+     */
     @Transactional(readOnly = true)
     public List<SubmissionResponseDTO> getAllSubmissions() {
         List<Submission> submissions = submissionRepository.findAll();
@@ -78,13 +89,23 @@ public class SubmissionService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * ID로 특정 제출을 조회합니다.
+     * @param id 조회할 제출 ID
+     * @return SubmissionResponseDTO
+     */
     @Transactional(readOnly = true)
     public SubmissionResponseDTO getSubmissionById(Integer id) {
         Submission submission = submissionRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Submission not found with ID: " + id));
+                .orElseThrow(() -> new RuntimeException("제출물을 찾을 수 없습니다. ID: " + id));
         return SubmissionResponseDTO.fromEntity(submission);
     }
 
+    /**
+     * 특정 사용자의 모든 제출을 조회합니다.
+     * @param userId 사용자 ID
+     * @return SubmissionResponseDTO 리스트
+     */
     @Transactional(readOnly = true)
     public List<SubmissionResponseDTO> getSubmissionsByUserId(Integer userId) {
         List<Submission> submissions = submissionRepository.findByCreatedById(userId);
@@ -93,6 +114,11 @@ public class SubmissionService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * 특정 과제에 대한 모든 제출을 조회합니다.
+     * @param taskId 과제 ID
+     * @return SubmissionResponseDTO 리스트
+     */
     @Transactional(readOnly = true)
     public List<SubmissionResponseDTO> getSubmissionsByTaskId(Integer taskId) {
         List<Submission> submissions = submissionRepository.findByTaskId(taskId);
@@ -101,46 +127,67 @@ public class SubmissionService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * 제출을 수정합니다.
+     * @param id 수정할 제출 ID
+     * @param requestDTO 제출 수정 요청 정보
+     * @param currentUser 현재 로그인한 사용자 정보
+     * @return 수정된 제출 정보
+     */
     public SubmissionResponseDTO updateSubmission(Integer id, SubmissionRequestDTO requestDTO, User currentUser) {
         Submission existingSubmission = submissionRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Submission not found with ID: " + id));
+                .orElseThrow(() -> new RuntimeException("제출물을 찾을 수 없습니다. ID: " + id));
 
-        // Check if user is the creator or admin
+        // 사용자가 작성자이거나 관리자인지 확인
         if (!existingSubmission.getCreatedById().equals(currentUser.getId()) && !currentUser.getIsAdmin()) {
-            throw new RuntimeException("Only the submission creator or admin can update this submission");
+            throw new RuntimeException("작성자 또는 관리자만 이 제출물을 수정할 수 있습니다.");
         }
 
-        // Verify task exists if being changed
+        // 과제가 변경되는 경우 존재하는지 확인
         if (!existingSubmission.getTaskId().equals(requestDTO.getTaskId())) {
             taskRepository.findById(requestDTO.getTaskId())
-                    .orElseThrow(() -> new RuntimeException("Task not found with ID: " + requestDTO.getTaskId()));
+                    .orElseThrow(() -> new RuntimeException("과제를 찾을 수 없습니다. ID: " + requestDTO.getTaskId()));
         }
 
-        // Update submission fields
+        // 제출 필드 업데이트
         existingSubmission.setContents(requestDTO.getContents());
         existingSubmission.setTaskId(requestDTO.getTaskId());
 
         Submission updatedSubmission = submissionRepository.save(existingSubmission);
 
-        // Fetch the complete submission with relationships
         Submission completeSubmission = submissionRepository.findById(updatedSubmission.getId())
-                .orElseThrow(() -> new RuntimeException("Submission not found after update"));
+                .orElseThrow(() -> new RuntimeException("수정 후 제출물을 찾을 수 없습니다."));
 
         return SubmissionResponseDTO.fromEntity(completeSubmission);
     }
 
+    /**
+     * 제출을 삭제합니다.
+     * @param id 삭제할 제출 ID
+     * @param currentUser 현재 로그인한 사용자 정보
+     */
     public void deleteSubmission(Integer id, User currentUser) {
         Submission existingSubmission = submissionRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Submission not found with ID: " + id));
+                .orElseThrow(() -> new RuntimeException("제출물을 찾을 수 없습니다. ID: " + id));
 
-        // Check if user is the creator or admin
+        // 사용자가 작성자이거나 관리자인지 확인
         if (!existingSubmission.getCreatedById().equals(currentUser.getId()) && !currentUser.getIsAdmin()) {
-            throw new RuntimeException("Only the submission creator or admin can delete this submission");
+            throw new RuntimeException("작성자 또는 관리자만 이 제출물을 삭제할 수 있습니다.");
         }
 
         submissionRepository.deleteById(id);
     }
 
+    /**
+     * 제출을 검색합니다.
+     * @param searchBy 검색 기준
+     * @param search 검색어
+     * @param page 페이지 번호
+     * @param pageSize 페이지 크기
+     * @param sortBy 정렬 기준
+     * @param sortDirection 정렬 방향
+     * @return 페이징 처리된 SubmissionResponseDTO
+     */
     @Transactional(readOnly = true)
     public PagedResponse<SubmissionResponseDTO> searchSubmissions(String searchBy, String search,
                                                                   Integer page, Integer pageSize, String sortBy, String sortDirection) {

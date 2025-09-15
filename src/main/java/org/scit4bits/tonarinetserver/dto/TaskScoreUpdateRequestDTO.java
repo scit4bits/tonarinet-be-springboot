@@ -5,6 +5,9 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/**
+ * 과제 점수 업데이트 요청을 위한 DTO
+ */
 @Data
 @Builder
 @NoArgsConstructor

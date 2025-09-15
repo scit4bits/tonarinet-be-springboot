@@ -9,6 +9,9 @@ import org.scit4bits.tonarinetserver.entity.User;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
+/**
+ * 사용자 정보를 전달하기 위한 DTO
+ */
 @Data
 @Builder
 @AllArgsConstructor
@@ -29,6 +32,11 @@ public class UserDTO {
     private String role; // 직접 주입
 
 
+    /**
+     * User 엔티티를 UserDTO로 변환합니다.
+     * @param user 변환할 User 엔티티
+     * @return 변환된 UserDTO 객체
+     */
     public static UserDTO fromEntity(User user) {
         return UserDTO.builder()
                 .id(user.getId())

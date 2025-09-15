@@ -8,6 +8,9 @@ import org.scit4bits.tonarinetserver.entity.Reply;
 
 import java.time.LocalDateTime;
 
+/**
+ * 댓글 응답을 위한 DTO
+ */
 @Data
 @Builder
 @AllArgsConstructor
@@ -21,6 +24,11 @@ public class ReplyResponseDTO {
     private Integer articleId;
     private String articleTitle;
 
+    /**
+     * Reply 엔티티를 ReplyResponseDTO로 변환합니다.
+     * @param reply 변환할 Reply 엔티티
+     * @return 변환된 ReplyResponseDTO 객체
+     */
     public static ReplyResponseDTO fromEntity(Reply reply) {
         return ReplyResponseDTO.builder()
                 .id(reply.getId())

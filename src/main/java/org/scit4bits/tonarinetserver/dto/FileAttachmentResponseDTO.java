@@ -9,6 +9,9 @@ import org.scit4bits.tonarinetserver.entity.FileAttachment.FileType;
 
 import java.time.LocalDateTime;
 
+/**
+ * 파일 첨부 응답을 위한 DTO
+ */
 @Data
 @Builder
 @AllArgsConstructor
@@ -28,6 +31,11 @@ public class FileAttachmentResponseDTO {
     private Integer submissionId;
     private String submissionContents;
 
+    /**
+     * FileAttachment 엔티티를 FileAttachmentResponseDTO로 변환합니다.
+     * @param fileAttachment 변환할 FileAttachment 엔티티
+     * @return 변환된 FileAttachmentResponseDTO 객체
+     */
     public static FileAttachmentResponseDTO fromEntity(FileAttachment fileAttachment) {
         return FileAttachmentResponseDTO.builder()
                 .id(fileAttachment.getId())
