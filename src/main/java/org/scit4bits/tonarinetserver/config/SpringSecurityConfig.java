@@ -1,11 +1,17 @@
 package org.scit4bits.tonarinetserver.config;
 
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
@@ -14,6 +20,11 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SpringSecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+
+    @Value("${swagger.auth.username}")
+    private String swaggerUsername;
+    @Value("${swagger.auth.password}")
+    private String swaggerPassword;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -31,6 +42,8 @@ public class SpringSecurityConfig {
                 .csrf(csrf -> csrf.disable()) // REST API Server doesn't need CSRF protection
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authz -> authz
+                        // Swagger UI endpoints require Basic Auth
+                        .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").hasRole("SWAGGER_USER")
                         .requestMatchers("/api/auth/**").permitAll() // Allow auth endpoints
                         .requestMatchers("/ws/**").permitAll() // Allow WebSocket endpoints
                         .requestMatchers("/app/**").permitAll() // Allow STOMP destinations
@@ -41,9 +54,23 @@ public class SpringSecurityConfig {
                         .requestMatchers("/api/chat/**").authenticated() // Secure chat REST endpoints
                         .anyRequest().permitAll() // Allow other requests for now
                 )
+                .httpBasic(basic -> basic
+                        .realmName("Swagger UI")
+                ) // Enable HTTP Basic authentication for Swagger endpoints
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
+    }
+
+    @Bean
+    public UserDetailsService userDetailsService() {
+        UserDetails swaggerUser = User.builder()
+                .username("swagger")
+                .password(passwordEncoder().encode("swagger123"))
+                .roles("SWAGGER_USER")
+                .build();
+
+        return new InMemoryUserDetailsManager(swaggerUser);
     }
 
     @Bean
