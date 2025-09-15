@@ -1,7 +1,7 @@
 <div align="center">
-  <a href="https://github.com/scit4bits/tonarinet-be-springboot">
+  <!-- <a href="https://github.com/scit4bits/tonarinet-be-springboot">
     <img src="https://raw.githubusercontent.com/s7s71/gemini-springboot-linter/main/assets/logo.png" alt="Logo" width="80" height="80">
-  </a>
+  </a> -->
 
   <h3 align="center">Tonarinet Backend Server</h3>
 
@@ -35,41 +35,44 @@ This is the backend server for the Tonarinet project, built with Spring Boot. It
 
 ## Features
 
--   **User Authentication:** Secure sign-up and sign-in using JWT (JSON Web Tokens) and OAuth2.
--   **RESTful API:** A comprehensive set of APIs for managing articles, comments, users, and other resources.
--   **Real-time Chat:** WebSocket-based real-time chat functionality.
--   **Content Management:** Features for creating, reading, updating, and deleting articles and posts.
--   **Task & Party Management:** Functionality for organizing and participating in tasks and events.
--   **AI Integration:** Utilizes AI for features like content recommendation.
--   **API Documentation:** API documentation generated with Swagger.
+- **User Authentication:** Secure sign-up and sign-in using JWT (JSON Web Tokens) and OAuth2.
+- **RESTful API:** A comprehensive set of APIs for managing articles, comments, users, and other resources.
+- **Real-time Chat:** WebSocket-based real-time chat functionality.
+- **Content Management:** Features for creating, reading, updating, and deleting articles and posts.
+- **Task & Party Management:** Functionality for organizing and participating in tasks and events.
+- **AI Integration:** Utilizes AI for features like content recommendation.
+- **API Documentation:** API documentation generated with Swagger.
 
 ## Installation
 
 ### Prerequisites
 
--   Java 17
--   Gradle 8.x
--   MySQL
+- Java 17
+- Gradle 8.x
+- MySQL
 
 ### Setup
 
 1.  **Clone the repository**
+
     ```bash
     git clone https://github.com/scit4bits/tonarinet-be-springboot.git
     cd tonarinet-be-springboot
     ```
 
 2.  **Database Setup**
-    -   Create a MySQL database.
-    -   Execute the `sql/tonarinet_db.sql` script to create the necessary tables.
+
+    - Create a MySQL database.
+    - Execute the `sql/tonarinet_db.sql` script to create the necessary tables.
+
     ```bash
     mysql -u [your_username] -p [your_database_name] < sql/tonarinet_db.sql
     ```
 
 3.  **Configure Application**
-    -   Open `src/main/resources/application.properties`.
-    -   Update the database connection details (`spring.datasource.url`, `spring.datasource.username`, `spring.datasource.password`).
-    -   Configure your JWT secret key, OAuth2 credentials, and any other external service settings.
+    - Open `src/main/resources/application.properties`.
+    - Update the database connection details (`spring.datasource.url`, `spring.datasource.username`, `spring.datasource.password`).
+    - Configure your JWT secret key, OAuth2 credentials, and any other external service settings.
 
 ## Usage
 
@@ -121,41 +124,44 @@ Project Link: [https://github.com/scit4bits/tonarinet-be-springboot](https://git
 
 ## 주요 기능
 
--   **사용자 인증:** JWT (JSON Web Tokens) 및 OAuth2를 사용한 안전한 회원가입 및 로그인.
--   **RESTful API:** 게시글, 댓글, 사용자 및 기타 리소스를 관리하기 위한 포괄적인 API 세트.
--   **실시간 채팅:** WebSocket 기반의 실시간 채팅 기능.
--   **콘텐츠 관리:** 게시글 및 포스트의 생성, 조회, 수정, 삭제 기능.
--   **태스크 & 파티 관리:** 태스크 및 이벤트 구성 및 참여 기능.
--   **AI 통합:** 콘텐츠 추천과 같은 기능에 AI 활용.
--   **API 문서화:** Swagger를 통해 생성된 API 문서.
+- **사용자 인증:** JWT (JSON Web Tokens) 및 OAuth2를 사용한 안전한 회원가입 및 로그인.
+- **RESTful API:** 게시글, 댓글, 사용자 및 기타 리소스를 관리하기 위한 포괄적인 API 세트.
+- **실시간 채팅:** WebSocket 기반의 실시간 채팅 기능.
+- **콘텐츠 관리:** 게시글 및 포스트의 생성, 조회, 수정, 삭제 기능.
+- **태스크 & 파티 관리:** 태스크 및 이벤트 구성 및 참여 기능.
+- **AI 통합:** 콘텐츠 추천과 같은 기능에 AI 활용.
+- **API 문서화:** Swagger를 통해 생성된 API 문서.
 
 ## 설치
 
 ### 요구 사항
 
--   Java 17
--   Gradle 8.x
--   MySQL
+- Java 17
+- Gradle 8.x
+- MySQL
 
 ### 설정
 
 1.  **리포지토리 클론**
+
     ```bash
     git clone https://github.com/scit4bits/tonarinet-be-springboot.git
     cd tonarinet-be-springboot
     ```
 
 2.  **데이터베이스 설정**
-    -   MySQL 데이터베이스를 생성합니다.
-    -   `sql/tonarinet_db.sql` 스크립트를 실행하여 필요한 테이블을 생성합니다.
+
+    - MySQL 데이터베이스를 생성합니다.
+    - `sql/tonarinet_db.sql` 스크립트를 실행하여 필요한 테이블을 생성합니다.
+
     ```bash
     mysql -u [사용자명] -p [데이터베이스명] < sql/tonarinet_db.sql
     ```
 
 3.  **애플리케이션 구성**
-    -   `src/main/resources/application.properties` 파일을 엽니다.
-    -   데이터베이스 연결 정보(`spring.datasource.url`, `spring.datasource.username`, `spring.datasource.password`)를 업데이트합니다.
-    -   JWT 비밀 키, OAuth2 자격 증명 및 기타 외부 서비스 설정을 구성합니다.
+    - `src/main/resources/application.properties` 파일을 엽니다.
+    - 데이터베이스 연결 정보(`spring.datasource.url`, `spring.datasource.username`, `spring.datasource.password`)를 업데이트합니다.
+    - JWT 비밀 키, OAuth2 자격 증명 및 기타 외부 서비스 설정을 구성합니다.
 
 ## 사용법
 
@@ -203,51 +209,54 @@ Gradle 래퍼를 사용하여 애플리케이션을 실행할 수 있습니다.
 
 ## 説明
 
-これはSpring Bootで構築されたTonarinetプロジェクトのバックエンドサーバーです。ユーザー管理、コンテンツ共有、リアルタイム通信など、コミュニティベースのサービスプラットフォームのコア機能を提供します。
+これは Spring Boot で構築された Tonarinet プロジェクトのバックエンドサーバーです。ユーザー管理、コンテンツ共有、リアルタイム通信など、コミュニティベースのサービスプラットフォームのコア機能を提供します。
 
 ## 主な機能
 
--   **ユーザー認証:** JWT (JSON Web Tokens) および OAuth2 を使用した安全なサインアップとサインイン。
--   **RESTful API:** 記事、コメント、ユーザー、その他のリソースを管理するための包括的なAPIセット。
--   **リアルタイムチャット:** WebSocketベースのリアルタイムチャット機能。
--   **コンテンツ管理:** 記事や投稿の作成、読み取り、更新、削除機能。
--   **タスク＆パーティー管理:** タスクやイベントの整理と参加機能。
--   **AI統合:** コンテンツ推薦などの機能にAIを活用。
--   **APIドキュментация:** Swaggerで生成されたAPIドキュメント。
+- **ユーザー認証:** JWT (JSON Web Tokens) および OAuth2 を使用した安全なサインアップとサインイン。
+- **RESTful API:** 記事、コメント、ユーザー、その他のリソースを管理するための包括的な API セット。
+- **リアルタイムチャット:** WebSocket ベースのリアルタイムチャット機能。
+- **コンテンツ管理:** 記事や投稿の作成、読み取り、更新、削除機能。
+- **タスク＆パーティー管理:** タスクやイベントの整理と参加機能。
+- **AI 統合:** コンテンツ推薦などの機能に AI を活用。
+- **API ドキュ ментация:** Swagger で生成された API ドキュメント。
 
 ## インストール
 
 ### 前提条件
 
--   Java 17
--   Gradle 8.x
--   MySQL
+- Java 17
+- Gradle 8.x
+- MySQL
 
 ### セットアップ
 
 1.  **リポジトリをクローン**
+
     ```bash
     git clone https://github.com/scit4bits/tonarinet-be-springboot.git
     cd tonarinet-be-springboot
     ```
 
 2.  **データベースのセットアップ**
-    -   MySQLデータベースを作成します。
-    -   `sql/tonarinet_db.sql` スクリプトを実行して、必要なテーブルを作成します。
+
+    - MySQL データベースを作成します。
+    - `sql/tonarinet_db.sql` スクリプトを実行して、必要なテーブルを作成します。
+
     ```bash
     mysql -u [ユーザー名] -p [データベース名] < sql/tonarinet_db.sql
     ```
 
 3.  **アプリケーションの設定**
-    -   `src/main/resources/application.properties` を開きます。
-    -   データベース接続詳細 (`spring.datasource.url`, `spring.datasource.username`, `spring.datasource.password`) を更新します。
-    -   JWTシークレットキー、OAuth2認証情報、およびその他の外部サービス設定を構成します。
+    - `src/main/resources/application.properties` を開きます。
+    - データベース接続詳細 (`spring.datasource.url`, `spring.datasource.username`, `spring.datasource.password`) を更新します。
+    - JWT シークレットキー、OAuth2 認証情報、およびその他の外部サービス設定を構成します。
 
 ## 使用法
 
 ### アプリケーションの実行
 
-Gradleラッパーを使用してアプリケーションを実行できます。
+Gradle ラッパーを使用してアプリケーションを実行できます。
 
 ```bash
 ./gradlew bootRun
@@ -255,9 +264,9 @@ Gradleラッパーを使用してアプリケーションを実行できます�
 
 サーバーは `http://localhost:8080` で起動します。
 
-### APIドキュメント
+### API ドキュメント
 
-アプリケーションが実行されたら、次のアドレスでAPIドキュメント用のSwagger UIにアクセスできます。
+アプリケーションが実行されたら、次のアドレスで API ドキュメント用の Swagger UI にアクセスできます。
 `http://localhost:8080/swagger-ui.html`
 
 ## 貢献
@@ -272,7 +281,7 @@ Gradleラッパーを使用してアプリケーションを実行できます�
 
 ## ライセンス
 
-このプロジェクトはMITライセンスの下でライセンスされています。詳細については `LICENSE` ファイルを参照してください。
+このプロジェクトは MIT ライセンスの下でライセンスされています。詳細については `LICENSE` ファイルを参照してください。
 
 ## 連絡先
 
