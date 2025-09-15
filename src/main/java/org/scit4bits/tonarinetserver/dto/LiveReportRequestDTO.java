@@ -6,6 +6,9 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/**
+ * 실시간 제보 요청을 위한 DTO
+ */
 @Data
 @Builder
 @AllArgsConstructor

@@ -5,6 +5,9 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/**
+ * OAuth 기반 로그인 요청을 위한 DTO
+ */
 @Data
 @Builder
 @AllArgsConstructor

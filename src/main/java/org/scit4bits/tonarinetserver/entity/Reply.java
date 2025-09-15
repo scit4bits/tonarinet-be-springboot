@@ -10,6 +10,9 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 
+/**
+ * 댓글 엔티티
+ */
 @Entity
 @Table(name = "reply")
 @Data
@@ -19,28 +22,35 @@ import java.time.LocalDateTime;
 @EntityListeners(AuditingEntityListener.class)
 public class Reply {
 
+    /** 댓글 ID */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
     private Integer id;
 
+    /** 생성일 */
     @CreatedDate
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
+    /** 작성자 ID */
     @Column(name = "created_by", nullable = false)
     private Integer createdById;
 
+    /** 내용 */
     @Column(name = "contents", columnDefinition = "TEXT")
     private String contents;
 
+    /** 게시글 ID */
     @Column(name = "article_id", nullable = false)
     private Integer articleId;
 
+    /** 작성자 */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by", insertable = false, updatable = false)
     private User createdBy;
 
+    /** 게시글 */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "article_id", insertable = false, updatable = false)
     private Article article;

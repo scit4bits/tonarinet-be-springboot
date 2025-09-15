@@ -5,6 +5,9 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/**
+ * 사용자 좋아요 응답을 위한 DTO
+ */
 @Data
 @Builder
 @AllArgsConstructor

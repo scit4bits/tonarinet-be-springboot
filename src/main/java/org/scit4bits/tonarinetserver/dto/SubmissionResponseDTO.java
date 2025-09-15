@@ -12,6 +12,9 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * 제출물 응답을 위한 DTO
+ */
 @Data
 @Builder
 @NoArgsConstructor
@@ -44,6 +47,11 @@ public class SubmissionResponseDTO {
     @Schema(description = "File attachments")
     private List<FileAttachmentResponseDTO> fileAttachments;
 
+    /**
+     * Submission 엔티티를 SubmissionResponseDTO로 변환합니다.
+     * @param submission 변환할 Submission 엔티티
+     * @return 변환된 SubmissionResponseDTO 객체
+     */
     public static SubmissionResponseDTO fromEntity(Submission submission) {
         SubmissionResponseDTOBuilder builder = SubmissionResponseDTO.builder()
                 .id(submission.getId())
@@ -52,17 +60,17 @@ public class SubmissionResponseDTO {
                 .contents(submission.getContents())
                 .taskId(submission.getTaskId());
 
-        // Add creator user if available
+        // 작성자 사용자 정보가 있는 경우 추가
         if (submission.getCreatedBy() != null) {
             builder.createdBy(UserDTO.fromEntity(submission.getCreatedBy()));
         }
 
-        // Add task if available
+        // 과제 정보가 있는 경우 추가
         if (submission.getTask() != null) {
             builder.task(TaskResponseDTO.fromEntity(submission.getTask()));
         }
 
-        // Add file attachments if available
+        // 파일 첨부 정보가 있는 경우 추가
         if (submission.getFileAttachments() != null && !submission.getFileAttachments().isEmpty()) {
             builder.fileAttachments(submission.getFileAttachments().stream()
                     .map(FileAttachmentResponseDTO::fromEntity)
@@ -72,3 +80,4 @@ public class SubmissionResponseDTO {
         return builder.build();
     }
 }
+

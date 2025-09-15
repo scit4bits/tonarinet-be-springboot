@@ -7,6 +7,9 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 
+/**
+ * 회원가입 요청을 위한 DTO
+ */
 @Data
 @Builder
 @AllArgsConstructor

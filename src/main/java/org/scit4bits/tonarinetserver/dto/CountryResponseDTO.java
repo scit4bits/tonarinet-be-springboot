@@ -6,6 +6,9 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.scit4bits.tonarinetserver.entity.Country;
 
+/**
+ * 국가 정보를 전달하기 위한 DTO
+ */
 @Data
 @Builder
 @AllArgsConstructor
@@ -15,6 +18,11 @@ public class CountryResponseDTO {
     private String name;
     private String description;
 
+    /**
+     * Country 엔티티를 CountryResponseDTO로 변환합니다.
+     * @param country 변환할 Country 엔티티
+     * @return 변환된 CountryResponseDTO 객체
+     */
     public static CountryResponseDTO fromEntity(Country country) {
         return CountryResponseDTO.builder()
                 .countryCode(country.getCountryCode())

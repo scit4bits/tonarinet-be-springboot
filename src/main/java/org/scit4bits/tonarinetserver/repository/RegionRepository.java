@@ -8,17 +8,20 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
+/**
+ * 지역(Region) 엔티티에 대한 데이터 액세스 작업을 처리하는 리포지토리
+ */
 @Repository
 public interface RegionRepository extends JpaRepository<Region, Integer> {
 
     /**
-     * Find regions within a certain radius from a center point using Manhattan distance
-     * Manhattan distance = |lat1 - lat2| + |lon1 - lon2|
+     * 맨해튼 거리를 사용하여 중심점으로부터 특정 반경 내의 지역을 찾습니다.
+     * 맨해튼 거리 = |lat1 - lat2| + |lon1 - lon2|
      *
-     * @param latitude  Center latitude
-     * @param longitude Center longitude
-     * @param radiusKm  Radius in kilometers (approximated using degree differences)
-     * @return List of regions within the specified radius
+     * @param latitude  중심 위도
+     * @param longitude 중심 경도
+     * @param radiusKm  킬로미터 단위의 반경 (근사치)
+     * @return 지정된 반경 내의 지역 리스트
      */
     @Query("SELECT r FROM Region r " +
             "WHERE r.latitude IS NOT NULL " +
@@ -30,7 +33,12 @@ public interface RegionRepository extends JpaRepository<Region, Integer> {
                                          @Param("radiusKm") Double radiusKm);
 
     /**
-     * Find regions within a certain radius and specific country using Manhattan distance
+     * 특정 국가 내에서 맨해튼 거리를 사용하여 중심점으로부터 특정 반경 내의 지역을 찾습니다.
+     * @param latitude 중심 위도
+     * @param longitude 중심 경도
+     * @param radiusKm 킬로미터 단위의 반경 (근사치)
+     * @param countryCode 국가 코드
+     * @return 지정된 반경 내의 지역 리스트
      */
     @Query("SELECT r FROM Region r " +
             "WHERE r.latitude IS NOT NULL " +

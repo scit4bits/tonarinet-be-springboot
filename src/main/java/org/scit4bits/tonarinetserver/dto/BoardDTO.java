@@ -6,6 +6,9 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.scit4bits.tonarinetserver.entity.Board;
 
+/**
+ * 게시판 정보를 전달하기 위한 DTO
+ */
 @Data
 @Builder
 @AllArgsConstructor
@@ -17,6 +20,11 @@ public class BoardDTO {
     private String countryCode;
     private Integer orgId;
 
+    /**
+     * Board 엔티티를 BoardDTO로 변환합니다.
+     * @param board 변환할 Board 엔티티
+     * @return 변환된 BoardDTO 객체
+     */
     public static BoardDTO fromEntity(Board board) {
         if (board == null) {
             return null;

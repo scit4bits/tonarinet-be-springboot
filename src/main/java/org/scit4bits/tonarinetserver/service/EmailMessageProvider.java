@@ -14,6 +14,9 @@ public class EmailMessageProvider {
 
     private final Map<EmailLanguage, Map<String, String>> messages = new HashMap<>();
 
+    /**
+     * EmailMessageProvider의 생성자입니다. 모든 지원 언어에 대한 이메일 메시지를 초기화합니다.
+     */
     public EmailMessageProvider() {
         initializeMessages();
     }

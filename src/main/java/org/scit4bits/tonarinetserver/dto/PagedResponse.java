@@ -7,6 +7,10 @@ import lombok.NoArgsConstructor;
 
 import java.util.List;
 
+/**
+ * 페이징된 응답 데이터를 위한 제네릭 DTO
+ * @param <T> 데이터 타입
+ */
 @Data
 @Builder
 @AllArgsConstructor

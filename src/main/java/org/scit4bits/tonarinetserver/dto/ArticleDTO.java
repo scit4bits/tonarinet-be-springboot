@@ -9,6 +9,9 @@ import org.scit4bits.tonarinetserver.entity.Article;
 import java.time.LocalDateTime;
 import java.util.List;
 
+/**
+ * 게시글 정보를 전달하기 위한 DTO
+ */
 @Data
 @Builder
 @AllArgsConstructor
@@ -29,6 +32,11 @@ public class ArticleDTO {
     private List<FileAttachmentResponseDTO> files;
     private List<String> tags;
 
+    /**
+     * Article 엔티티를 ArticleDTO로 변환합니다.
+     * @param article 변환할 Article 엔티티
+     * @return 변환된 ArticleDTO 객체
+     */
     public static ArticleDTO fromEntity(Article article) {
         return ArticleDTO.builder()
                 .id(article.getId())

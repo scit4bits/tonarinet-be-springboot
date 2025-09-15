@@ -7,6 +7,9 @@ import lombok.NoArgsConstructor;
 
 import java.util.List;
 
+/**
+ * 게시글 작성을 위한 요청 DTO
+ */
 @Data
 @Builder
 @AllArgsConstructor

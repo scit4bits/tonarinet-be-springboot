@@ -9,6 +9,9 @@ import org.scit4bits.tonarinetserver.entity.TaskGroup;
 import java.time.LocalDateTime;
 import java.util.List;
 
+/**
+ * 과제 그룹 응답을 위한 DTO
+ */
 @Data
 @Builder
 @AllArgsConstructor
@@ -24,6 +27,11 @@ public class TaskGroupResponseDTO {
     private String organizationName;
     private List<TaskResponseDTO> tasks;
 
+    /**
+     * TaskGroup 엔티티를 TaskGroupResponseDTO로 변환합니다.
+     * @param taskGroup 변환할 TaskGroup 엔티티
+     * @return 변환된 TaskGroupResponseDTO 객체
+     */
     public static TaskGroupResponseDTO fromEntity(TaskGroup taskGroup) {
         return TaskGroupResponseDTO.builder()
                 .id(taskGroup.getId())

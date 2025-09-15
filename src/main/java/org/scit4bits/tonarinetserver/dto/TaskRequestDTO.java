@@ -10,6 +10,9 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 import java.util.List;
 
+/**
+ * 과제 생성 및 수정을 위한 요청 DTO
+ */
 @Data
 @Builder
 @AllArgsConstructor
@@ -27,9 +30,9 @@ public class TaskRequestDTO {
 
     private LocalDateTime dueDate;
 
-    private List<Integer> assignedUserIds; // If assigned to specific user
+    private List<Integer> assignedUserIds; // 특정 사용자에게 할당된 경우
 
-    private List<Integer> assignedTeamIds; // If assigned to team
+    private List<Integer> assignedTeamIds; // 팀에 할당된 경우
 
     private Integer maxScore;
 }

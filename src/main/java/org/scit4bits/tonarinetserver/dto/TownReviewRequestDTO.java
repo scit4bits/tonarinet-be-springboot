@@ -9,6 +9,9 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/**
+ * 동네 리뷰 생성 및 수정을 위한 요청 DTO
+ */
 @Data
 @Builder
 @AllArgsConstructor

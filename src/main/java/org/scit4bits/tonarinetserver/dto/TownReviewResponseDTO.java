@@ -8,6 +8,9 @@ import org.scit4bits.tonarinetserver.entity.TownReview;
 
 import java.time.LocalDateTime;
 
+/**
+ * 동네 리뷰 응답을 위한 DTO
+ */
 @Data
 @Builder
 @AllArgsConstructor
@@ -33,6 +36,11 @@ public class TownReviewResponseDTO {
     private Integer radius;
     private Double averageRating;
 
+    /**
+     * TownReview 엔티티를 TownReviewResponseDTO로 변환합니다.
+     * @param townReview 변환할 TownReview 엔티티
+     * @return 변환된 TownReviewResponseDTO 객체
+     */
     public static TownReviewResponseDTO fromEntity(TownReview townReview) {
         double avgRating = (townReview.getTransportation() + townReview.getSafety() +
                 townReview.getInfra() + townReview.getPopulation() +
@@ -58,7 +66,7 @@ public class TownReviewResponseDTO {
                 .countryCode(townReview.getCountryCode())
                 .countryName(townReview.getCountry() != null ? townReview.getCountry().getName() : null)
                 .likeCount(townReview.getLikeCount())
-                .averageRating(Math.round(avgRating * 10.0) / 10.0) // Round to 1 decimal place
+                .averageRating(Math.round(avgRating * 10.0) / 10.0) // 소수점 첫째 자리에서 반올림
                 .build();
     }
 }

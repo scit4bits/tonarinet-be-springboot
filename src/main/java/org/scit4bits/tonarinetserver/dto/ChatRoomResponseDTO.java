@@ -12,6 +12,9 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * 채팅방 응답을 위한 DTO
+ */
 @Data
 @Builder
 @NoArgsConstructor
@@ -50,6 +53,11 @@ public class ChatRoomResponseDTO {
     @Schema(description = "Number of messages in the chat room", example = "25")
     private Integer messageCount;
 
+    /**
+     * ChatRoom 엔티티를 ChatRoomResponseDTO로 변환합니다.
+     * @param chatRoom 변환할 ChatRoom 엔티티
+     * @return 변환된 ChatRoomResponseDTO 객체
+     */
     public static ChatRoomResponseDTO fromEntity(ChatRoom chatRoom) {
         ChatRoomResponseDTOBuilder builder = ChatRoomResponseDTO.builder()
                 .id(chatRoom.getId())
@@ -59,12 +67,12 @@ public class ChatRoomResponseDTO {
                 .createdAt(chatRoom.getCreatedAt())
                 .leaderUserId(chatRoom.getLeaderUserId());
 
-        // Add leader user if available
+        // 방장 사용자 정보가 있는 경우 추가
         if (chatRoom.getLeaderUser() != null) {
             builder.leaderUser(UserDTO.fromEntity(chatRoom.getLeaderUser()));
         }
 
-        // Add users if available
+        // 사용자 목록이 있는 경우 추가
         if (chatRoom.getUsers() != null) {
             List<UserDTO> userDTOs = chatRoom.getUsers().stream()
                     .map(UserDTO::fromEntity)
@@ -75,7 +83,7 @@ public class ChatRoomResponseDTO {
             builder.userCount(0);
         }
 
-        // Add message count if available
+        // 메시지 수가 있는 경우 추가
         if (chatRoom.getMessages() != null) {
             builder.messageCount(chatRoom.getMessages().size());
         } else {
@@ -85,3 +93,4 @@ public class ChatRoomResponseDTO {
         return builder.build();
     }
 }
+

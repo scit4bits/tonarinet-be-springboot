@@ -8,6 +8,9 @@ import org.scit4bits.tonarinetserver.entity.Team;
 
 import java.util.List;
 
+/**
+ * 팀 응답을 위한 DTO
+ */
 @Data
 @Builder
 @AllArgsConstructor
@@ -22,6 +25,11 @@ public class TeamResponseDTO {
     private List<UserDTO> users;
     private Integer userCount;
 
+    /**
+     * Team 엔티티를 TeamResponseDTO로 변환합니다.
+     * @param team 변환할 Team 엔티티
+     * @return 변환된 TeamResponseDTO 객체
+     */
     public static TeamResponseDTO fromEntity(Team team) {
         return TeamResponseDTO.builder()
                 .id(team.getId())

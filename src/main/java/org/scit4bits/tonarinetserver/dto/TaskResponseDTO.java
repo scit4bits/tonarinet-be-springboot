@@ -8,6 +8,9 @@ import org.scit4bits.tonarinetserver.entity.Task;
 
 import java.time.LocalDateTime;
 
+/**
+ * 과제 응답을 위한 DTO
+ */
 @Data
 @Builder
 @AllArgsConstructor
@@ -30,6 +33,11 @@ public class TaskResponseDTO {
     private String feedback;
     private Integer taskGroupId;
 
+    /**
+     * Task 엔티티를 TaskResponseDTO로 변환합니다.
+     * @param task 변환할 Task 엔티티
+     * @return 변환된 TaskResponseDTO 객체
+     */
     public static TaskResponseDTO fromEntity(Task task) {
         return TaskResponseDTO.builder()
                 .id(task.getId())

@@ -18,8 +18,8 @@ import java.util.List;
  * 선택 파라미터: countryCode
  * <p>
  * 사용 예시:
- * - 도쿄 중심 0.1도 반경 내 지역 검색: /api/region/search?latitude=35.6762&longitude=139.6503&radius=0.1
- * - 일본 내 지역만 검색: /api/region/search?latitude=35.6762&longitude=139.6503&radius=0.1&countryCode=JP
+ * - 도쿄 중심 0.1도 반경 내 지역 검색: /api/region/search?latitude=35.6762&amp;longitude=139.6503&amp;radius=0.1
+ * - 일본 내 지역만 검색: /api/region/search?latitude=35.6762&amp;longitude=139.6503&amp;radius=0.1&amp;countryCode=JP
  */
 @Slf4j
 @RestController

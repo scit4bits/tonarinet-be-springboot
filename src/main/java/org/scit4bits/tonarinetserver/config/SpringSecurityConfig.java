@@ -9,12 +9,21 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+/**
+ * Spring Security 설정을 구성하는 클래스
+ */
 @Configuration
 @RequiredArgsConstructor
 public class SpringSecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
+    /**
+     * 보안 필터 체인을 설정합니다.
+     * @param http HttpSecurity 객체
+     * @return SecurityFilterChain 객체
+     * @throws Exception 보안 설정 중 예외 발생 시
+     */
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
@@ -28,26 +37,31 @@ public class SpringSecurityConfig {
                             config.setAllowCredentials(false);
                             return config;
                         }))
-                .csrf(csrf -> csrf.disable()) // REST API Server doesn't need CSRF protection
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .csrf(csrf -> csrf.disable()) // REST API 서버는 CSRF 보호가 필요하지 않음
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // 세션을 사용하지 않음
                 .authorizeHttpRequests(authz -> authz
-                        .requestMatchers("/api/auth/**").permitAll() // Allow auth endpoints
-                        .requestMatchers("/ws/**").permitAll() // Allow WebSocket endpoints
-                        .requestMatchers("/app/**").permitAll() // Allow STOMP destinations
-                        .requestMatchers("/topic/**").permitAll() // Allow message broker endpoints
-                        .requestMatchers("/queue/**").permitAll() // Allow message broker endpoints
-                        .requestMatchers("/api/user/**").authenticated() // Secure this endpoint
-                        .requestMatchers("/api/board/**").authenticated() // Secure board endpoints
-                        .requestMatchers("/api/chat/**").authenticated() // Secure chat REST endpoints
-                        .anyRequest().permitAll() // Allow other requests for now
+                        .requestMatchers("/api/auth/**").permitAll() // 인증 관련 엔드포인트는 모두 허용
+                        .requestMatchers("/ws/**").permitAll() // 웹소켓 엔드포인트 허용
+                        .requestMatchers("/app/**").permitAll() // STOMP 목적지 허용
+                        .requestMatchers("/topic/**").permitAll() // 메시지 브로커 엔드포인트 허용
+                        .requestMatchers("/queue/**").permitAll() // 메시지 브로커 엔드포인트 허용
+                        .requestMatchers("/api/user/**").authenticated() // 사용자 관련 엔드포인트는 인증 필요
+                        .requestMatchers("/api/board/**").authenticated() // 게시판 관련 엔드포인트는 인증 필요
+                        .requestMatchers("/api/chat/**").authenticated() // 채팅 관련 REST 엔드포인트는 인증 필요
+                        .anyRequest().permitAll() // 나머지 요청은 일단 모두 허용
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
 
+    /**
+     * 비밀번호 암호화를 위한 BCryptPasswordEncoder를 빈으로 등록합니다.
+     * @return BCryptPasswordEncoder 객체
+     */
     @Bean
     public BCryptPasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 }
+

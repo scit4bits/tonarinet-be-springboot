@@ -9,6 +9,9 @@ import lombok.NoArgsConstructor;
 
 import java.util.List;
 
+/**
+ * 팀 생성 및 수정을 위한 요청 DTO
+ */
 @Data
 @Builder
 @AllArgsConstructor
