@@ -278,6 +278,8 @@ public class ArticleService {
         boolean shouldFilterByCategory = category != null && !category.trim().isEmpty() && !category.equals("all");
         String categoryFilter = (category != null && shouldFilterByCategory) ? category.trim() : null;
 
+        log.debug("카테고리 필터링 적용 여부: {}, 필터링 카테고리: {}", shouldFilterByCategory, categoryFilter);
+
         if (search == null || search.trim().isEmpty()) {
             // 검색어가 없는 경우
             if (shouldFilterByCategory) {

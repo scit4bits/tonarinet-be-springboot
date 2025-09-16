@@ -272,7 +272,7 @@ public class PartyService {
      * @param partyId 가입할 파티 ID
      * @param user 현재 로그인한 사용자 정보
      */
-    public void joinParty(Integer partyId, User user) {
+    public void joinParty(Integer partyId, User user, PartyJoinRequestDTO request) {
         log.info("사용자 {}가 파티 {}에 가입을 요청합니다.", user.getId(), partyId);
 
         Party party = partyRepository.findById(partyId)
@@ -293,6 +293,7 @@ public class PartyService {
                 .user(user)
                 .party(party)
                 .isGranted(false) // 채팅방 입장을 위해 승인이 필요합니다.
+                .entryMessage(request.getEntryMessage())
                 .build();
         userPartyRepository.save(userParty);
 

@@ -33,7 +33,7 @@ public class BoardDTO {
                 .id(board.getId())
                 .title(board.getTitle())
                 .description(board.getDescription())
-                .countryCode(board.getCountryCode())
+                .countryCode(board.getCountryCode() != null ? board.getCountry().getCountryCode() : board.getOrganization().getCountryCode())
                 .orgId(board.getOrgId())
                 .build();
     }

@@ -7,6 +7,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.scit4bits.tonarinetserver.dto.PagedResponse;
+import org.scit4bits.tonarinetserver.dto.PartyJoinRequestDTO;
 import org.scit4bits.tonarinetserver.dto.PartyRequestDTO;
 import org.scit4bits.tonarinetserver.dto.PartyResponseDTO;
 import org.scit4bits.tonarinetserver.dto.SimpleResponse;
@@ -216,13 +217,17 @@ public class PartyController {
     @Operation(summary = "파티 참여", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<SimpleResponse> joinParty(
             @PathVariable("id") Integer id,
-            @AuthenticationPrincipal User user) {
+            @AuthenticationPrincipal User user,
+            @RequestBody(required=false) PartyJoinRequestDTO request) {
         if (user == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
         try {
-            partyService.joinParty(id, user);
+            if(request == null) {
+                request = new PartyJoinRequestDTO();
+            }
+            partyService.joinParty(id, user, request);
             return ResponseEntity.ok(new SimpleResponse("Joined party successfully"));
         } catch (RuntimeException e) {
             if (e.getMessage().contains("not found")) {

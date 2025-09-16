@@ -23,10 +23,12 @@ public class ArticleDTO {
     private String contents;
     private Integer createdById;
     private String createdByName;
+    private Integer createdByProfileFileId;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private Integer views;
     private Integer boardId;
+    private String boardTitle;
     private Integer likedByUsers;
     private Integer replyCount;
     private List<FileAttachmentResponseDTO> files;
@@ -45,9 +47,11 @@ public class ArticleDTO {
                 .contents(article.getContents())
                 .createdById(article.getCreatedById())
                 .createdByName(article.getCreatedBy() != null ? article.getCreatedBy().getNickname() : null)
+                .createdByProfileFileId(article.getCreatedBy() != null ? article.getCreatedBy().getProfileFileId() : null)
                 .createdAt(article.getCreatedAt())
                 .updatedAt(article.getUpdatedAt())
-                .boardId(article.getBoardId())
+                .boardId(article.getBoard() != null ? article.getBoard().getId() : null)
+                .boardTitle(article.getBoard() != null ? article.getBoard().getTitle() : null)
                 .views(article.getViews())
                 .files(article.getAttachments() != null
                         ? article.getAttachments().stream().map(FileAttachmentResponseDTO::fromEntity).toList()
