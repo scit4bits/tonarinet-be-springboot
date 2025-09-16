@@ -19,7 +19,9 @@ public class OrganizationDTO {
     private String description;
     private String countryCode;
     private String type;
-    private String role;
+    private String role; // 직접 주입
+    private Boolean isGranted; // 직접 주입
+    private String entryMessage; // 직접 주입
 
     /**
      * Organization 엔티티를 OrganizationDTO로 변환합니다.

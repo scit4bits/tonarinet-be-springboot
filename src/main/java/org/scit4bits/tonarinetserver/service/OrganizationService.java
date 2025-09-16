@@ -280,13 +280,15 @@ public class OrganizationService {
 
         return organizations.stream()
                 .map(org -> {
-                    String role = userRoleRepository.findById(UserRole.UserRoleId.builder()
+                    UserRole userRole = userRoleRepository.findById(UserRole.UserRoleId.builder()
                                     .userId(user.getId())
                                     .orgId(org.getId())
                                     .build())
-                            .get().getRole();
+                            .get();
                     OrganizationDTO dto = OrganizationDTO.fromEntity(org);
-                    dto.setRole(role);
+                    dto.setRole(userRole.getRole());
+                    dto.setIsGranted(userRole.getIsGranted());
+                    dto.setEntryMessage(userRole.getEntryMessage());
                     return dto;
                 })
                 .collect(Collectors.toList());
