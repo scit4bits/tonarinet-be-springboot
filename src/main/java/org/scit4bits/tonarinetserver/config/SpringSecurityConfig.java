@@ -76,8 +76,8 @@ public class SpringSecurityConfig {
     @Bean
     public UserDetailsService userDetailsService() {
         UserDetails swaggerUser = User.builder()
-                .username("swagger")
-                .password(passwordEncoder().encode("swagger123"))
+                .username(swaggerUsername)
+                .password(passwordEncoder().encode(swaggerPassword))
                 .roles("SWAGGER_USER")
                 .build();
 
