@@ -31,6 +31,7 @@ public class OrganizationService {
     private final UserRoleRepository userRoleRepository;
     private final UserRoleService userRoleService;
     private final BoardRepository boardRepository;
+    private final NotificationService notificationService;
 
     /**
      * 새로운 조직을 생성하고, 해당 조직의 기본 게시판을 함께 생성합니다.
@@ -182,6 +183,14 @@ public class OrganizationService {
 
         userRoleRepository.save(userRole);
         log.info("사용자 {}가 조직 {}에 성공적으로 가입 신청했습니다.", user.getEmail(), organization.getName());
+
+        // 조직 관리자들에게 알림 전송
+        List<UserRole> admins = userRoleRepository.findByOrgIdAndRoleAndIsGranted(organizationId, "admin", true);
+        for (UserRole adminRole : admins) {
+            User admin = adminRole.getUser();
+            log.info("조직 관리자 {}에게 가입 신청 알림을 전송합니다.", admin.getEmail());
+            notificationService.addNotification(admin.getId(), "{\"messageType\": \"incomingOrgRequest\", \"orgName\": \"" + organization.getName() + "\", \"userName\": \"" + user.getName() + "\"}", "/orgadmin/"+organizationId+"/member");
+        }
     }
 
     /**
@@ -210,6 +219,9 @@ public class OrganizationService {
         userRoleRepository.save(userRole);
 
         log.info("사용자 {}의 조직 {} 멤버십을 승인했습니다.", targetUser.getId(), organization.getId());
+        
+        // 승인된 사용자에게 알림 전송
+        notificationService.addNotification(targetUser.getId(), "{\"messageType\": \"approvedOrgRequest\", \"orgName\": \"" + organization.getName() + "\"}", null);
     }
 
     /**
