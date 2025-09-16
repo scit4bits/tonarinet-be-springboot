@@ -87,6 +87,9 @@ public class User implements UserDetails {
     @Column(name = "reset_token", columnDefinition = "TEXT")
     private String resetToken;
 
+    @Column(name = "profile_file_id")
+    private Integer profileFileId;
+
     /** 생성일 */
     @CreatedDate
     @Column(name = "created_at")

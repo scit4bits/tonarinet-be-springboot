@@ -371,4 +371,11 @@ public class UserService {
                 .map(ArticleDTO::fromEntity)
                 .toList();
     }
+
+    public void changeProfileImage(User user, Integer fileId) {
+        User dbUser = userRepository.findById(user.getId())
+                .orElseThrow(() -> new RuntimeException("User not found with id: " + user.getId()));
+        dbUser.setProfileFileId(fileId);
+        userRepository.save(dbUser);
+    }
 }

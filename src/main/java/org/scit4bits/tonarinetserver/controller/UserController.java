@@ -12,6 +12,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -198,6 +199,28 @@ public class UserController {
         // 사용자의 상담 내역을 조회하여 반환합니다.
         List<ArticleDTO> counsels = userService.getMyCounsels(user);
         return ResponseEntity.ok(counsels);
+    }
+
+    /**
+     * 사용자의 프로필 이미지를 변경합니다.
+     * @param user 현재 로그인한 사용자 정보
+     * @param fileId 새로운 프로필 이미지 파일 ID
+     * @return 성공 응답
+     */
+    @PostMapping("/change-profile-image")
+    public ResponseEntity<SimpleResponse> changeProfileImage(@AuthenticationPrincipal User user,
+                                                            @RequestParam("fileId") Integer fileId) {
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        
+        try {
+            userService.changeProfileImage(user, fileId);
+            return ResponseEntity.ok(new SimpleResponse("프로필 이미지 변경에 성공했습니다."));
+        } catch (Exception e) {
+            log.debug("Error changing profile image: ", e);
+            return ResponseEntity.status(400).body(new SimpleResponse("프로필 이미지 변경에 실패했습니다."));
+        }
     }
 
 }

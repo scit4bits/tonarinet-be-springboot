@@ -30,6 +30,7 @@ public class UserDTO {
     private String entryMessage; // 직접 주입
     private Boolean isGranted; // 직접 주입
     private String role; // 직접 주입
+    private Integer profileFileId;
 
 
     /**
@@ -49,6 +50,7 @@ public class UserDTO {
                 .description(user.getDescription())
                 .isAdmin(user.getIsAdmin())
                 .createdAt(user.getCreatedAt())
+                .profileFileId(user.getProfileFileId())
                 .build();
     }
 }

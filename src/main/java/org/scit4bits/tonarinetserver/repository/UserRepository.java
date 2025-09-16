@@ -105,7 +105,7 @@ public interface UserRepository extends JpaRepository<User, Integer> {
             "LOWER(u.name) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
             "LOWER(u.nickname) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
             "LOWER(u.phone) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
-            "LOWER(u.nationality.countryCode) LIKE LOWER(CONCAT('%', :search, '%')))")
+            "LOWER(u.nationality.countryCode) LIKE LOWER(CONCAT('%', :search, '%'))")
     Page<User> findByAllFieldsContaining(@Param("search") String search, Pageable pageable);
 
     /**
