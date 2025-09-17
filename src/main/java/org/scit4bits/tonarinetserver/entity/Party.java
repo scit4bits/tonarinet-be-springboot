@@ -38,6 +38,10 @@ public class Party {
     @JoinColumn(name = "leader_user_id", insertable = false, updatable = false)
     private User leaderUser;
 
+    /** 파티 모집 완료 여부 */
+    @Column(name = "is_finished", nullable = false, columnDefinition = "BOOLEAN DEFAULT FALSE")
+    private Boolean isFinished;
+
     /** 파티에 참여한 사용자 목록 */
     @ManyToMany
     @JoinTable(

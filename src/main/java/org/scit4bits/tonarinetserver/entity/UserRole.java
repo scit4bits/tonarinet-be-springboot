@@ -1,5 +1,7 @@
 package org.scit4bits.tonarinetserver.entity;
 
+import java.time.LocalDateTime;
+
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -44,6 +46,14 @@ public class UserRole {
     /** 입장 메시지 */
     @Column(name = "entry_message")
     private String entryMessage;
+
+    /** 가입 신청 일시 */
+    @Column(name = "created_at", nullable = false)
+    private LocalDateTime createdAt;
+
+    /** 승인 일시 */
+    @Column(name = "approved_at")
+    private LocalDateTime approvedAt;
 
     /**
      * 사용자-조직 역할 ID 복합 키 클래스

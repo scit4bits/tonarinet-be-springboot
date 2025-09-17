@@ -137,6 +137,7 @@ public class PartyService {
                 .leaderUserName(party.getLeaderUser() != null ? party.getLeaderUser().getName() : null)
                 .users(enrichedUsers)
                 .userCount(enrichedUsers != null ? enrichedUsers.size() : 0)
+                .isFinished(party.getIsFinished())
                 .build();
     }
 

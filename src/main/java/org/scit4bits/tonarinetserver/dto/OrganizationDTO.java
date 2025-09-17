@@ -4,6 +4,9 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.time.LocalDateTime;
+
 import org.scit4bits.tonarinetserver.entity.Organization;
 
 /**
@@ -22,6 +25,8 @@ public class OrganizationDTO {
     private String role; // 직접 주입
     private Boolean isGranted; // 직접 주입
     private String entryMessage; // 직접 주입
+    private LocalDateTime approvedAt; // 직접 주입
+    private Integer boardId; // 직접 주입
 
     /**
      * Organization 엔티티를 OrganizationDTO로 변환합니다.

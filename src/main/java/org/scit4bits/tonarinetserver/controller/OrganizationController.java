@@ -14,6 +14,9 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+
 
 /**
  * 조직 관련 API를 처리하는 컨트롤러입니다.
@@ -34,6 +37,20 @@ public class OrganizationController {
     public ResponseEntity<OrganizationDTO> createOrganization(@RequestBody OrganizationDTO organizationDTO) {
         Organization createdOrganization = organizationService.createOrganization(organizationDTO);
         return ResponseEntity.ok(OrganizationDTO.fromEntity(createdOrganization));
+    }
+
+    /**
+     * 조직 상세 정보를 조회합니다.
+     * @param orgId 조직 ID
+     * @return OrganizationDTO 객체 (존재하지 않으면 null)
+     */
+    @GetMapping("/{orgId}")
+    public ResponseEntity<OrganizationDTO> getOrganizationDetail(@PathVariable Integer orgId) {
+        OrganizationDTO organization = organizationService.getOrganizationDetail(orgId);
+        if (organization == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(organization);
     }
 
     /**

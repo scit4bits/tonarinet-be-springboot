@@ -21,6 +21,7 @@ public class PartyResponseDTO {
     private Integer leaderUserId;
     private String leaderUserName;
     private List<UserDTO> users;
+    private Boolean isFinished;
     private Integer userCount;
 
     /**
@@ -29,6 +30,7 @@ public class PartyResponseDTO {
      * @return 변환된 PartyResponseDTO 객체
      */
     public static PartyResponseDTO fromEntity(Party party) {
+
         return PartyResponseDTO.builder()
                 .id(party.getId())
                 .name(party.getName())
@@ -37,6 +39,7 @@ public class PartyResponseDTO {
                 .users(party.getUsers() != null ?
                         party.getUsers().stream().map(UserDTO::fromEntity).toList() : null)
                 .userCount(party.getUsers() != null ? party.getUsers().size() : 0)
+                .isFinished(party.getIsFinished())
                 .build();
     }
 }

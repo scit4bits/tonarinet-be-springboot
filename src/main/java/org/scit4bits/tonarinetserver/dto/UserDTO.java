@@ -31,6 +31,7 @@ public class UserDTO {
     private Boolean isGranted; // 직접 주입
     private String role; // 직접 주입
     private Integer profileFileId;
+    private LocalDateTime approvedAt; // 직접 주입
 
 
     /**

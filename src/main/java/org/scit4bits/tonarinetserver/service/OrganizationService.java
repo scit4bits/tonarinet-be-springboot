@@ -14,6 +14,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -58,6 +59,25 @@ public class OrganizationService {
         boardRepository.save(newBoard);
 
         return savedOrganization;
+    }
+
+    /**
+     * 조직 상세 정보를 조회합니다.
+     * @param orgId 조직 ID
+     * @return OrganizationDTO 객체 (존재하지 않으면 null)
+     */
+    public OrganizationDTO getOrganizationDetail(Integer orgId){
+        Organization organization = organizationRepository.findById(orgId).orElse(null);
+        Board board = boardRepository.findByOrgId(orgId).stream().findFirst().orElse(null);
+        if(organization == null){
+            return null;
+        }
+        OrganizationDTO result = OrganizationDTO.fromEntity(organization);
+        if(board != null){
+            result.setBoardId(board.getId());
+        }
+
+        return result;
     }
 
     /**
@@ -143,6 +163,7 @@ public class OrganizationService {
 
         List<OrganizationDTO> result = organizationPage.getContent().stream()
                 .map(OrganizationDTO::fromEntity)
+                .filter(org -> org.getId() != 0) // id가 0인 조직(전체 조직)을 결과에서 제외
                 .toList();
 
         log.info("총 {}개의 조직 중 {}개를 찾았습니다.", organizationPage.getTotalElements(), result.size());
@@ -185,7 +206,7 @@ public class OrganizationService {
         log.info("사용자 {}가 조직 {}에 성공적으로 가입 신청했습니다.", user.getEmail(), organization.getName());
 
         // 조직 관리자들에게 알림 전송
-        List<UserRole> admins = userRoleRepository.findByOrgIdAndRoleAndIsGranted(organizationId, "admin", true);
+        List<UserRole> admins = userRoleRepository.findByIdOrgIdAndRoleAndIsGranted(organizationId, "admin", true);
         for (UserRole adminRole : admins) {
             User admin = adminRole.getUser();
             log.info("조직 관리자 {}에게 가입 신청 알림을 전송합니다.", admin.getEmail());
@@ -216,6 +237,7 @@ public class OrganizationService {
         UserRole userRole = userRoleRepository.findById(userRoleId).get();
 
         userRole.setIsGranted(true);
+        userRole.setApprovedAt(LocalDateTime.now());
         userRoleRepository.save(userRole);
 
         log.info("사용자 {}의 조직 {} 멤버십을 승인했습니다.", targetUser.getId(), organization.getId());
@@ -301,6 +323,7 @@ public class OrganizationService {
                     dto.setRole(userRole.getRole());
                     dto.setIsGranted(userRole.getIsGranted());
                     dto.setEntryMessage(userRole.getEntryMessage());
+                    dto.setApprovedAt(userRole.getApprovedAt());
                     return dto;
                 })
                 .collect(Collectors.toList());
