@@ -35,6 +35,40 @@ create table tonarinet.board
             on delete cascade
 );
 
+create table tonarinet.article
+(
+    id         int auto_increment
+        primary key,
+    category   varchar(20)                        null,
+    title      text                               not null,
+    contents   text                               not null,
+    created_by int                                not null,
+    created_at datetime default CURRENT_TIMESTAMP not null,
+    updated_at datetime default CURRENT_TIMESTAMP not null on update CURRENT_TIMESTAMP,
+    board_id   int                                not null,
+    views      int      default 0                 not null,
+    constraint Article_Board_id_fk
+        foreign key (board_id) references tonarinet.board (id)
+);
+
+create table tonarinet.fileattachment
+(
+    filepath          text                                 not null,
+    original_filename text                                 not null,
+    is_private        tinyint(1) default 0                 not null,
+    id                int auto_increment
+        primary key,
+    uploaded_by       int                                  not null,
+    type              enum ('IMAGE', 'ATTACHMENT')         null,
+    uploaded_at       datetime   default CURRENT_TIMESTAMP not null,
+    article_id        int                                  null,
+    filesize          int                                  not null comment 'in byte',
+    submission_id     int                                  null,
+    constraint fileattachment_article_id_fk
+        foreign key (article_id) references tonarinet.article (id)
+            on delete set null
+);
+
 create table tonarinet.region
 (
     id           int auto_increment
@@ -49,6 +83,31 @@ create table tonarinet.region
     radius       int         not null,
     constraint Region_Country_country_code_fk
         foreign key (country_code) references tonarinet.country (country_code)
+);
+
+create table tonarinet.reply
+(
+    id         int auto_increment
+        primary key,
+    created_at datetime default CURRENT_TIMESTAMP not null,
+    created_by int                                not null,
+    contents   text                               null,
+    article_id int                                null,
+    constraint Reply_Article_id_fk
+        foreign key (article_id) references tonarinet.article (id)
+            on delete cascade
+);
+
+create index Reply_User_id_fk
+    on tonarinet.reply (created_by);
+
+create table tonarinet.tag
+(
+    article_id int         not null,
+    tag_name   varchar(20) not null,
+    primary key (article_id, tag_name),
+    constraint Tag_Article_id_fk
+        foreign key (article_id) references tonarinet.article (id)
 );
 
 create table tonarinet.taskgroup
@@ -67,47 +126,36 @@ create table tonarinet.taskgroup
 
 create table tonarinet.user
 (
-    id          int auto_increment
+    id              int auto_increment
         primary key,
-    email       varchar(50)                          not null,
-    password    text                                 not null,
-    name        text                                 not null,
-    birth       date                                 null,
-    nickname    varchar(10)                          not null,
-    phone       varchar(20)                          null,
-    description text                                 null,
-    created_at  datetime   default CURRENT_TIMESTAMP null,
-    provider    varchar(10)                          null,
-    oauth_id    text                                 null,
-    is_admin    tinyint(1) default 0                 not null,
-    gender      varchar(10)                          null,
-    nationality varchar(5) default 'kor'             not null,
-    reset_token text                                 null,
+    email           varchar(50)                          not null,
+    password        text                                 not null,
+    name            text                                 not null,
+    birth           date                                 null,
+    nickname        varchar(10)                          not null,
+    phone           varchar(20)                          null,
+    description     text                                 null,
+    created_at      datetime   default CURRENT_TIMESTAMP null,
+    provider        varchar(10)                          null,
+    oauth_id        text                                 null,
+    is_admin        tinyint(1) default 0                 not null,
+    gender          varchar(10)                          null,
+    nationality     varchar(5) default 'kor'             not null,
+    reset_token     text                                 null,
+    profile_file_id int                                  null,
     constraint User_pk
         unique (nickname),
     constraint User_pk_2
         unique (email),
     constraint user_country_country_code_fk
-        foreign key (nationality) references tonarinet.country (country_code)
+        foreign key (nationality) references tonarinet.country (country_code),
+    constraint user_fileattachment_id_fk
+        foreign key (profile_file_id) references tonarinet.fileattachment (id)
 );
 
-create table tonarinet.article
-(
-    id         int auto_increment
-        primary key,
-    category   varchar(20)                        null,
-    title      text                               not null,
-    contents   text                               not null,
-    created_by int                                not null,
-    created_at datetime default CURRENT_TIMESTAMP not null,
-    updated_at datetime default CURRENT_TIMESTAMP not null on update CURRENT_TIMESTAMP,
-    board_id   int                                not null,
-    views      int      default 0                 not null,
-    constraint Article_Board_id_fk
-        foreign key (board_id) references tonarinet.board (id),
-    constraint Article_User_id_fk
-        foreign key (created_by) references tonarinet.user (id)
-);
+alter table tonarinet.article
+    add constraint Article_User_id_fk
+        foreign key (created_by) references tonarinet.user (id);
 
 create table tonarinet.chatmessage
 (
@@ -137,6 +185,10 @@ create table tonarinet.chatroom
     constraint ChatRoom_User_id_fk
         foreign key (leader_user_id) references tonarinet.user (id)
 );
+
+alter table tonarinet.fileattachment
+    add constraint fileattachment_user_id_fk
+        foreign key (uploaded_by) references tonarinet.user (id);
 
 create table tonarinet.livereport
 (
@@ -174,31 +226,6 @@ create table tonarinet.party
     is_finished    tinyint(1) default 0 not null,
     constraint Party_User_id_fk
         foreign key (leader_user_id) references tonarinet.user (id)
-);
-
-create table tonarinet.reply
-(
-    id         int auto_increment
-        primary key,
-    created_at datetime default CURRENT_TIMESTAMP not null,
-    created_by int                                not null,
-    contents   text                               null,
-    article_id int                                null,
-    constraint Reply_Article_id_fk
-        foreign key (article_id) references tonarinet.article (id)
-            on delete cascade
-);
-
-create index Reply_User_id_fk
-    on tonarinet.reply (created_by);
-
-create table tonarinet.tag
-(
-    article_id int         not null,
-    tag_name   varchar(20) not null,
-    primary key (article_id, tag_name),
-    constraint Tag_Article_id_fk
-        foreign key (article_id) references tonarinet.article (id)
 );
 
 create table tonarinet.team
@@ -254,28 +281,10 @@ create table tonarinet.submission
         foreign key (created_by) references tonarinet.user (id)
 );
 
-create table tonarinet.fileattachment
-(
-    filepath          text                                 not null,
-    original_filename text                                 not null,
-    is_private        tinyint(1) default 0                 not null,
-    id                int auto_increment
-        primary key,
-    uploaded_by       int                                  not null,
-    type              enum ('IMAGE', 'ATTACHMENT')         null,
-    uploaded_at       datetime   default CURRENT_TIMESTAMP not null,
-    article_id        int                                  null,
-    filesize          int                                  not null comment 'in byte',
-    submission_id     int                                  null,
-    constraint fileattachment_article_id_fk
-        foreign key (article_id) references tonarinet.article (id)
-            on delete set null,
-    constraint fileattachment_submission_id_fk
+alter table tonarinet.fileattachment
+    add constraint fileattachment_submission_id_fk
         foreign key (submission_id) references tonarinet.submission (id)
-            on delete set null,
-    constraint fileattachment_user_id_fk
-        foreign key (uploaded_by) references tonarinet.user (id)
-);
+            on delete set null;
 
 create table tonarinet.townreview
 (
@@ -350,11 +359,13 @@ create table tonarinet.userparty
 
 create table tonarinet.userrole
 (
-    user_id       int                  not null,
-    org_id        int                  not null,
-    role          varchar(20)          not null,
-    is_granted    tinyint(1) default 0 not null,
-    entry_message text                 null,
+    user_id       int                                  not null,
+    org_id        int                                  not null,
+    role          varchar(20)                          not null,
+    is_granted    tinyint(1) default 0                 not null,
+    entry_message text                                 null,
+    created_at    datetime   default CURRENT_TIMESTAMP not null,
+    approved_at   datetime                             null,
     primary key (user_id, org_id),
     constraint UserRole_Organization_id_fk
         foreign key (org_id) references tonarinet.organization (id),
