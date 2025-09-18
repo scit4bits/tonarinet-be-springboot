@@ -101,6 +101,8 @@ public class ScheduleService {
                 .toWhen(request.getToWhen())
                 .orgId(request.getOrgId())
                 .createdById(user.getId())
+                .allDay(request.getAllDay())
+                .type(request.getType())
                 .build();
         scheduleRepository.save(schedule);
     }

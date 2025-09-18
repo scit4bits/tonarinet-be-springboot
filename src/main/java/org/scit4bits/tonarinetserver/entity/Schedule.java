@@ -62,7 +62,7 @@ public class Schedule {
     private LocalDateTime fromWhen;
 
     /** 언제까지 */
-    @Column(name = "to_when")
+    @Column(name = "to_when", nullable = false)
     private LocalDateTime toWhen;
 
     /** 할당된 조직 ID */
