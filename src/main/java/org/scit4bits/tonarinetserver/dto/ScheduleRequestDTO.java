@@ -39,4 +39,7 @@ public class ScheduleRequestDTO {
 
     /** 일정 유형 (예: "MEETING", "HOLIDAY" 등) */
     private String type;
+
+    /** 하루종일 여부 */
+    private Boolean allDay;
 }

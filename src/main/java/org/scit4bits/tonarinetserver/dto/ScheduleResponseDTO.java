@@ -53,6 +53,9 @@ public class ScheduleResponseDTO {
     /** 일정 유형 (예: "MEETING", "HOLIDAY" 등) */
     private String type;
 
+    /** 하루종일 여부 */
+    private Boolean allDay;
+
     /**
      * Schedule 엔티티를 ScheduleResponseDTO로 변환합니다.
      * 
@@ -72,6 +75,7 @@ public class ScheduleResponseDTO {
                 .toWhen(schedule.getToWhen())
                 .orgId(schedule.getOrgId())
                 .type(schedule.getType())
+                .allDay(schedule.getAllDay())
                 .build();
     }
 }

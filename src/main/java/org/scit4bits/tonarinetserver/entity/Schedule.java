@@ -58,7 +58,7 @@ public class Schedule {
     private LocalDateTime createdAt;
 
     /** 언제부터 */
-    @Column(name = "from_when")
+    @Column(name = "from_when", nullable = false)
     private LocalDateTime fromWhen;
 
     /** 언제까지 */
@@ -71,6 +71,11 @@ public class Schedule {
 
     @Column(name= "type", columnDefinition = "TEXT")
     private String type;
+
+    /** 하루종일 여부 */
+    @Builder.Default
+    @Column(name = "all_day", columnDefinition = "BOOLEAN DEFAULT FALSE")
+    private Boolean allDay = false;
 
     /** 생성자 */
     @ManyToOne(fetch = FetchType.LAZY)
