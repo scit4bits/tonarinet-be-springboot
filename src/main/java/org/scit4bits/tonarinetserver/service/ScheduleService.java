@@ -61,8 +61,8 @@ public class ScheduleService {
      * <p>주어진 년월과 일정의 기간이 겹치는 모든 일정을 조회합니다.</p>
      * 
      * @param orgId 조직 ID
-     * @param year 연도 (예: 2025)
-     * @param month 월 (1-12)
+     * @param start 시작일 (예: 2025-09-01T00:00:00)
+     * @param end 종료일 (예: 2025-09-30T23:59:59)
      * @return 해당 월과 겹치는 일정 목록
      * 
      * @throws java.time.DateTimeException 잘못된 년도나 월이 제공된 경우
@@ -75,7 +75,7 @@ public class ScheduleService {
      *   <li>일정 기간과 주어진 월이 겹치는 경우를 모두 포함합니다.</li>
      * </ul>
      */
-    public List<ScheduleResponseDTO> getSchedulesByOrgIdAndYearMonth(Integer orgId, LocalDateTime start, LocalDateTime end) {
+    public List<ScheduleResponseDTO> getSchedulesByOrgIdAndRange(Integer orgId, LocalDateTime start, LocalDateTime end) {
         log.info("조직 ID: {}, 시작일: {}, 종료일: {} 일정 조회", orgId, start, end);
         return scheduleRepository.findByOrgIdByRange(orgId, start, end).stream()
                 .map(ScheduleResponseDTO::fromEntity)

@@ -114,7 +114,7 @@ public class ScheduleController {
             return ResponseEntity.status(401).build();
         }
         try {
-            List<ScheduleResponseDTO> response = scheduleService.getSchedulesByOrgIdAndYearMonth(orgId, start, end);
+            List<ScheduleResponseDTO> response = scheduleService.getSchedulesByOrgIdAndRange(orgId, start, end);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             log.error("Error in getScheduleListByOrgId: ", e);
