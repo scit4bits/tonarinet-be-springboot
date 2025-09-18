@@ -47,8 +47,10 @@ public class ScheduleService {
      * @param orgId 조직 ID
      * @return 조직의 일정 목록
      */
-    public List<Schedule> getSchedulesByOrgId(Integer orgId) {
-        return scheduleRepository.findByOrgId(orgId);
+    public List<ScheduleResponseDTO> getSchedulesByOrgId(Integer orgId) {
+        return scheduleRepository.findByOrgId(orgId).stream()
+                .map(ScheduleResponseDTO::fromEntity)
+                .toList();
     }
 
     /**
@@ -71,9 +73,11 @@ public class ScheduleService {
      *   <li>일정 기간과 주어진 월이 겹치는 경우를 모두 포함합니다.</li>
      * </ul>
      */
-    public List<Schedule> getSchedulesByOrgIdAndYearMonth(Integer orgId, LocalDateTime start, LocalDateTime end) {
+    public List<ScheduleResponseDTO> getSchedulesByOrgIdAndYearMonth(Integer orgId, LocalDateTime start, LocalDateTime end) {
         log.info("조직 ID: {}, 시작일: {}, 종료일: {} 일정 조회", orgId, start, end);
-        return scheduleRepository.findByOrgIdByRange(orgId, start, end);
+        return scheduleRepository.findByOrgIdByRange(orgId, start, end).stream()
+                .map(ScheduleResponseDTO::fromEntity)
+                .toList();
     }
 
     /**
