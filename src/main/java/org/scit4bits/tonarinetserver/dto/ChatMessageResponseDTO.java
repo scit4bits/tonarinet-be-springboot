@@ -55,6 +55,7 @@ public class ChatMessageResponseDTO {
                 .id(chatMessage.getId())
                 .chatroomId(chatMessage.getChatroomId())
                 .senderId(chatMessage.getSenderId())
+                .sender(chatMessage.getSender() != null ? UserDTO.fromEntity(chatMessage.getSender()) : null)
                 .message(chatMessage.getMessage())
                 .createdAt(chatMessage.getCreatedAt())
                 .isRead(chatMessage.getIsRead())
