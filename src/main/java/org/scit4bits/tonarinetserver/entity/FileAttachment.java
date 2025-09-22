@@ -41,7 +41,7 @@ public class FileAttachment {
     private Boolean isPrivate;
 
     /** 업로드한 사용자 ID */
-    @Column(name = "uploaded_by", nullable = false)
+    @Column(name = "uploaded_by")
     private Integer uploadedBy;
 
     /** 파일 타입 */
