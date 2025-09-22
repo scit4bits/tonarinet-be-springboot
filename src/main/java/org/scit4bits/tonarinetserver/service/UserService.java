@@ -8,6 +8,7 @@ import org.scit4bits.tonarinetserver.dto.ArticleDTO;
 import org.scit4bits.tonarinetserver.dto.PagedResponse;
 import org.scit4bits.tonarinetserver.dto.UserDTO;
 import org.scit4bits.tonarinetserver.entity.Article;
+import org.scit4bits.tonarinetserver.entity.Organization;
 import org.scit4bits.tonarinetserver.entity.User;
 import org.scit4bits.tonarinetserver.entity.UserRole;
 import org.scit4bits.tonarinetserver.repository.UserRepository;
@@ -32,6 +33,7 @@ import java.util.List;
 public class UserService {
     private final UserRepository userRepository;
     private final UserRoleRepository userRoleRepository;
+    private final NotificationService notificationService;
 
     /**
      * 액세스 토큰으로 사용자를 조회합니다.
@@ -314,7 +316,17 @@ public class UserService {
                 .orElseThrow(() -> new RuntimeException("UserRole not found"));
 
         userRole.setIsGranted(!userRole.getIsGranted());
+        userRole.setApprovedAt(userRole.getIsGranted() ? java.time.LocalDateTime.now() : null);
         userRoleRepository.save(userRole);
+
+
+        if(userRole.getIsGranted()){
+
+        log.info("사용자 {}의 조직 {} 멤버십을 승인했습니다.", userId, userRole.getOrganization().getName());
+        
+        // 승인된 사용자에게 알림 전송
+        notificationService.addNotification(userId, "{\"messageType\": \"approvedOrgRequest\", \"orgName\": \"" + userRole.getOrganization().getName() + "\"}", null);
+        }
     }
 
     /**
