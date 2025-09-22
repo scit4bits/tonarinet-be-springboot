@@ -32,6 +32,9 @@ public class ChatMessageResponseDTO {
     @Schema(description = "Sender user information")
     private UserDTO sender;
 
+    @Schema(description = "Sender nickname", example = "john_doe")
+    private String senderNickname;
+
     @Schema(description = "Message content", example = "Hello everyone!")
     private String message;
 
@@ -55,7 +58,7 @@ public class ChatMessageResponseDTO {
                 .id(chatMessage.getId())
                 .chatroomId(chatMessage.getChatroomId())
                 .senderId(chatMessage.getSenderId())
-                .sender(chatMessage.getSender() != null ? UserDTO.fromEntity(chatMessage.getSender()) : null)
+                .senderNickname(chatMessage.getSender() != null ? chatMessage.getSender().getNickname() : null)
                 .message(chatMessage.getMessage())
                 .createdAt(chatMessage.getCreatedAt())
                 .isRead(chatMessage.getIsRead())

@@ -64,6 +64,8 @@ public class ChatMessageController {
             // 메시지를 저장하고 저장된 메시지를 반환받습니다.
             ChatMessageResponseDTO savedMessage = chatMessageService.sendMessage(messageRequest, principal.getId());
 
+            log.debug("Saved message: {}", savedMessage);
+
             // 해당 채팅방을 구독하는 모든 클라이언트에게 메시지를 브로드캐스트합니다.
             messagingTemplate.convertAndSend("/topic/chat/room/" + roomId, savedMessage);
 
