@@ -53,7 +53,7 @@ public class ReplyService {
         articleRepository.findById(request.getArticleId()).ifPresent(article -> {
             if (!article.getCreatedById().equals(creator.getId())) {
                 notificationService.addNotification(article.getCreatedById(),
-                        "{\"messageType\": \"newReplyToArticle\", \"articleTitle\": \"" + article.getTitle() + "\", \"userName\": \"" + creator.getUsername() + "\"}",
+                        "{\"messageType\": \"newReplyToArticle\", \"articleTitle\": \"" + article.getTitle() + "\", \"userName\": \"" + creator.getNickname() + "\"}",
                         "/board/view/" + article.getId());
                 log.info("게시글 작성자에게 알림 발송: {}", article.getCreatedById());
             } else {
