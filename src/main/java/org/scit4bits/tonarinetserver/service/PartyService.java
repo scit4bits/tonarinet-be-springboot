@@ -45,6 +45,7 @@ public class PartyService {
         Party party = Party.builder()
                 .name(request.getName())
                 .leaderUserId(creator.getId())
+                .isFinished(false)
                 .build();
 
         Party savedParty = partyRepository.save(party);
