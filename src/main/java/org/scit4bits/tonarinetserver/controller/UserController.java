@@ -177,7 +177,7 @@ public class UserController {
             @RequestParam(name = "sortBy", defaultValue = "id") String sortBy,
             @RequestParam(name = "sortDirection", defaultValue = "asc") String sortDirection,
             @AuthenticationPrincipal User user) {
-        if (user == null || !user.getIsAdmin()) {
+        if (user == null) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
 
