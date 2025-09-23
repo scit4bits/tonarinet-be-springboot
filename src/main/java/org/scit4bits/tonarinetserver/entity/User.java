@@ -116,7 +116,8 @@ public class User implements UserDetails {
     private List<Party> parties;
 
     /** 생성한 팀 목록 */
-    @OneToMany(mappedBy = "leaderUser", cascade = CascadeType.ALL)
+    @ManyToMany
+    @JoinTable(name = "userteam", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "team_id"))
     private List<Team> teams;
 
     /** 작성한 댓글 목록 */
