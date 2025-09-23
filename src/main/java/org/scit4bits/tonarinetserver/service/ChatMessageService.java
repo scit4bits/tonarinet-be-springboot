@@ -9,6 +9,7 @@ import org.scit4bits.tonarinetserver.entity.User;
 import org.scit4bits.tonarinetserver.repository.ChatMessageRepository;
 import org.scit4bits.tonarinetserver.repository.ChatRoomRepository;
 import org.scit4bits.tonarinetserver.repository.UserChatRoomRepository;
+import org.scit4bits.tonarinetserver.repository.UserRepository;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -29,6 +30,7 @@ public class ChatMessageService {
     private final ChatMessageRepository chatMessageRepository;
     private final ChatRoomRepository chatRoomRepository;
     private final UserChatRoomRepository userChatRoomRepository;
+    private final UserRepository userRepository;
     private final AIService aiService;
 
     /**
@@ -48,6 +50,9 @@ public class ChatMessageService {
         // throw new RuntimeException("사용자가 이 채팅방의 멤버가 아닙니다.");
         // }
 
+        User sender = userRepository.findById(senderId)
+                .orElseThrow(() -> new RuntimeException("발신자 사용자를 찾을 수 없습니다. ID: " + senderId));
+
         ChatMessage chatMessage = ChatMessage.builder()
                 .chatroomId(requestDTO.getChatroomId())
                 .senderId(senderId)
@@ -60,7 +65,10 @@ public class ChatMessageService {
         ChatMessage savedMessage = chatMessageRepository.findById(chatMessage.getId())
                 .orElseThrow(() -> new RuntimeException("저장된 메시지를 가져오는데 실패했습니다."));
 
-        return ChatMessageResponseDTO.fromEntity(savedMessage);
+        ChatMessageResponseDTO responseDTO = ChatMessageResponseDTO.fromEntity(savedMessage);
+        responseDTO.setSenderNickname(sender.getNickname()); // 직접 주입
+
+        return responseDTO;
     }
 
     /**

@@ -33,7 +33,7 @@ public class ChatMessageResponseDTO {
     private UserDTO sender;
 
     @Schema(description = "Sender nickname", example = "john_doe")
-    private String senderNickname;
+    private String senderNickname; // 직접 주입
 
     @Schema(description = "Message content", example = "Hello everyone!")
     private String message;
@@ -58,7 +58,6 @@ public class ChatMessageResponseDTO {
                 .id(chatMessage.getId())
                 .chatroomId(chatMessage.getChatroomId())
                 .senderId(chatMessage.getSenderId())
-                .senderNickname(chatMessage.getSender() != null ? chatMessage.getSender().getNickname() : null)
                 .message(chatMessage.getMessage())
                 .createdAt(chatMessage.getCreatedAt())
                 .isRead(chatMessage.getIsRead())
