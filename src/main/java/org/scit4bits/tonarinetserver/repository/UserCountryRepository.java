@@ -10,4 +10,6 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface UserCountryRepository extends JpaRepository<UserCountry, UserCountry.UserCountryId> {
 
+    Boolean existsByIdUserIdAndIdCountryCode(Integer id, String countryCode);
+
 }
