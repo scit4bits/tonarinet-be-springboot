@@ -33,6 +33,7 @@ public class OrganizationService {
     private final UserRoleService userRoleService;
     private final BoardRepository boardRepository;
     private final NotificationService notificationService;
+    private final UserCountryRepository userCountryRepository;
 
     /**
      * 새로운 조직을 생성하고, 해당 조직의 기본 게시판을 함께 생성합니다.
@@ -241,6 +242,26 @@ public class OrganizationService {
         userRoleRepository.save(userRole);
 
         log.info("사용자 {}의 조직 {} 멤버십을 승인했습니다.", targetUser.getId(), organization.getId());
+
+        // 조직의 국가 추가 (UserCountry)
+        if (organization.getCountry() != null) {
+            if (!userCountryRepository.existsByIdUserIdAndIdCountryCode(targetUser.getId(), organization.getCountryCode())) {
+                UserCountry.UserCountryId userCountryId = UserCountry.UserCountryId.builder()
+                        .userId(targetUser.getId())
+                        .countryCode(organization.getCountryCode())
+                        .build();
+                UserCountry userCountry = UserCountry.builder()
+                        .id(userCountryId)
+                        .user(targetUser)
+                        .country(organization.getCountry())
+                        .build();
+                userCountryRepository.save(userCountry);
+                log.info("사용자 {}에게 국가 {}를 추가했습니다.", targetUser.getId(), organization.getCountryCode());
+            } else {
+                log.info("사용자 {}는 이미 국가 {}를 가지고 있습니다. 추가하지 않습니다.", targetUser.getId(), organization.getCountryCode());
+            }
+        }
+
         
         // 승인된 사용자에게 알림 전송
         notificationService.addNotification(targetUser.getId(), "{\"messageType\": \"approvedOrgRequest\", \"orgName\": \"" + organization.getName() + "\"}", null);
