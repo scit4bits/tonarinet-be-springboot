@@ -43,15 +43,16 @@ public class BoardService {
      */
     @Transactional(readOnly = true)
     public List<BoardDTO> getAccessibleBoards(User user) {
+        List<UserRole> roles = userRoleService.getUserRoleByUser(user);
         User dbUser = userRepository.findById(user.getId()).get();
         List<BoardDTO> boards = new ArrayList<>();
-        List<Organization> orgs = dbUser.getOrganizations();
 
-        // 사용자가 속한 조직의 게시판 추가
-        for (Organization org : orgs) {
-            List<Board> orgBoards = boardRepository.findByOrgId(org.getId());
-            for (Board board : orgBoards) {
-                boards.add(BoardDTO.fromEntity(board));
+        for(UserRole role : roles){
+            if(role.getIsGranted() && role.getId().getOrgId() != null){
+                List<Board> orgBoards = boardRepository.findByOrgId(role.getId().getOrgId());
+                for (Board board : orgBoards) {
+                    boards.add(BoardDTO.fromEntity(board));
+                }
             }
         }
 

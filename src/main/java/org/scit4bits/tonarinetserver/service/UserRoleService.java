@@ -2,6 +2,9 @@ package org.scit4bits.tonarinetserver.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.List;
+
 import org.scit4bits.tonarinetserver.entity.Organization;
 import org.scit4bits.tonarinetserver.entity.User;
 import org.scit4bits.tonarinetserver.entity.UserRole;
@@ -18,6 +21,15 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 public class UserRoleService {
     private final UserRoleRepository userRoleRepository;
+
+    /**
+     * 사용자의 전체 역할 정보를 조회합니다.
+     * @param user
+     * @return UserRole 객체 (존재하지 않으면 예외 발생)
+     */
+    public List<UserRole> getUserRoleByUser(User user) {
+        return userRoleRepository.findByIdUserId(user.getId());
+    }
 
     /**
      * 특정 조직 내에서 사용자의 역할을 확인합니다.

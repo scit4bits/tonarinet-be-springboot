@@ -1,6 +1,7 @@
 package org.scit4bits.tonarinetserver.repository;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.scit4bits.tonarinetserver.entity.UserRole;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -43,5 +44,7 @@ public interface UserRoleRepository extends JpaRepository<UserRole, UserRole.Use
      * @return 해당 조건에 맞는 UserRole (Optional로 감싸져 반환됨)
      */
     List<UserRole> findByIdUserIdAndIdOrgId(Integer userId, Integer orgId);
+
+    List<UserRole> findByIdUserId(Integer id);
 
 }
