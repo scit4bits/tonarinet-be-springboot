@@ -346,6 +346,7 @@ public class UserService {
                             .id(userCountryId)
                             .user(dbUser)
                             .country(organization.getCountry())
+                            .role("user")
                             .build();
                     userCountryRepository.save(userCountry);
                     log.info("사용자 {}에게 국가 {}를 추가했습니다.", dbUser.getId(), organization.getCountryCode());
