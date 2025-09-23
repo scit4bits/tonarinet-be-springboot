@@ -10,7 +10,10 @@ import org.scit4bits.tonarinetserver.dto.UserDTO;
 import org.scit4bits.tonarinetserver.entity.Article;
 import org.scit4bits.tonarinetserver.entity.Organization;
 import org.scit4bits.tonarinetserver.entity.User;
+import org.scit4bits.tonarinetserver.entity.UserCountry;
 import org.scit4bits.tonarinetserver.entity.UserRole;
+import org.scit4bits.tonarinetserver.repository.OrganizationRepository;
+import org.scit4bits.tonarinetserver.repository.UserCountryRepository;
 import org.scit4bits.tonarinetserver.repository.UserRepository;
 import org.scit4bits.tonarinetserver.repository.UserRoleRepository;
 import org.springframework.data.domain.Page;
@@ -34,6 +37,8 @@ public class UserService {
     private final UserRepository userRepository;
     private final UserRoleRepository userRoleRepository;
     private final NotificationService notificationService;
+    private final OrganizationRepository organizationRepository;
+    private final UserCountryRepository userCountryRepository;
 
     /**
      * 액세스 토큰으로 사용자를 조회합니다.
@@ -294,6 +299,11 @@ public class UserService {
      * @param orgId 조직 ID
      */
     public void toggleUserRole(User user, Integer userId, Integer orgId) {
+        User dbUser = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
+        Organization organization = organizationRepository.findById(orgId)
+                .orElseThrow(() -> new RuntimeException("Organization not found with id: " + orgId));
+
         UserRole.UserRoleId adminUserRoleId = UserRole.UserRoleId.builder()
                 .userId(user.getId())
                 .orgId(orgId)
@@ -321,11 +331,28 @@ public class UserService {
 
 
         if(userRole.getIsGranted()){
+            log.info("사용자 {}의 조직 {} 멤버십을 승인했습니다.", userId, userRole.getOrganization().getName());
+            // 승인된 사용자에게 알림 전송
+            notificationService.addNotification(userId, "{\"messageType\": \"approvedOrgRequest\", \"orgName\": \"" + userRole.getOrganization().getName() + "\"}", null);
 
-        log.info("사용자 {}의 조직 {} 멤버십을 승인했습니다.", userId, userRole.getOrganization().getName());
-        
-        // 승인된 사용자에게 알림 전송
-        notificationService.addNotification(userId, "{\"messageType\": \"approvedOrgRequest\", \"orgName\": \"" + userRole.getOrganization().getName() + "\"}", null);
+            // 조직의 국가 추가 (UserCountry)
+            if (organization.getCountry() != null) {
+                if (!userCountryRepository.existsByIdUserIdAndIdCountryCode(dbUser.getId(), organization.getCountryCode())) {
+                    UserCountry.UserCountryId userCountryId = UserCountry.UserCountryId.builder()
+                            .userId(user.getId())
+                            .countryCode(organization.getCountryCode())
+                            .build();
+                    UserCountry userCountry = UserCountry.builder()
+                            .id(userCountryId)
+                            .user(dbUser)
+                            .country(organization.getCountry())
+                            .build();
+                    userCountryRepository.save(userCountry);
+                    log.info("사용자 {}에게 국가 {}를 추가했습니다.", dbUser.getId(), organization.getCountryCode());
+                } else {
+                    log.info("사용자 {}는 이미 국가 {}를 가지고 있습니다. 추가하지 않습니다.", dbUser.getId(), organization.getCountryCode());
+                }
+            }
         }
     }
 
