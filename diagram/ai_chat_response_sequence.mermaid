@@ -1,0 +1,32 @@
+sequenceDiagram
+    actor User
+    participant Frontend as Frontend (React)
+    participant Backend as Backend (Spring Boot)
+    participant AIService as AI Service
+
+    User->>+Frontend: Sends a message in an AI-enabled chat room
+    Frontend->>Backend: WebSocket SEND to /app/chat/send/{roomId}
+
+    Note over Backend: Receives message, saves it, and broadcasts it to the room
+    Backend-->>Frontend: WebSocket MESSAGE /topic/chat/room/{roomId} (User's own message)
+    Frontend->>User: Displays user's message
+
+    alt Room is an AI Chat Room
+        Note over Backend: Sends a system message to notify user
+        Backend->>Backend: Creates "AI is generating a response..." message
+        Backend-->>Frontend: WebSocket MESSAGE /topic/chat/room/{roomId} (System notice)
+        Frontend->>User: Displays "AI is generating a response..."
+
+        Note over Backend: Starts an asynchronous process for the AI response
+        par Async AI Processing
+            Backend->>+AIService: generateResponseWithMemory(message, roomId)
+            AIService-->>-Backend: Returns AI-generated response text
+        and
+            Note over Backend: The main thread is free
+        end
+
+        Note over Backend: When async task completes, sends final response
+        Backend->>Backend: Saves AI response to Database
+        Backend-->>Frontend: WebSocket MESSAGE /topic/chat/room/{roomId} (AI's final response)
+        Frontend->>User: Displays the AI's response message
+    end

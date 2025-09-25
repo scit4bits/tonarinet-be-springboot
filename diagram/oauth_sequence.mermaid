@@ -1,0 +1,36 @@
+sequenceDiagram
+    actor User
+    participant Frontend as Frontend (React)
+    participant Backend as Backend (Spring Boot)
+    participant OAuthProvider as OAuth Provider (Google, etc.)
+
+    User->>+Frontend: Clicks "Login with XXX"
+    Frontend->>+Backend: GET /api/auth/generateState
+    Backend-->>-Frontend: Returns {state, nonce}
+
+    Note over Frontend: Constructs Authorization URL with state, nonce, client_id, redirect_uri
+
+    Frontend->>User: Redirect to OAuth Provider URL
+    User->>+OAuthProvider: Authenticates with credentials
+    OAuthProvider-->>-User: Redirects back to Frontend's callback URL with (code, state)
+
+    User->>+Frontend: Accesses callback URL (/logincb/google?code=...&state=...)
+    Frontend->>+Backend: GET /api/auth/google/check?code=...&state=...
+    
+    Backend->>+OAuthProvider: POST /token (sends code, client_id, client_secret)
+    OAuthProvider-->>-Backend: Returns OpenID Token
+    
+
+    Note over Backend: Validates state, decodes id_token, checks for existing user with oauthId
+
+    alt User does not exist
+        Backend->>Frontend: Send user info extracted from id_token<br>let Frontend continue with Signup procedure
+    end
+
+    Note over Backend: Generates internal JWT (Access Token) for the user
+
+    Backend-->>-Frontend: Returns JWT (Access token)
+    
+    Note over Frontend: Stores JWT in localStorage
+
+    Frontend->>-User: Redirects to Main Page ('/main')

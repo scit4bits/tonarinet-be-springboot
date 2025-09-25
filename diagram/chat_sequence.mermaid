@@ -1,0 +1,34 @@
+sequenceDiagram
+    actor User
+    participant Frontend as Frontend (React)
+    participant Backend as Backend (Spring Boot)
+
+    User->>+Frontend: Navigates to Chat Page
+
+    Note over Frontend: useChat hook initializes
+    Frontend->>+Backend: REST GET /api/chatroom/my (to get user's chat rooms)
+    Backend-->>-Frontend: Returns list of Chat Rooms
+
+    Note over Frontend: Establishes WebSocket connection
+    Frontend->>+Backend: WebSocket CONNECT to /ws with JWT in headers
+    Note over Backend: WebSocketConfig intercepts connection, validates JWT, and authenticates user
+    Backend-->>-Frontend: WebSocket CONNECT_ACK
+
+    Note over Frontend: User selects a chat room
+    Frontend->>+Backend: REST GET /api/chat/room/{roomId}/messages/all (to get message history)
+    Backend-->>-Frontend: Returns message history for the selected room
+
+    Note over Frontend: Subscribes to the room's topic
+    Frontend->>+Backend: WebSocket SUBSCRIBE to /topic/chat/room/{roomId}
+    Backend-->>-Frontend: WebSocket SUBSCRIPTION_ACK
+
+    User->>+Frontend: Types and sends a new message
+    Frontend->>+Backend: WebSocket SEND to /app/chat/send/{roomId} with message payload
+    
+    Note over Backend: ChatMessageController receives the message
+    Backend->>Backend: Saves message to Database
+    Note over Backend: Broadcasts the message to subscribers
+    Backend-->>-Frontend: WebSocket MESSAGE to /topic/chat/room/{roomId} with new message
+
+    Note over Frontend: Receives new message and updates UI
+    Frontend->>-User: Displays the new message in real-time
