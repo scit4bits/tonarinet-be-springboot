@@ -35,6 +35,10 @@ public class ChatMessageResponseDTO {
     @Schema(description = "Sender nickname", example = "john_doe")
     private String senderNickname; // 직접 주입
 
+    @Schema(description = "Sender Profile File Id")
+    private Integer senderProfileFileId; // 직접 주입
+
+
     @Schema(description = "Message content", example = "Hello everyone!")
     private String message;
 

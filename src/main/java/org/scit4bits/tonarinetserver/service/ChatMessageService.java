@@ -67,6 +67,7 @@ public class ChatMessageService {
 
         ChatMessageResponseDTO responseDTO = ChatMessageResponseDTO.fromEntity(savedMessage);
         responseDTO.setSenderNickname(sender.getNickname()); // 직접 주입
+        responseDTO.setSenderProfileFileId(sender.getProfileFileId()); // 직접 주입
 
         return responseDTO;
     }
