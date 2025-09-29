@@ -1,80 +1,91 @@
-# Tonarinet バックエンドサーバー
+# となりネット - バックエンド
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Java](https://img.shields.io/badge/java-%23ED8B00.svg?style=for-the-badge&logo=openjdk&logoColor=white)](https://www.java.com)
+[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-6DB33F?logo=springboot&logoColor=fff)](https://spring.io/projects/spring-boot)
+[![MySQL](https://img.shields.io/badge/MySQL-00000F?style=for-the-badge&logo=mysql&logoColor=white)](https://www.mysql.com/)
+[![License: LGPL v3](https://img.shields.io/badge/License-LGPL%20v3-blue.svg)](https://www.gnu.org/licenses/lgpl-3.0)
 
-## 説明
+**デモサイト: https://tn.thxx.xyz**
 
-これはSpring Bootで構築されたTonarinetプロジェクトのバックエンドサーバーです。ユーザー管理、コンテンツ共有、リアルタイム通信など、コミュニティベースのサービスプラットフォームのコア機能を提供します。
+## 紹介
 
-## 主な機能
+**となりネット**は、留学生や外国人労働者のための統合管理・支援プラットフォームです。このプロジェクトは、SMART Cloud IT Master 第47期のチームプロジェクト(4bits)のバックエンドサーバーです。
 
--   **ユーザー認証:** JWT (JSON Web Tokens) および OAuth2 を使用した安全なサインアップとサインイン。
--   **RESTful API:** 記事、コメント、ユーザー、その他のリソースを管理するための包括的なAPIセット。
--   **リアルタイムチャット:** WebSocketベースのリアルタイムチャット機能。
--   **コンテンツ管理:** 記事や投稿の作成、読み取り、更新、削除機能。
--   **タスク＆パーティー管理:** タスクやイベントの整理と参加機能。
--   **AI統合:** コンテンツ推薦などの機能にAIを活用。
--   **APIドキュментация:** Swaggerで生成されたAPIドキュメント。
+大学や企業の管理者は、このプラットフォームを通じて留学生や外国人労働者を効率的に管理でき、ユーザーは現地生活への適応に必要な様々な情報やコミュニティ機能を提供されます。
 
-## インストール
+## 技術スタック
 
-### 前提条件
+- **言語:** Java 17
+- **フレームワーク:** Spring Boot 3.5.4
+- **データベース:** MySQL
+- **認証:** Spring Security, JWT, OAuth 2.0 (Google, Kakao, LINE)
+- **API:** REST API with Swagger (springdoc-openapi)
+- **リアルタイム通信:** WebSocket (with STOMP)
+- **AI:** Spring AI (OpenAI GPT-5-mini)
+- **ORM:** Spring Data JPA (Hibernate)
+- **メール:** Spring Boot Starter Mail (OCI Email Delivery)
+- **ビルド:** Gradle
 
--   Java 17
--   Gradle 8.x
--   MySQL
+##始め方
 
-### セットアップ
+### 環境変数
 
-1.  **リポジトリをクローン**
-    ```bash
-    git clone https://github.com/scit4bits/tonarinet-be-springboot.git
-    cd tonarinet-be-springboot
-    ```
+このプロジェクトを実行するには、プロジェクトのルートに`.env`ファイルを作成し、次の環境変数を設定する必要があります。
 
-2.  **データベースのセットアップ**
-    -   MySQLデータベースを作成します。
-    -   `sql/tonarinet_db.sql` スクリプトを実行して、必要なテーブルを作成します。
-    ```bash
-    mysql -u [ユーザー名] -p [データベース名] < sql/tonarinet_db.sql
-    ```
+```
+MYSQL_URL=jdbc:mysql://<host>:<port>/<database>
+MYSQL_USER=<username>
+MYSQL_PASSWORD=<password>
 
-3.  **アプリケーションの設定**
-    -   `src/main/resources/application.properties` を開きます。
-    -   データベース接続詳細 (`spring.datasource.url`, `spring.datasource.username`, `spring.datasource.password`) を更新します。
-    -   JWTシークレットキー、OAuth2認証情報、およびその他の外部サービス設定を構成します。
+UPLOAD_PATH=<upload_directory_path>
 
-## 使用法
+LINE_API_CLIENT_ID=...
+LINE_API_CLIENT_SECRET=...
+LINE_API_REDIRECT_URI=...
+
+GOOGLE_API_CLIENT_ID=...
+GOOGLE_API_CLIENT_SECRET=...
+GOOGLE_API_REDIRECT_URI=...
+
+KAKAO_CLIENT_ID=...
+KAKAO_REDIRECT_URI=...
+KAKAO_CLIENT_SECRET=...
+
+JWT_SECRET_KEY=...
+
+SPRING_MAIL_HOST=...
+SPRING_MAIL_PORT=...
+SPRING_MAIL_USERNAME=...
+SPRING_MAIL_PASSWORD=...
+
+OPENAI_API_KEY=...
+GOOGLE_TRANS_API_KEY=...
+
+SWAGGER_AUTH_USERNAME=...
+SWAGGER_AUTH_PASSWORD=...
+```
 
 ### アプリケーションの実行
 
-Gradleラッパーを使用してアプリケーションを実行できます。
+プロジェクトをビルドして実行するコマンドは次のとおりです。
 
 ```bash
 ./gradlew bootRun
 ```
 
-サーバーは `http://localhost:8080` で起動します。
+APIドキュメントは、サーバーの起動後に`http://localhost:8999/swagger-ui/index.html`で確認できます。
 
-### APIドキュメント
+## 技術的な特徴
 
-アプリケーションが実行されたら、次のアドレスでAPIドキュメント用のSwagger UIにアクセスできます。
-`http://localhost:8080/swagger-ui.html`
+- **REST APIとSwaggerドキュментаATION:** springdoc-openapiを使用してAPIの仕様とテストを行うためのSwagger UIを提供します。
+- **認証と認可:** Spring SecurityとJWTを組み合わせて、ステートレスな認証/認可システムを構築しました。また、OAuth 2.0を介してGoogle、Kakao、LINEのソーシャルログインをサポートします。
+- **リアルタイムチャット:** WebSocketとSTOMPプロトコルを使用して、ユーザーと管理者間のリアルタイムチャット機能を実装しました。
+- **AI統合:** Spring AIを介してOpenAIの言語モデルを統合し、AIチャットボットやタスクの推奨など、さまざまなインテリジェントサービスを提供します。
+- **データベース管理:** Spring Data JPAとJPQLを使用して、データを効率的に管理および操作します。
+- **メールサービス:** OCI(Oracle Cloud Infrastructure)のEメール配信サービスと連携して、会員登録認証やパスワードリセットなどのメールを送信します。
 
-## 貢献
 
-貢献は、オープンソースコミュニティを学び、ひらめき、創造するための素晴らしい場所にするものです。皆様の貢献を**心よりお待ちしております**。
-
-1.  プロジェクトをフォークする
-2.  機能ブランチを作成する (`git checkout -b feature/AmazingFeature`)
-3.  変更をコミットする (`git commit -m '''Add some AmazingFeature'''`)
-4.  ブランチにプッシュする (`git push origin feature/AmazingFeature`)
-5.  プルリクエストを開く
 
 ## ライセンス
 
-このプロジェクトはMITライセンスの下でライセンスされています。詳細については `LICENSE` ファイルを参照してください。
-
-## 連絡先
-
-プロジェクトリンク: [https://github.com/scit4bits/tonarinet-be-springboot](https://github.com/scit4bits/tonarinet-be-springboot)
+このプロジェクトは、[GNU LGPLv3](LICENSE.md)ライセンスの下でライセンスされています。
