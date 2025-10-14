@@ -52,6 +52,7 @@ public class TaskResponseDTO {
                 .assignedUserName(task.getUser() != null ? task.getUser().getName() : null)
                 .teamId(task.getTeamId())
                 .teamName(task.getTeam() != null ? task.getTeam().getName() : null)
+                .feedback(task.getFeedback())
                 .score(task.getScore())
                 .maxScore(task.getMaxScore())
                 .taskGroupId(task.getTaskGroupId())
