@@ -44,6 +44,7 @@ public class OrganizationService {
         Country country = countryRepository.findById(request.getCountryCode()).get();
         Organization organization = Organization.builder()
                 .name(request.getName())
+                .countryCode(country.getCountryCode())
                 .country(country)
                 .type(request.getType())
                 .description(request.getDescription())
